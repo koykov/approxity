@@ -3,21 +3,20 @@ package bloom
 import "sync"
 
 type Filter struct {
-	Size, Expected uint64
+	once sync.Once
+	conf *Config
 
-	once           sync.Once
-	size, expected uint64
+	err error
 }
 
-func New(size, expected uint64) *Filter {
+func New(config *Config) *Filter {
 	f := &Filter{
-		Size:     size,
-		Expected: expected,
+		conf: config.copy(),
 	}
 	f.once.Do(f.init)
 	return f
 }
 
 func (f *Filter) init() {
-	f.size, f.expected = f.Size, f.Expected
+	// todo calculate number of hashing steps
 }
