@@ -1,8 +1,15 @@
 package bloom
 
+type Access uint
+
+const (
+	AccessReadWrite Access = iota
+	AccessExclusiveReadOrWrite
+)
+
 type Config struct {
 	Size       uint64
-	Buckets    uint
+	Access     Access
 	Hasher     Hasher
 	HashChecks uint
 }

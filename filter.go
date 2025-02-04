@@ -1,10 +1,15 @@
 package bloom
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/koykov/bitvector"
+)
 
 type Filter struct {
 	once sync.Once
 	conf *Config
+	vec  bitvector.Interface
 
 	err error
 }
@@ -18,5 +23,5 @@ func New(config *Config) *Filter {
 }
 
 func (f *Filter) init() {
-	// todo calculate number of hashing steps
+	// todo implement me
 }
