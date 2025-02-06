@@ -7,21 +7,65 @@ import (
 )
 
 type Filter struct {
-	once sync.Once
-	conf *Config
-	vec  bitvector.Interface
+	once   sync.Once
+	conf   *Config
+	vec    bitvector.Interface
+	access Access
 
 	err error
 }
 
-func New(config *Config) *Filter {
+func NewFilter(config *Config) (*Filter, error) {
+	if config == nil {
+		return nil, ErrBadConfig
+	}
 	f := &Filter{
 		conf: config.copy(),
 	}
 	f.once.Do(f.init)
-	return f
+	return f, f.err
+}
+
+func (f *Filter) Set(key any) error {
+	f.once.Do(f.init)
+	if f.err != nil {
+		return f.err
+	}
+	return nil
+}
+
+func (f *Filter) Has(key any) bool {
+	f.once.Do(f.init)
+	if f.err != nil {
+		return false
+	}
+	return false
+}
+
+func (f *Filter) SetAccess(access Access) error {
+	f.once.Do(f.init)
+	if f.err != nil {
+		return f.err
+	}
+	if f.conf.Policy == PolicySimultaneousReadWrite {
+		return ErrSetAccess
+	}
+	f.access = access
+	return nil
 }
 
 func (f *Filter) init() {
-	// todo implement me
+	switch f.conf.Policy {
+	case PolicySimultaneousReadWrite:
+		f.vec, f.err = bitvector.NewConcurrentVector(f.conf.Size, f.conf.WriteLimit)
+		f.access = AccessReadWrite
+	case PolicyExclusiveReadOrWrite:
+		f.vec, f.err = bitvector.NewVector(f.conf.Size)
+		f.access = AccessWrite
+	default:
+		f.err = ErrBadPolicy
+	}
+	if f.err != nil {
+		return
+	}
 }

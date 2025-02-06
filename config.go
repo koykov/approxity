@@ -1,15 +1,24 @@
 package bloom
 
+type Policy uint
+
+const (
+	PolicySimultaneousReadWrite Policy = iota
+	PolicyExclusiveReadOrWrite
+)
+
 type Access uint
 
 const (
 	AccessReadWrite Access = iota
-	AccessExclusiveReadOrWrite
+	AccessRead
+	AccessWrite
 )
 
 type Config struct {
 	Size       uint64
-	Access     Access
+	Policy     Policy
+	WriteLimit uint64
 	Hasher     Hasher
 	HashChecks uint
 }
