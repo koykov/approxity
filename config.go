@@ -18,7 +18,7 @@ const (
 type Config struct {
 	Size       uint64
 	Policy     Policy
-	WriteLimit uint
+	WriteLimit uint64
 	Hasher     Hasher
 	HashChecks uint
 }
