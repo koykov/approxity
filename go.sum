@@ -1,4 +1,6 @@
 github.com/koykov/bitvector v0.0.0-20250204230211-0b2acbb44595 h1:Zwsjz0DSkkTPjW+v+fuH7DjMMhCAusTTLRjo4iMyuU4=
 github.com/koykov/bitvector v0.0.0-20250204230211-0b2acbb44595/go.mod h1:KMT512J5l5vPCk55NNEWwXtH8GueCtUl37Rxz5OGpyo=
+github.com/koykov/byteconv v1.0.1 h1:5Yb6++P+HnipDW/V9rHXR7CyS0ZFncspT4isvt65fFA=
+github.com/koykov/byteconv v1.0.1/go.mod h1:viZknv/akQJrXOQS3bZu2U7TE+gjA03LFQpSsRExZR4=
 github.com/koykov/openrt v0.0.0-20240728195600-ccc3242946f9 h1:BZvoBH5eeWfqd74OnY4G3u81zPl52mYg2rF9I2dM0cE=
 github.com/koykov/openrt v0.0.0-20240728195600-ccc3242946f9/go.mod h1:y8Xa99HTBmthCilUUW36IZJd5SP9Rb+W8S9CJaauyU8=
