@@ -68,4 +68,9 @@ func (f *Filter) init() {
 	if f.err != nil {
 		return
 	}
+
+	if f.conf.Hasher != nil {
+		f.err = ErrNoHasher
+		return
+	}
 }
