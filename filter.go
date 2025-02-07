@@ -29,12 +29,22 @@ func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
+	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
+		h := f.conf.Hasher.Hash(key) + i
+		f.vec.Set(h % f.conf.Size)
+	}
 	return nil
 }
 
 func (f *Filter) Check(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
+	}
+	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
+		h := f.conf.Hasher.Hash(key) + i
+		if f.vec.Get(h%f.conf.Size) == 1 {
+			return true
+		}
 	}
 	return false
 }

@@ -6,7 +6,7 @@ type Config struct {
 	Size               uint64
 	WriteAttemptsLimit uint64
 	Hasher             Hasher
-	HashChecksLimit    uint
+	HashChecksLimit    uint64
 }
 
 func (c *Config) copy() *Config {
