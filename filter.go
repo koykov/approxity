@@ -50,7 +50,7 @@ func (f *Filter) Check(key any) bool {
 }
 
 func (f *Filter) init() {
-	if f.conf.Hasher != nil {
+	if f.conf.Hasher == nil {
 		f.err = ErrNoHasher
 		return
 	}
