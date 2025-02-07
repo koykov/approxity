@@ -7,10 +7,9 @@ import (
 )
 
 type Filter struct {
-	once   sync.Once
-	conf   *Config
-	vec    bitvector.Interface
-	access Access
+	once sync.Once
+	conf *Config
+	vec  bitvector.Interface
 
 	err error
 }
@@ -40,35 +39,12 @@ func (f *Filter) Check(key any) bool {
 	return false
 }
 
-func (f *Filter) SetAccess(access Access) error {
-	f.once.Do(f.init)
-	if f.err != nil {
-		return f.err
-	}
-	if f.conf.Policy == PolicySimultaneousReadWrite {
-		return ErrSetAccess
-	}
-	f.access = access
-	return nil
-}
-
 func (f *Filter) init() {
-	switch f.conf.Policy {
-	case PolicySimultaneousReadWrite:
-		f.vec, f.err = bitvector.NewConcurrentVector(f.conf.Size, f.conf.WriteLimit)
-		f.access = AccessReadWrite
-	case PolicyExclusiveReadOrWrite:
-		f.vec, f.err = bitvector.NewVector(f.conf.Size)
-		f.access = AccessWrite
-	default:
-		f.err = ErrBadPolicy
-	}
-	if f.err != nil {
-		return
-	}
-
 	if f.conf.Hasher != nil {
 		f.err = ErrNoHasher
+		return
+	}
+	if f.vec, f.err = bitvector.NewVector(f.conf.Size); f.err != nil {
 		return
 	}
 }
