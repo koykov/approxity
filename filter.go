@@ -34,7 +34,7 @@ func (f *Filter) Set(key any) error {
 	return nil
 }
 
-func (f *Filter) Has(key any) bool {
+func (f *Filter) Check(key any) bool {
 	f.once.Do(f.init)
 	if f.err != nil {
 		return false
