@@ -3,10 +3,12 @@ package bloom
 type Policy uint
 
 type Config struct {
-	Size               uint64
-	WriteAttemptsLimit uint64
-	Hasher             Hasher
-	HashChecksLimit    uint64
+	Concurrent struct {
+		WriteAttemptsLimit uint64
+	}
+	Size            uint64
+	Hasher          Hasher
+	HashChecksLimit uint64
 }
 
 func (c *Config) copy() *Config {
