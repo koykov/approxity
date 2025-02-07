@@ -27,16 +27,14 @@ func NewFilter(config *Config) (*Filter, error) {
 }
 
 func (f *Filter) Set(key any) error {
-	f.once.Do(f.init)
-	if f.err != nil {
+	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
 	return nil
 }
 
 func (f *Filter) Check(key any) bool {
-	f.once.Do(f.init)
-	if f.err != nil {
+	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
 	return false
