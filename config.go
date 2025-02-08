@@ -1,6 +1,7 @@
 package bloom
 
 type Config struct {
+	// Setting up this section enables concurrent read/write operations.
 	Concurrent *struct {
 		// How many write attempts may perform.
 		WriteAttemptsLimit uint64

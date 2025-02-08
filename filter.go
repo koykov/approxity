@@ -7,14 +7,13 @@ import (
 )
 
 // Filter represents Bloom filter.
-// This implementation doesn't support simultaneous read/write operations - you must set up the filter before reading.
+// By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
 // Concurrent reading allowed afterward.
-// If you want to use concurrent read/write operations, use ConcurrentFilter instead.
+// If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
 type Filter struct {
 	once sync.Once
 	conf *Config
 	vec  bitvector.Interface
-	cncr bool
 
 	err error
 }
@@ -74,7 +73,7 @@ func (f *Filter) init() {
 		f.err = ErrNoHasher
 		return
 	}
-	if f.cncr {
+	if f.conf.Concurrent != nil {
 		f.vec, f.err = bitvector.NewConcurrentVector(f.conf.Size, f.conf.Concurrent.WriteAttemptsLimit)
 	} else {
 		f.vec, f.err = bitvector.NewVector(f.conf.Size)
