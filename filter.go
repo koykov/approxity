@@ -10,6 +10,7 @@ type Filter struct {
 	once sync.Once
 	conf *Config
 	vec  bitvector.Interface
+	cncr bool
 
 	err error
 }
@@ -54,7 +55,9 @@ func (f *Filter) init() {
 		f.err = ErrNoHasher
 		return
 	}
-	if f.vec, f.err = bitvector.NewVector(f.conf.Size); f.err != nil {
-		return
+	if f.cncr {
+		f.vec, f.err = bitvector.NewConcurrentVector(f.conf.Size, f.conf.Concurrent.WriteAttemptsLimit)
+	} else {
+		f.vec, f.err = bitvector.NewVector(f.conf.Size)
 	}
 }
