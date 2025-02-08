@@ -6,6 +6,10 @@ import (
 	"github.com/koykov/bitvector"
 )
 
+// Filter represents Bloom filter.
+// This implementation doesn't support simultaneous read/write operations - you must set up the filter before reading.
+// Concurrent reading allowed afterward.
+// If you want to use concurrent read/write operations, use ConcurrentFilter instead.
 type Filter struct {
 	once sync.Once
 	conf *Config
@@ -15,6 +19,7 @@ type Filter struct {
 	err error
 }
 
+// NewFilter creates new Bloom filter.
 func NewFilter(config *Config) (*Filter, error) {
 	if config == nil {
 		return nil, ErrBadConfig
@@ -26,6 +31,7 @@ func NewFilter(config *Config) (*Filter, error) {
 	return f, f.err
 }
 
+// Set adds new item to the filter.
 func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
@@ -37,6 +43,7 @@ func (f *Filter) Set(key any) error {
 	return nil
 }
 
+// Clear removes item from the filter.
 func (f *Filter) Clear(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
@@ -48,6 +55,7 @@ func (f *Filter) Clear(key any) error {
 	return nil
 }
 
+// Check checks if item is in the filter.
 func (f *Filter) Check(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false

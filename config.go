@@ -1,13 +1,16 @@
 package bloom
 
-type Policy uint
-
 type Config struct {
-	Concurrent struct {
+	Concurrent *struct {
+		// How many write attempts may perform.
 		WriteAttemptsLimit uint64
 	}
-	Size            uint64
-	Hasher          Hasher
+	// The size of the filter in bits.
+	// Mandatory param.
+	Size uint64
+	// Hasher to calculate hash sum of the items.
+	Hasher Hasher
+	// How many hash checks filter may do to reduce false positives cases.
 	HashChecksLimit uint64
 }
 
