@@ -2,6 +2,24 @@ package bloom
 
 import "testing"
 
+var dataset = []struct {
+	pos, neg []string
+}{
+	{
+		pos: []string{
+			"abound", "abounds", "abundance", "abundant", "accessible",
+			"bloom", "blossom", "bolster", "bonny", "bonus", "bonuses",
+			"coherent", "cohesive", "colorful", "comely", "comfort",
+			"gems", "generosity", "generous", "generously", "genial",
+		},
+		neg: []string{
+			"bluff", "cheater", "hate", "war", "humanity",
+			"racism", "hurt", "nuke", "gloomy", "facebook",
+			"twitter", "google", "youtube",
+		},
+	},
+}
+
 func assertBool(tb testing.TB, value, expected bool) {
 	if value != expected {
 		tb.Errorf("expected %v, got %v", expected, value)
@@ -9,32 +27,47 @@ func assertBool(tb testing.TB, value, expected bool) {
 }
 
 func TestFilter(t *testing.T) {
-	t.Run("", func(t *testing.T) {
-		f, err := NewFilter(NewConfig(1000, &hasherStringCRC64{}).
-			WithHashCheckLimit(3))
-		if err != nil {
-			t.Fatal(err)
-		}
-		_ = f.Set("foobar")
-		_ = f.Set("qwerty")
-		assertBool(t, f.Check("123456"), false)
-		assertBool(t, f.Check("foobar"), true)
-		assertBool(t, f.Check("hello"), false)
-		assertBool(t, f.Check("qwerty"), true)
-		assertBool(t, f.Check("654321"), false)
-	})
+	for i := 0; i < len(dataset); i++ {
+		ds := &dataset[i]
+		t.Run("", func(t *testing.T) {
+			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
+				WithHashCheckLimit(3))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for j := 0; j < len(ds.pos); j++ {
+				_ = f.Set(ds.pos[j])
+			}
+			for j := 0; j < len(ds.neg); j++ {
+				assertBool(t, f.Check(ds.neg[j]), false)
+			}
+			for j := 0; j < len(ds.neg); j++ {
+				assertBool(t, f.Check(ds.pos[j]), true)
+			}
+		})
+	}
 }
 
 func BenchmarkFilter(b *testing.B) {
-	b.Run("", func(b *testing.B) {
-		b.ReportAllocs()
-		f, _ := NewFilter(NewConfig(1000, &hasherStringCRC64{}).
-			WithHashCheckLimit(3))
-		_ = f.Set("foobar")
-		_ = f.Set("qwerty")
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			f.Check("foobar")
-		}
-	})
+	for i := 0; i < len(dataset); i++ {
+		ds := &dataset[i]
+		b.Run("", func(b *testing.B) {
+			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
+				WithHashCheckLimit(3))
+			if err != nil {
+				b.Fatal(err)
+			}
+			for j := 0; j < len(ds.pos); j++ {
+				_ = f.Set(ds.pos[j])
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			all := make([]string, 0, len(ds.pos)+len(ds.neg))
+			all = append(all, ds.pos...)
+			all = append(all, ds.neg...)
+			for k := 0; k < b.N; k++ {
+				f.Check(&all[k%len(all)])
+			}
+		})
+	}
 }
