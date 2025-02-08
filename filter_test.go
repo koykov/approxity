@@ -10,13 +10,11 @@ var dataset = []struct {
 			"abound", "abounds", "abundance", "abundant", "accessible",
 			"bloom", "blossom", "bolster", "bonny", "bonus", "bonuses",
 			"coherent", "cohesive", "colorful", "comely", "comfort",
-			"gems", "generosity", "generous", "generously", "genial",
-		},
+			"gems", "generosity", "generous", "generously", "genial"},
 		neg: []string{
 			"bluff", "cheater", "hate", "war", "humanity",
 			"racism", "hurt", "nuke", "gloomy", "facebook",
-			"twitter", "google", "youtube",
-		},
+			"twitter", "google", "youtube", "comedy"},
 	},
 }
 

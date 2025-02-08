@@ -3,6 +3,7 @@ package bloom
 import (
 	"hash/crc32"
 	"hash/crc64"
+	"sync"
 
 	"github.com/koykov/byteconv"
 )
@@ -24,17 +25,20 @@ func (hasherStringCRC32) Hash(data any) uint64 {
 }
 
 type hasherStringCRC64 struct {
+	once  sync.Once
 	poly  uint64
 	table *crc64.Table
 }
 
 func (h *hasherStringCRC64) Hash(data any) uint64 {
-	if h.poly == 0 {
-		h.poly = crc64.ISO
-	}
-	if h.table == nil {
-		h.table = crc64.MakeTable(h.poly)
-	}
+	h.once.Do(func() {
+		if h.poly == 0 {
+			h.poly = crc64.ISO
+		}
+		if h.table == nil {
+			h.table = crc64.MakeTable(h.poly)
+		}
+	})
 	switch x := data.(type) {
 	case string:
 		return crc64.Checksum(byteconv.S2B(x), h.table)
