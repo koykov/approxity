@@ -10,11 +10,8 @@ func assertBool(tb testing.TB, value, expected bool) {
 
 func TestFilter(t *testing.T) {
 	t.Run("", func(t *testing.T) {
-		f, err := NewFilter(&Config{
-			Size:            1000,
-			Hasher:          &hasherStringCRC64{},
-			HashChecksLimit: 3,
-		})
+		f, err := NewFilter(NewConfig(1000, &hasherStringCRC64{}).
+			WithHashCheckLimit(3))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -31,11 +28,8 @@ func TestFilter(t *testing.T) {
 func BenchmarkFilter(b *testing.B) {
 	b.Run("", func(b *testing.B) {
 		b.ReportAllocs()
-		f, _ := NewFilter(&Config{
-			Size:            1000,
-			Hasher:          &hasherStringCRC64{},
-			HashChecksLimit: 3,
-		})
+		f, _ := NewFilter(NewConfig(1000, &hasherStringCRC64{}).
+			WithHashCheckLimit(3))
 		_ = f.Set("foobar")
 		_ = f.Set("qwerty")
 		b.ResetTimer()
