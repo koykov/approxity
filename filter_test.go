@@ -2,7 +2,9 @@ package bloom
 
 import (
 	"context"
+	"math"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -57,7 +59,7 @@ func TestFilter(t *testing.T) {
 				assertBool(t, f.Check(ds.pos[j]), true)
 			}
 		})
-		t.Run("concurrent", func(t *testing.T) { // run me using -race flag
+		t.Run("concurrent", func(t *testing.T) {
 			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
 				WithHashCheckLimit(3).
 				WithConcurrency().WithWriteAttemptsLimit(5))
@@ -89,7 +91,7 @@ func TestFilter(t *testing.T) {
 					case <-ctx.Done():
 						return
 					default:
-						_ = f.Clear(ds.all[i%len(ds.all)])
+						_ = f.Clear(&ds.all[i%len(ds.all)])
 					}
 				}
 			}()
@@ -101,7 +103,7 @@ func TestFilter(t *testing.T) {
 					case <-ctx.Done():
 						return
 					default:
-						f.Check(ds.all[(i % len(ds.all))])
+						f.Check(&ds.all[(i % len(ds.all))])
 					}
 				}
 			}()
@@ -128,6 +130,28 @@ func BenchmarkFilter(b *testing.B) {
 			for k := 0; k < b.N; k++ {
 				f.Check(&ds.all[k%len(ds.all)])
 			}
+		})
+		b.Run("concurrent", func(b *testing.B) {
+			b.ReportAllocs()
+
+			f, _ := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
+				WithHashCheckLimit(3).
+				WithConcurrency().WithWriteAttemptsLimit(5))
+
+			b.RunParallel(func(pb *testing.PB) {
+				var i uint64 = math.MaxUint64
+				for pb.Next() {
+					ci := atomic.AddUint64(&i, 1)
+					switch ci % 5 {
+					case 4:
+						_ = f.Set(&ds.pos[ci%uint64(len(ds.pos))])
+					case 3:
+						_ = f.Clear(&ds.all[ci%uint64(len(ds.all))])
+					default:
+						f.Check(&ds.all[ci%uint64(len(ds.all))])
+					}
+				}
+			})
 		})
 	}
 }
