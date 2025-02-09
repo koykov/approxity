@@ -68,6 +68,13 @@ func (f *Filter) Check(key any) bool {
 	return false
 }
 
+func (f *Filter) Reset() {
+	if f.once.Do(f.init); f.err != nil {
+		return
+	}
+	f.vec.Reset()
+}
+
 func (f *Filter) init() {
 	if f.conf.Hasher == nil {
 		f.err = ErrNoHasher
