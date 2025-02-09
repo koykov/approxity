@@ -91,7 +91,7 @@ func TestFilter(t *testing.T) {
 					case <-ctx.Done():
 						return
 					default:
-						_ = f.Clear(&ds.all[i%len(ds.all)])
+						_ = f.Unset(&ds.all[i%len(ds.all)])
 					}
 				}
 			}()
@@ -146,7 +146,7 @@ func BenchmarkFilter(b *testing.B) {
 					case 4:
 						_ = f.Set(&ds.pos[ci%uint64(len(ds.pos))])
 					case 3:
-						_ = f.Clear(&ds.all[ci%uint64(len(ds.all))])
+						_ = f.Unset(&ds.all[ci%uint64(len(ds.all))])
 					default:
 						f.Check(&ds.all[ci%uint64(len(ds.all))])
 					}

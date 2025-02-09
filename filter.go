@@ -42,14 +42,14 @@ func (f *Filter) Set(key any) error {
 	return nil
 }
 
-// Clear removes item from the filter.
-func (f *Filter) Clear(key any) error {
+// Unset removes item from the filter.
+func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
 	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
 		h := f.conf.Hasher.Hash(key) + i
-		f.vec.Clear(h % f.conf.Size)
+		f.vec.Unset(h % f.conf.Size)
 	}
 	return nil
 }
