@@ -22,6 +22,11 @@ func NewConfig(size uint64, hasher Hasher) *Config {
 	return &Config{Size: size, Hasher: hasher}
 }
 
+func (c *Config) WithConcurrency() *Config {
+	c.Concurrent = &ConcurrentConfig{}
+	return c
+}
+
 func (c *Config) WithSize(size uint64) *Config {
 	c.Size = size
 	return c

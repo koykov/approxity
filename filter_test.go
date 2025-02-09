@@ -1,9 +1,14 @@
 package bloom
 
-import "testing"
+import (
+	"context"
+	"sync"
+	"testing"
+	"time"
+)
 
 var dataset = []struct {
-	pos, neg []string
+	pos, neg, all []string
 }{
 	{
 		pos: []string{
@@ -18,6 +23,15 @@ var dataset = []struct {
 	},
 }
 
+func init() {
+	for i := 0; i < len(dataset); i++ {
+		ds := &dataset[i]
+		ds.all = make([]string, 0, len(ds.pos)+len(ds.neg))
+		ds.all = append(ds.all, ds.pos...)
+		ds.all = append(ds.all, ds.neg...)
+	}
+}
+
 func assertBool(tb testing.TB, value, expected bool) {
 	if value != expected {
 		tb.Errorf("expected %v, got %v", expected, value)
@@ -27,7 +41,7 @@ func assertBool(tb testing.TB, value, expected bool) {
 func TestFilter(t *testing.T) {
 	for i := 0; i < len(dataset); i++ {
 		ds := &dataset[i]
-		t.Run("", func(t *testing.T) {
+		t.Run("sync", func(t *testing.T) {
 			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
 				WithHashCheckLimit(3))
 			if err != nil {
@@ -43,13 +57,64 @@ func TestFilter(t *testing.T) {
 				assertBool(t, f.Check(ds.pos[j]), true)
 			}
 		})
+		t.Run("concurrent", func(t *testing.T) { // run me using -race flag
+			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
+				WithHashCheckLimit(3).
+				WithConcurrency().WithWriteAttemptsLimit(5))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			var wg sync.WaitGroup
+			wg.Add(3)
+
+			go func() {
+				defer wg.Done()
+				for i := 0; ; i++ {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						_ = f.Set(&ds.pos[i%len(ds.pos)])
+					}
+				}
+			}()
+
+			go func() {
+				defer wg.Done()
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						_ = f.Clear(ds.all[i%len(ds.all)])
+					}
+				}
+			}()
+
+			go func() {
+				defer wg.Done()
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						f.Check(ds.all[(i % len(ds.all))])
+					}
+				}
+			}()
+
+			wg.Wait()
+		})
 	}
 }
 
 func BenchmarkFilter(b *testing.B) {
 	for i := 0; i < len(dataset); i++ {
 		ds := &dataset[i]
-		b.Run("", func(b *testing.B) {
+		b.Run("sync", func(b *testing.B) {
 			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
 				WithHashCheckLimit(3))
 			if err != nil {
@@ -60,11 +125,8 @@ func BenchmarkFilter(b *testing.B) {
 			}
 			b.ReportAllocs()
 			b.ResetTimer()
-			all := make([]string, 0, len(ds.pos)+len(ds.neg))
-			all = append(all, ds.pos...)
-			all = append(all, ds.neg...)
 			for k := 0; k < b.N; k++ {
-				f.Check(&all[k%len(all)])
+				f.Check(&ds.all[k%len(ds.all)])
 			}
 		})
 	}
