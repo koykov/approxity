@@ -1,9 +1,9 @@
-module github.com/koykov/bloom
+module github.com/koykov/pds
 
 go 1.18
 
 require (
-	github.com/koykov/bitvector v0.0.0-20250209211001-ce464655135c
+	github.com/koykov/bitvector v0.0.0-20250209223757-4dd34fefe522
 	github.com/koykov/byteconv v1.0.1
 )
 
