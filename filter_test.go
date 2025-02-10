@@ -53,10 +53,10 @@ func TestFilter(t *testing.T) {
 				_ = f.Set(ds.pos[j])
 			}
 			for j := 0; j < len(ds.neg); j++ {
-				assertBool(t, f.Check(ds.neg[j]), false)
+				assertBool(t, f.Contains(ds.neg[j]), false)
 			}
 			for j := 0; j < len(ds.neg); j++ {
-				assertBool(t, f.Check(ds.pos[j]), true)
+				assertBool(t, f.Contains(ds.pos[j]), true)
 			}
 		})
 		t.Run("concurrent", func(t *testing.T) {
@@ -103,7 +103,7 @@ func TestFilter(t *testing.T) {
 					case <-ctx.Done():
 						return
 					default:
-						f.Check(&ds.all[(i % len(ds.all))])
+						f.Contains(&ds.all[(i % len(ds.all))])
 					}
 				}
 			}()
@@ -128,7 +128,7 @@ func BenchmarkFilter(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
 			for k := 0; k < b.N; k++ {
-				f.Check(&ds.all[k%len(ds.all)])
+				f.Contains(&ds.all[k%len(ds.all)])
 			}
 		})
 		b.Run("concurrent", func(b *testing.B) {
@@ -148,7 +148,7 @@ func BenchmarkFilter(b *testing.B) {
 					case 3:
 						_ = f.Unset(&ds.all[ci%uint64(len(ds.all))])
 					default:
-						f.Check(&ds.all[ci%uint64(len(ds.all))])
+						f.Contains(&ds.all[ci%uint64(len(ds.all))])
 					}
 				}
 			})

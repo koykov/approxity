@@ -30,7 +30,7 @@ func NewFilter(config *Config) (*Filter, error) {
 	return f, f.err
 }
 
-// Set adds new item to the filter.
+// Set adds new key to the filter.
 func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
@@ -42,7 +42,7 @@ func (f *Filter) Set(key any) error {
 	return nil
 }
 
-// Unset removes item from the filter.
+// Unset removes key from the filter.
 func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
@@ -54,8 +54,8 @@ func (f *Filter) Unset(key any) error {
 	return nil
 }
 
-// Check checks if item is in the filter.
-func (f *Filter) Check(key any) bool {
+// Contains checks if key is in the filter.
+func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
