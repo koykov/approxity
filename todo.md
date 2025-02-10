@@ -16,6 +16,7 @@ Research and implement:
 * [SimHash](https://en.wikipedia.org/wiki/SimHash)
 * [Skip list](https://en.wikipedia.org/wiki/Skip_list)
 * [Treap](https://en.wikipedia.org/wiki/Treap)
+* https://medium.com/@tech.anikghosh/probabilistic-data-structures-db5d238008eb
 
 Naming issues:
 * probabilistic
