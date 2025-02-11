@@ -1,8 +1,6 @@
-github.com/koykov/bitvector v0.0.0-20250209211001-ce464655135c h1:6RmLhz63oI95TlIuQQk/qlEC4zlgcJaTrKC7zN6MxlA=
-github.com/koykov/bitvector v0.0.0-20250209211001-ce464655135c/go.mod h1:KMT512J5l5vPCk55NNEWwXtH8GueCtUl37Rxz5OGpyo=
 github.com/koykov/bitvector v0.0.0-20250209223757-4dd34fefe522 h1:ZK7HEdrpOpcjSvO8k/dzRCcqDGkS0N9MDHQiGB62uCU=
 github.com/koykov/bitvector v0.0.0-20250209223757-4dd34fefe522/go.mod h1:KMT512J5l5vPCk55NNEWwXtH8GueCtUl37Rxz5OGpyo=
-github.com/koykov/byteconv v1.0.1 h1:5Yb6++P+HnipDW/V9rHXR7CyS0ZFncspT4isvt65fFA=
-github.com/koykov/byteconv v1.0.1/go.mod h1:viZknv/akQJrXOQS3bZu2U7TE+gjA03LFQpSsRExZR4=
 github.com/koykov/openrt v0.0.0-20240728195600-ccc3242946f9 h1:BZvoBH5eeWfqd74OnY4G3u81zPl52mYg2rF9I2dM0cE=
 github.com/koykov/openrt v0.0.0-20240728195600-ccc3242946f9/go.mod h1:y8Xa99HTBmthCilUUW36IZJd5SP9Rb+W8S9CJaauyU8=
+github.com/koykov/x2bytes v1.0.2 h1:AISrs+8qfGLb/0RntRdbg1F/ahha3KrFcNledLBbLgA=
+github.com/koykov/x2bytes v1.0.2/go.mod h1:0fbvyQAm3RAiTOE/NT0Dg3ZXL9EQiYpyrp5wZyoz11Q=

@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/koykov/pds/hasher"
 )
 
 var dataset = []struct {
@@ -44,8 +46,8 @@ func TestFilter(t *testing.T) {
 	for i := 0; i < len(dataset); i++ {
 		ds := &dataset[i]
 		t.Run("sync", func(t *testing.T) {
-			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
-				WithHashCheckLimit(3))
+			f, err := NewFilter(NewConfig(1e6, &hasher.CRC64{}).
+				WithHashCheckLimit(1))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -60,7 +62,7 @@ func TestFilter(t *testing.T) {
 			}
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
+			f, err := NewFilter(NewConfig(1e6, &hasher.CRC64{}).
 				WithHashCheckLimit(3).
 				WithConcurrency().WithWriteAttemptsLimit(5))
 			if err != nil {
@@ -117,8 +119,8 @@ func BenchmarkFilter(b *testing.B) {
 	for i := 0; i < len(dataset); i++ {
 		ds := &dataset[i]
 		b.Run("sync", func(b *testing.B) {
-			f, err := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
-				WithHashCheckLimit(3))
+			f, err := NewFilter(NewConfig(1e6, &hasher.CRC64{}).
+				WithHashCheckLimit(1))
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -134,7 +136,7 @@ func BenchmarkFilter(b *testing.B) {
 		b.Run("concurrent", func(b *testing.B) {
 			b.ReportAllocs()
 
-			f, _ := NewFilter(NewConfig(1e5, &hasherStringCRC64{}).
+			f, _ := NewFilter(NewConfig(1e6, &hasher.CRC64{}).
 				WithHashCheckLimit(3).
 				WithConcurrency().WithWriteAttemptsLimit(5))
 

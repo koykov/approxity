@@ -1,5 +1,5 @@
-package bloom
+package pds
 
 type Hasher interface {
-	Hash(data any) uint64
+	Sum64(data []byte) uint64
 }

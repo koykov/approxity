@@ -1,9 +1,12 @@
 package bloom
 
 import (
+	"strconv"
 	"sync"
+	"unsafe"
 
 	"github.com/koykov/bitvector"
+	"github.com/koykov/x2bytes"
 )
 
 // Filter represents Bloom filter.
@@ -36,7 +39,10 @@ func (f *Filter) Set(key any) error {
 		return f.err
 	}
 	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h := f.conf.Hasher.Hash(key) + i
+		h, err := f.hash(key, i)
+		if err != nil {
+			return err
+		}
 		f.vec.Set(h % f.conf.Size)
 	}
 	return nil
@@ -48,7 +54,10 @@ func (f *Filter) Unset(key any) error {
 		return f.err
 	}
 	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h := f.conf.Hasher.Hash(key) + i
+		h, err := f.hash(key, i)
+		if err != nil {
+			return err
+		}
 		f.vec.Unset(h % f.conf.Size)
 	}
 	return nil
@@ -60,7 +69,10 @@ func (f *Filter) Contains(key any) bool {
 		return false
 	}
 	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h := f.conf.Hasher.Hash(key) + i
+		h, err := f.hash(key, i)
+		if err != nil {
+			return false
+		}
 		if f.vec.Get(h%f.conf.Size) == 1 {
 			return true
 		}
@@ -73,6 +85,23 @@ func (f *Filter) Reset() {
 		return
 	}
 	f.vec.Reset()
+}
+
+func (f *Filter) hash(data any, seed uint64) (_ uint64, err error) {
+	const bufsz = 128
+	var a [bufsz]byte
+	var h struct {
+		ptr      uintptr
+		len, cap int
+	}
+	h.ptr = uintptr(unsafe.Pointer(&a))
+	h.cap = bufsz
+	buf := *(*[]byte)(unsafe.Pointer(&h))
+	if buf, err = x2bytes.ToBytes(buf, data); err != nil {
+		return 0, err
+	}
+	buf = strconv.AppendUint(buf, seed, 10)
+	return f.conf.Hasher.Sum64(buf), nil
 }
 
 func (f *Filter) init() {
