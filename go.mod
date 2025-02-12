@@ -3,7 +3,7 @@ module github.com/koykov/pds
 go 1.18
 
 require (
-	github.com/koykov/bitvector v0.0.0-20250209223757-4dd34fefe522
+	github.com/koykov/bitvector v0.0.0-20250212215034-14f294e0eba3
 	github.com/koykov/x2bytes v1.0.2
 )
 
