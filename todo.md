@@ -1,6 +1,6 @@
 Research and implement:
 * [Approximate membership query filter](https://en.wikipedia.org/wiki/Approximate_membership_query_filter)
-* [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter)
+* [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) [+]
 * [Count sketch](https://en.wikipedia.org/wiki/Count_sketch)
 * [Count-min sketch](https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch)
 * [Cuckoo filter](https://en.wikipedia.org/wiki/Cuckoo_filter)
