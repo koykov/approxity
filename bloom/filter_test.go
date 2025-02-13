@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/koykov/pds/hasher"
+	"github.com/koykov/amq/hasher"
 )
 
 var dataset = []struct {

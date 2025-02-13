@@ -1,4 +1,4 @@
-module github.com/koykov/pds
+module github.com/koykov/amq
 
 go 1.18
 

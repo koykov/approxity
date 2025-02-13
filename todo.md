@@ -1,5 +1,4 @@
 Research and implement:
-* [Approximate membership query filter](https://en.wikipedia.org/wiki/Approximate_membership_query_filter)
 * [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) [+]
 * [Count sketch](https://en.wikipedia.org/wiki/Count_sketch)
 * [Count-min sketch](https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch)
@@ -17,7 +16,3 @@ Research and implement:
 * [Skip list](https://en.wikipedia.org/wiki/Skip_list)
 * [Treap](https://en.wikipedia.org/wiki/Treap)
 * https://medium.com/@tech.anikghosh/probabilistic-data-structures-db5d238008eb
-
-Naming issues:
-* probabilistic
-* PDS (probabilistic Data Structures)

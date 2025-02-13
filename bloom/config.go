@@ -1,6 +1,6 @@
 package bloom
 
-import "github.com/koykov/pds"
+import "github.com/koykov/amq"
 
 type Config struct {
 	// Setting up this section enables concurrent read/write operations.
@@ -9,7 +9,7 @@ type Config struct {
 	// Mandatory param.
 	Size uint64
 	// Hasher to calculate hash sum of the items.
-	Hasher pds.Hasher
+	Hasher amq.Hasher
 	// How many hash checks filter may do to reduce false positives cases.
 	HashChecksLimit uint64
 }
@@ -20,7 +20,7 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
-func NewConfig(size uint64, hasher pds.Hasher) *Config {
+func NewConfig(size uint64, hasher amq.Hasher) *Config {
 	return &Config{Size: size, Hasher: hasher}
 }
 
@@ -34,7 +34,7 @@ func (c *Config) WithSize(size uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHasher(hasher pds.Hasher) *Config {
+func (c *Config) WithHasher(hasher amq.Hasher) *Config {
 	c.Hasher = hasher
 	return c
 }
