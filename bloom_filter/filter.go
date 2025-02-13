@@ -37,14 +37,14 @@ func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
-	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h, err := f.Hash(f.conf.Hasher, key, i)
+	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
+		h, err := f.Hash(f.c().Hasher, key, i)
 		if err != nil {
-			return err
+			return f.mw().Set(err)
 		}
-		f.vec.Set(h % f.conf.Size)
+		f.vec.Set(h % f.c().Size)
 	}
-	return nil
+	return f.mw().Set(nil)
 }
 
 // Unset removes key from the filter.
@@ -52,14 +52,14 @@ func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
-	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h, err := f.Hash(f.conf.Hasher, key, i)
+	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
+		h, err := f.Hash(f.c().Hasher, key, i)
 		if err != nil {
-			return err
+			return f.mw().Unset(err)
 		}
-		f.vec.Unset(h % f.conf.Size)
+		f.vec.Unset(h % f.c().Size)
 	}
-	return nil
+	return f.mw().Unset(nil)
 }
 
 // Contains checks if key is in the filter.
@@ -67,16 +67,16 @@ func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
-	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h, err := f.Hash(f.conf.Hasher, key, i)
+	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
+		h, err := f.Hash(f.c().Hasher, key, i)
 		if err != nil {
-			return false
+			return f.mw().Contains(false)
 		}
-		if f.vec.Get(h%f.conf.Size) == 0 {
-			return false
+		if f.vec.Get(h%f.c().Size) == 0 {
+			return f.mw().Contains(false)
 		}
 	}
-	return true
+	return f.mw().Contains(true)
 }
 
 func (f *Filter) Reset() {
@@ -96,4 +96,15 @@ func (f *Filter) init() {
 	} else {
 		f.vec, f.err = bitvector.NewVector(f.conf.Size)
 	}
+	if f.conf.MetricsWriter == nil {
+		f.conf.MetricsWriter = amq.DummyMetricsWriter{}
+	}
+}
+
+func (f *Filter) c() *Config {
+	return f.conf
+}
+
+func (f *Filter) mw() amq.MetricsWriter {
+	return f.conf.MetricsWriter
 }

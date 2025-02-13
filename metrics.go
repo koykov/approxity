@@ -1,13 +1,13 @@
 package amq
 
 type MetricsWriter interface {
-	Set()
-	Unset()
-	Contains(positive bool)
+	Set(err error) error
+	Unset(err error) error
+	Contains(positive bool) bool
 }
 
 type DummyMetricsWriter struct{}
 
-func (DummyMetricsWriter) Set()            {}
-func (DummyMetricsWriter) Unset()          {}
-func (DummyMetricsWriter) Contains(_ bool) {}
+func (DummyMetricsWriter) Set(err error) error         { return err }
+func (DummyMetricsWriter) Unset(err error) error       { return err }
+func (DummyMetricsWriter) Contains(positive bool) bool { return positive }

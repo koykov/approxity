@@ -12,6 +12,8 @@ type Config struct {
 	Hasher amq.Hasher
 	// How many hash checks filter may do to reduce false positives cases.
 	HashChecksLimit uint64
+	// Metrics writer handler.
+	MetricsWriter amq.MetricsWriter
 }
 
 // ConcurrentConfig configures concurrent section of config.
