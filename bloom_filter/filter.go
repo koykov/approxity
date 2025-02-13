@@ -1,12 +1,10 @@
 package bloom
 
 import (
-	"strconv"
 	"sync"
-	"unsafe"
 
+	"github.com/koykov/amq"
 	"github.com/koykov/bitvector"
-	"github.com/koykov/x2bytes"
 )
 
 // Filter represents Bloom filter.
@@ -14,6 +12,7 @@ import (
 // Concurrent reading allowed afterward.
 // If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
 type Filter struct {
+	amq.BaseFilter
 	once sync.Once
 	conf *Config
 	vec  bitvector.Interface
@@ -39,7 +38,7 @@ func (f *Filter) Set(key any) error {
 		return f.err
 	}
 	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h, err := f.hash(key, i)
+		h, err := f.Hash(f.conf.Hasher, key, i)
 		if err != nil {
 			return err
 		}
@@ -54,7 +53,7 @@ func (f *Filter) Unset(key any) error {
 		return f.err
 	}
 	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h, err := f.hash(key, i)
+		h, err := f.Hash(f.conf.Hasher, key, i)
 		if err != nil {
 			return err
 		}
@@ -69,7 +68,7 @@ func (f *Filter) Contains(key any) bool {
 		return false
 	}
 	for i := uint64(0); i < f.conf.HashChecksLimit+1; i++ {
-		h, err := f.hash(key, i)
+		h, err := f.Hash(f.conf.Hasher, key, i)
 		if err != nil {
 			return false
 		}
@@ -85,23 +84,6 @@ func (f *Filter) Reset() {
 		return
 	}
 	f.vec.Reset()
-}
-
-func (f *Filter) hash(data any, seed uint64) (_ uint64, err error) {
-	const bufsz = 128
-	var a [bufsz]byte
-	var h struct {
-		ptr      uintptr
-		len, cap int
-	}
-	h.ptr, h.cap = uintptr(unsafe.Pointer(&a)), bufsz
-	buf := *(*[]byte)(unsafe.Pointer(&h))
-
-	if buf, err = x2bytes.ToBytes(buf, data); err != nil {
-		return 0, err
-	}
-	buf = strconv.AppendUint(buf, seed, 10)
-	return f.conf.Hasher.Sum64(buf), nil
 }
 
 func (f *Filter) init() {
