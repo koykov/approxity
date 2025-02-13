@@ -73,11 +73,11 @@ func (f *Filter) Contains(key any) bool {
 		if err != nil {
 			return false
 		}
-		if f.vec.Get(h%f.conf.Size) == 1 {
-			return true
+		if f.vec.Get(h%f.conf.Size) == 0 {
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func (f *Filter) Reset() {
@@ -94,9 +94,9 @@ func (f *Filter) hash(data any, seed uint64) (_ uint64, err error) {
 		ptr      uintptr
 		len, cap int
 	}
-	h.ptr = uintptr(unsafe.Pointer(&a))
-	h.cap = bufsz
+	h.ptr, h.cap = uintptr(unsafe.Pointer(&a)), bufsz
 	buf := *(*[]byte)(unsafe.Pointer(&h))
+
 	if buf, err = x2bytes.ToBytes(buf, data); err != nil {
 		return 0, err
 	}
