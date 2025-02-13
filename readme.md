@@ -1,3 +1,3 @@
-# Probabilistic data structures
+# Approximate membership query
 
 TODO ...
