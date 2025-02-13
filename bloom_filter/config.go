@@ -54,6 +54,11 @@ func (c *Config) WithHashCheckLimit(limit uint64) *Config {
 	return c
 }
 
+func (c *Config) WithMetricsWriter(mw amq.MetricsWriter) *Config {
+	c.MetricsWriter = mw
+	return c
+}
+
 func (c *Config) copy() *Config {
 	cpy := *c
 	return &cpy
