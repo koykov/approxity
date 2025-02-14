@@ -144,10 +144,10 @@ func BenchmarkFilter(b *testing.B) {
 				var i uint64 = math.MaxUint64
 				for pb.Next() {
 					ci := atomic.AddUint64(&i, 1)
-					switch ci % 5 {
-					case 4:
+					switch ci % 100 {
+					case 99:
 						_ = f.Set(&ds.pos[ci%uint64(len(ds.pos))])
-					case 3:
+					case 98:
 						_ = f.Unset(&ds.all[ci%uint64(len(ds.all))])
 					default:
 						f.Contains(&ds.all[ci%uint64(len(ds.all))])

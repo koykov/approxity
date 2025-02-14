@@ -38,7 +38,7 @@ func (f *Filter) Set(key any) error {
 		return f.err
 	}
 	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
-		h, err := f.Hash(f.c().Hasher, key, i)
+		h, err := f.h(key, i)
 		if err != nil {
 			return f.mw().Set(err)
 		}
@@ -53,7 +53,7 @@ func (f *Filter) Unset(key any) error {
 		return f.err
 	}
 	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
-		h, err := f.Hash(f.c().Hasher, key, i)
+		h, err := f.h(key, i)
 		if err != nil {
 			return f.mw().Unset(err)
 		}
@@ -68,7 +68,7 @@ func (f *Filter) Contains(key any) bool {
 		return false
 	}
 	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
-		h, err := f.Hash(f.c().Hasher, key, i)
+		h, err := f.h(key, i)
 		if err != nil {
 			return f.mw().Contains(false)
 		}
@@ -103,6 +103,10 @@ func (f *Filter) init() {
 
 func (f *Filter) c() *Config {
 	return f.conf
+}
+
+func (f *Filter) h(key any, seed uint64) (uint64, error) {
+	return f.Hash(f.c().Hasher, key, seed)
 }
 
 func (f *Filter) mw() amq.MetricsWriter {
