@@ -1,8 +1,8 @@
 Research and implement:
 * [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) [+]
+* [Cuckoo filter](https://en.wikipedia.org/wiki/Cuckoo_filter)
 * [Count sketch](https://en.wikipedia.org/wiki/Count_sketch)
 * [Count-min sketch](https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch)
-* [Cuckoo filter](https://en.wikipedia.org/wiki/Cuckoo_filter)
 * [HyperLogLog](https://en.wikipedia.org/wiki/HyperLogLog)
 * [Kinetic hanger](https://en.wikipedia.org/wiki/Kinetic_hanger)
 * [Kinetic heater](https://en.wikipedia.org/wiki/Kinetic_heater)
