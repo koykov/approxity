@@ -23,7 +23,7 @@ type Filter struct {
 // NewFilter creates new Bloom filter.
 func NewFilter(config *Config) (*Filter, error) {
 	if config == nil {
-		return nil, ErrBadConfig
+		return nil, amq.ErrBadConfig
 	}
 	f := &Filter{
 		conf: config.copy(),
@@ -87,17 +87,22 @@ func (f *Filter) Reset() {
 }
 
 func (f *Filter) init() {
-	if f.conf.Hasher == nil {
-		f.err = ErrNoHasher
+	c := f.conf
+	if c.Size == 0 {
+		f.err = amq.ErrBadSize
 		return
 	}
-	if f.conf.Concurrent != nil {
-		f.vec, f.err = bitvector.NewConcurrentVector(f.conf.Size, f.conf.Concurrent.WriteAttemptsLimit)
-	} else {
-		f.vec, f.err = bitvector.NewVector(f.conf.Size)
+	if c.Hasher == nil {
+		f.err = amq.ErrNoHasher
+		return
 	}
-	if f.conf.MetricsWriter == nil {
-		f.conf.MetricsWriter = amq.DummyMetricsWriter{}
+	if c.Concurrent != nil {
+		f.vec, f.err = bitvector.NewConcurrentVector(c.Size, c.Concurrent.WriteAttemptsLimit)
+	} else {
+		f.vec, f.err = bitvector.NewVector(c.Size)
+	}
+	if c.MetricsWriter == nil {
+		c.MetricsWriter = amq.DummyMetricsWriter{}
 	}
 }
 
