@@ -12,7 +12,7 @@ import (
 // Concurrent reading allowed afterward.
 // If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
 type Filter struct {
-	amq.BaseFilter
+	amq.Base
 	once sync.Once
 	conf *Config
 	vec  bitvector.Interface

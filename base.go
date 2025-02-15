@@ -7,10 +7,10 @@ import (
 	"github.com/koykov/x2bytes"
 )
 
-type BaseFilter struct{}
+type Base struct{}
 
 // Hash calculates hash sum of data + seed using given hasher.
-func (BaseFilter) Hash(hasher Hasher, data any, seed uint64) (_ uint64, err error) {
+func (Base) Hash(hasher Hasher, data any, seed uint64) (_ uint64, err error) {
 	const bufsz = 128
 	var a [bufsz]byte
 	var h struct {
