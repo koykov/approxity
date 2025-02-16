@@ -6,6 +6,7 @@ const (
 	defaultBucketSize        = 4
 	defaultKicksLimit        = 500
 	defaultFalsePositiveRate = 0.01
+	defaultSeed              = 2077
 )
 
 type Config struct {
@@ -14,6 +15,7 @@ type Config struct {
 	FingerprintSize uint64
 	KicksLimit      uint64
 	Hasher          amq.Hasher
+	Seed            uint64
 }
 
 func (c *Config) copy() *Config {

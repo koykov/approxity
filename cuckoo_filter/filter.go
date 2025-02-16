@@ -101,13 +101,15 @@ func (f *Filter) init() {
 	if c.KicksLimit == 0 {
 		c.KicksLimit = defaultKicksLimit
 	}
+	if c.Seed == 0 {
+		c.Seed = defaultSeed
+	}
 	buckets := uint64(math.Ceil(float64(c.Size) / float64(c.BucketSize)))
 	f.buckets = make([]bucket, buckets)
 	f.buf = make([]byte, c.Size*c.FingerprintSize)
 
-	const seed = uint64(2077)
 	for i := 0; i < 256; i++ {
-		f.hsh[i], _ = f.Hash(c.Hasher, []byte{byte(i)}, seed)
+		f.hsh[i], _ = f.Hash(c.Hasher, []byte{byte(i)}, c.Seed)
 	}
 	for i := 0; i < 65; i++ {
 		f.msk[i] = (1 << i) - 1
