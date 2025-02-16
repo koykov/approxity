@@ -17,7 +17,6 @@ type Filter struct {
 	buckets []bucket
 	buf     []byte
 	hsh     [256]uint64
-	msk     [65]uint64
 
 	err error
 }
@@ -76,8 +75,8 @@ func (f *Filter) calcI2FP(data any, bp, i uint64) (i0 uint64, i1 uint64, fp byte
 	}
 	hs := f.conf.Hasher.Sum64(buf)
 	fp = byte(hs%255 + 1)
-	i0 = (hs >> 32) & f.msk[bp]
-	m := f.msk[bp]
+	i0 = (hs >> 32) & mask64[bp]
+	m := mask64[bp]
 	i1 = (i & m) ^ (f.hsh[fp] & m)
 	return
 }
@@ -110,9 +109,6 @@ func (f *Filter) init() {
 
 	for i := 0; i < 256; i++ {
 		f.hsh[i], _ = f.Hash(c.Hasher, []byte{byte(i)}, c.Seed)
-	}
-	for i := 0; i < 65; i++ {
-		f.msk[i] = (1 << i) - 1
 	}
 }
 
