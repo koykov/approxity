@@ -3,8 +3,10 @@ package cuckoo
 import (
 	"math"
 	"sync"
+	"unsafe"
 
 	"github.com/koykov/amq"
+	"github.com/koykov/x2bytes"
 )
 
 type Filter struct {
@@ -14,6 +16,8 @@ type Filter struct {
 
 	buckets []bucket
 	buf     []byte
+	hsh     [256]uint64
+	msk     [65]uint64
 
 	err error
 }
@@ -27,22 +31,55 @@ func NewFilter(conf *Config) (*Filter, error) {
 }
 
 func (f *Filter) Set(key any) error {
+	if f.once.Do(f.init); f.err != nil {
+		return f.err
+	}
 	// todo implement me
 	return nil
 }
 
 func (f *Filter) Unset(key any) error {
+	if f.once.Do(f.init); f.err != nil {
+		return f.err
+	}
 	// todo implement me
 	return nil
 }
 
 func (f *Filter) Contains(key any) bool {
+	if f.once.Do(f.init); f.err != nil {
+		return false
+	}
 	// todo implement me
 	return false
 }
 
 func (f *Filter) Reset() {
+	if f.once.Do(f.init); f.err != nil {
+		return
+	}
 	// todo implement me
+}
+
+func (f *Filter) calcI2FP(data any, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
+	const bufsz = 128
+	var a [bufsz]byte
+	var h struct {
+		ptr      uintptr
+		len, cap int
+	}
+	h.ptr, h.cap = uintptr(unsafe.Pointer(&a)), bufsz
+	buf := *(*[]byte)(unsafe.Pointer(&h))
+
+	if buf, err = x2bytes.ToBytes(buf, data); err != nil {
+		return
+	}
+	hs := f.conf.Hasher.Sum64(buf)
+	fp = byte(hs%255 + 1)
+	i0 = (hs >> 32) & f.msk[bp]
+	m := f.msk[bp]
+	i1 = (i & m) ^ (f.hsh[fp] & m)
+	return
 }
 
 func (f *Filter) init() {
@@ -67,6 +104,14 @@ func (f *Filter) init() {
 	buckets := uint64(math.Ceil(float64(c.Size) / float64(c.BucketSize)))
 	f.buckets = make([]bucket, buckets)
 	f.buf = make([]byte, c.Size*c.FingerprintSize)
+
+	const seed = uint64(2077)
+	for i := 0; i < 256; i++ {
+		f.hsh[i], _ = f.Hash(c.Hasher, []byte{byte(i)}, seed)
+	}
+	for i := 0; i < 65; i++ {
+		f.msk[i] = (1 << i) - 1
+	}
 }
 
 func CalcFingerprintSize(size uint64, fp float64) (sz uint64) {

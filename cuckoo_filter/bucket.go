@@ -1,5 +1,5 @@
 package cuckoo
 
 type bucket struct {
-	lo, hi uint64
+	lo, hi, off uint64
 }
