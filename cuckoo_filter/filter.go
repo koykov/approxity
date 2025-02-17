@@ -96,9 +96,6 @@ func (f *Filter) init() {
 	if c.BucketSize == 0 {
 		c.BucketSize = defaultBucketSize
 	}
-	if c.FingerprintSize == 0 {
-		c.FingerprintSize = CalcFingerprintSize(c.Size, defaultFalsePositiveRate)
-	}
 	if c.KicksLimit == 0 {
 		c.KicksLimit = defaultKicksLimit
 	}
@@ -107,18 +104,11 @@ func (f *Filter) init() {
 	}
 	buckets := uint64(math.Ceil(float64(c.Size) / float64(c.BucketSize)))
 	f.buckets = make([]bucket, buckets)
-	f.buf = make([]byte, c.Size*c.FingerprintSize)
+	f.buf = make([]byte, c.Size)
 
 	var buf []byte
 	for i := 0; i < 256; i++ {
 		buf = append(buf[:0], byte(i))
 		f.hsh[i], _ = f.Hash(c.Hasher, buf, c.Seed)
 	}
-}
-
-func CalcFingerprintSize(size uint64, fp float64) (sz uint64) {
-	if sz = uint64(math.Ceil(math.Log(2*float64(size)/fp))) / 8; sz == 0 {
-		sz = 1
-	}
-	return
 }
