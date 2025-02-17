@@ -25,8 +25,10 @@ func NewFilter(conf *Config) (*Filter, error) {
 	f := &Filter{
 		conf: conf.copy(),
 	}
-	f.once.Do(f.init)
-	return f, f.err
+	if f.once.Do(f.init); f.err != nil {
+		return nil, f.err
+	}
+	return f, nil
 }
 
 func (f *Filter) Set(key any) error {
@@ -107,8 +109,10 @@ func (f *Filter) init() {
 	f.buckets = make([]bucket, buckets)
 	f.buf = make([]byte, c.Size*c.FingerprintSize)
 
+	var buf []byte
 	for i := 0; i < 256; i++ {
-		f.hsh[i], _ = f.Hash(c.Hasher, []byte{byte(i)}, c.Seed)
+		buf = append(buf[:0], byte(i))
+		f.hsh[i], _ = f.Hash(c.Hasher, buf, c.Seed)
 	}
 }
 
