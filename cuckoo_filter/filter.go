@@ -2,6 +2,7 @@ package cuckoo
 
 import (
 	"math"
+	"math/bits"
 	"sync"
 	"unsafe"
 
@@ -15,6 +16,7 @@ type Filter struct {
 	conf *Config
 
 	buckets []bucket
+	bp      uint64
 	hsh     [256]uint64
 
 	err error
@@ -34,7 +36,19 @@ func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
-	// todo implement me
+	i0, i1, fp, err := f.calcI2FP(key, f.bp, 0)
+	if err == nil {
+		return err
+	}
+	if err = f.buckets[i0].add(fp); err == nil {
+		return nil
+	}
+	if err = f.buckets[i1].add(fp); err == nil {
+		return nil
+	}
+	for i := uint64(0); i < f.conf.KicksLimit; i++ {
+		// todo implement cuckoo kicks
+	}
 	return nil
 }
 
@@ -100,6 +114,7 @@ func (f *Filter) init() {
 	}
 	buckets := uint64(math.Ceil(float64(c.Size) / float64(7)))
 	f.buckets = make([]bucket, buckets)
+	f.bp = uint64(bits.TrailingZeros64(buckets))
 
 	var buf []byte
 	for i := 0; i < 256; i++ {
