@@ -15,7 +15,6 @@ type Filter struct {
 	conf *Config
 
 	buckets []bucket
-	buf     []byte
 	hsh     [256]uint64
 
 	err error
@@ -93,18 +92,14 @@ func (f *Filter) init() {
 		f.err = amq.ErrNoHasher
 		return
 	}
-	if c.BucketSize == 0 {
-		c.BucketSize = defaultBucketSize
-	}
 	if c.KicksLimit == 0 {
 		c.KicksLimit = defaultKicksLimit
 	}
 	if c.Seed == 0 {
 		c.Seed = defaultSeed
 	}
-	buckets := uint64(math.Ceil(float64(c.Size) / float64(c.BucketSize)))
+	buckets := uint64(math.Ceil(float64(c.Size) / float64(7)))
 	f.buckets = make([]bucket, buckets)
-	f.buf = make([]byte, c.Size)
 
 	var buf []byte
 	for i := 0; i < 256; i++ {
