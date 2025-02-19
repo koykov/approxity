@@ -38,7 +38,7 @@ func (f *Filter) Set(key any) error {
 		return f.err
 	}
 	i0, i1, fp, err := f.calcI2FP(key, f.bp, 0)
-	if err == nil {
+	if err != nil {
 		return err
 	}
 	if err = f.buckets[i0].add(fp); err == nil {
