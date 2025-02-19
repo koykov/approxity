@@ -41,10 +41,12 @@ func (f *Filter) Set(key any) error {
 	if err != nil {
 		return err
 	}
-	if err = f.buckets[i0].add(fp); err == nil {
+	b := f.buckets[i0]
+	if err = b.add(fp); err == nil {
 		return nil
 	}
-	if err = f.buckets[i1].add(fp); err == nil {
+	b = f.buckets[i1]
+	if err = b.add(fp); err == nil {
 		return nil
 	}
 	i := i0
@@ -52,7 +54,7 @@ func (f *Filter) Set(key any) error {
 		i = i1
 	}
 	for k := uint64(0); k < f.conf.KicksLimit; k++ {
-		j := uint64(rand.Intn(8))
+		j := uint64(rand.Intn(bucketsz))
 		pfp := fp
 		fp = f.buckets[i].get(j)
 		_ = f.buckets[i].set(j, pfp)
@@ -126,9 +128,22 @@ func (f *Filter) init() {
 	if c.Seed == 0 {
 		c.Seed = defaultSeed
 	}
-	buckets := uint64(math.Ceil(float64(c.Size) / float64(8)))
+	buckets := uint64(math.Ceil(float64(c.Size) / float64(bucketsz)))
 	f.buckets = make([]bucket, buckets)
-	f.bp = uint64(bits.TrailingZeros64(buckets))
+
+	pow2 := func(n uint64) uint64 {
+		n--
+		n |= n >> 1
+		n |= n >> 2
+		n |= n >> 4
+		n |= n >> 8
+		n |= n >> 16
+		n |= n >> 32
+		n++
+		return n
+	}
+	b := pow2(c.Size) / bucketsz
+	f.bp = uint64(bits.TrailingZeros64(b))
 
 	var buf []byte
 	for i := 0; i < 256; i++ {

@@ -42,7 +42,7 @@ func TestFilter(t *testing.T) {
 		ds := &dataset[i]
 		t.Run("sync", func(t *testing.T) {
 			f, err := NewFilter(&Config{
-				Size:   1e3,
+				Size:   1e6,
 				Hasher: &hasher.CRC64{},
 			})
 			if err != nil {
