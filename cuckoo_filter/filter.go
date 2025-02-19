@@ -3,6 +3,7 @@ package cuckoo
 import (
 	"math"
 	"math/bits"
+	"math/rand"
 	"sync"
 	"unsafe"
 
@@ -46,10 +47,23 @@ func (f *Filter) Set(key any) error {
 	if err = f.buckets[i1].add(fp); err == nil {
 		return nil
 	}
-	for i := uint64(0); i < f.conf.KicksLimit; i++ {
-		// todo implement cuckoo kicks
+	i := i0
+	if rand.Intn(2) == 1 {
+		i = i1
 	}
-	return nil
+	for k := uint64(0); k < f.conf.KicksLimit; k++ {
+		j := uint64(rand.Intn(8))
+		pfp := fp
+		fp = f.buckets[i].get(j)
+		_ = f.buckets[i].set(j, pfp)
+
+		m := mask64[f.bp]
+		i = (i & m) ^ (f.hsh[fp] & m)
+		if err = f.buckets[i].add(fp); err == nil {
+			return nil
+		}
+	}
+	return ErrFullFilter
 }
 
 func (f *Filter) Unset(key any) error {
