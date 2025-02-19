@@ -1,16 +1,21 @@
 package cuckoo
 
-// 7 byte payload / 1 byte header
+import "unsafe"
+
 type bucket uint64
 
-func (b *bucket) plen() uint64 {
-	return uint64(*b << 7)
-}
-
-func (b *bucket) payload() uint64 {
-	return uint64(*b >> 1)
-}
-
 func (b *bucket) add(fp byte) error {
-	return nil
+	type sh struct {
+		p    uintptr
+		l, c int
+	}
+	h := sh{p: uintptr(unsafe.Pointer(b)), l: 8, c: 8}
+	bb := *(*[]byte)(unsafe.Pointer(&h))
+	for i := 0; i < 8; i++ {
+		if bb[i] == 0 {
+			bb[i] = fp
+			return nil
+		}
+	}
+	return ErrFullBucket
 }

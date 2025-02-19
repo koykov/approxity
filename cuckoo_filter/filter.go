@@ -112,7 +112,7 @@ func (f *Filter) init() {
 	if c.Seed == 0 {
 		c.Seed = defaultSeed
 	}
-	buckets := uint64(math.Ceil(float64(c.Size) / float64(7)))
+	buckets := uint64(math.Ceil(float64(c.Size) / float64(8)))
 	f.buckets = make([]bucket, buckets)
 	f.bp = uint64(bits.TrailingZeros64(buckets))
 
