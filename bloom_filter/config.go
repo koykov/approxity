@@ -52,7 +52,7 @@ func (c *Config) WithWriteAttemptsLimit(limit uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHashCheckLimit(limit uint64) *Config {
+func (c *Config) WithHashChecksLimit(limit uint64) *Config {
 	c.HashChecksLimit = limit
 	return c
 }

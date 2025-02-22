@@ -134,9 +134,6 @@ func (f *Filter) init() {
 	if c.KicksLimit == 0 {
 		c.KicksLimit = defaultKicksLimit
 	}
-	if c.Seed == 0 {
-		c.Seed = defaultSeed
-	}
 
 	pow2 := func(n uint64) uint64 {
 		n--

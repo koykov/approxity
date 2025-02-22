@@ -47,7 +47,7 @@ func TestFilter(t *testing.T) {
 		ds := &dataset[i]
 		t.Run("sync", func(t *testing.T) {
 			f, err := NewFilter(NewConfig(1e6, metro.Hasher64[[]byte]{Seed: 1234}).
-				WithHashCheckLimit(1))
+				WithHashChecksLimit(1))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -63,7 +63,7 @@ func TestFilter(t *testing.T) {
 		})
 		t.Run("concurrent", func(t *testing.T) {
 			f, err := NewFilter(NewConfig(1e6, metro.Hasher64[[]byte]{Seed: 1234}).
-				WithHashCheckLimit(3).
+				WithHashChecksLimit(3).
 				WithConcurrency().WithWriteAttemptsLimit(5))
 			if err != nil {
 				t.Fatal(err)
@@ -120,7 +120,7 @@ func BenchmarkFilter(b *testing.B) {
 		ds := &dataset[i]
 		b.Run("sync", func(b *testing.B) {
 			f, err := NewFilter(NewConfig(1e6, metro.Hasher64[[]byte]{Seed: 1234}).
-				WithHashCheckLimit(1))
+				WithHashChecksLimit(1))
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -137,7 +137,7 @@ func BenchmarkFilter(b *testing.B) {
 			b.ReportAllocs()
 
 			f, _ := NewFilter(NewConfig(1e6, metro.Hasher64[[]byte]{Seed: 1234}).
-				WithHashCheckLimit(3).
+				WithHashChecksLimit(3).
 				WithConcurrency().WithWriteAttemptsLimit(5))
 
 			b.RunParallel(func(pb *testing.PB) {
