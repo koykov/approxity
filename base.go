@@ -9,8 +9,17 @@ import (
 
 type Base struct{}
 
-// Hash calculates hash sum of data + seed using given hasher.
-func (Base) Hash(hasher Hasher, data any, seed uint64) (_ uint64, err error) {
+// HashSalt calculates hash sum of data + salt using given hasher.
+func (b Base) HashSalt(hasher Hasher, data any, salt uint64) (_ uint64, err error) {
+	return b.hash(hasher, data, salt, true)
+}
+
+// Hash calculates hash sum of data using given hasher.
+func (b Base) Hash(hasher Hasher, data any) (_ uint64, err error) {
+	return b.hash(hasher, data, 0, false)
+}
+
+func (b Base) hash(hasher Hasher, data any, salt uint64, saltext bool) (_ uint64, err error) {
 	const bufsz = 128
 	var a [bufsz]byte
 	var h struct {
@@ -20,9 +29,22 @@ func (Base) Hash(hasher Hasher, data any, seed uint64) (_ uint64, err error) {
 	h.ptr, h.cap = uintptr(unsafe.Pointer(&a)), bufsz
 	buf := *(*[]byte)(unsafe.Pointer(&h))
 
-	if buf, err = x2bytes.ToBytes(buf, data); err != nil {
-		return 0, err
+	switch x := data.(type) {
+	case []byte:
+		buf = append(buf, x...)
+	case *[]byte:
+		buf = append(buf, *x...)
+	case string:
+		buf = append(buf, x...)
+	case *string:
+		buf = append(buf, *x...)
+	default:
+		if buf, err = x2bytes.ToBytes(buf, data); err != nil {
+			return 0, err
+		}
 	}
-	buf = strconv.AppendUint(buf, seed, 10)
+	if saltext {
+		buf = strconv.AppendUint(buf, salt, 10)
+	}
 	return hasher.Sum64(buf), err
 }

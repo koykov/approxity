@@ -111,7 +111,7 @@ func (f *Filter) c() *Config {
 }
 
 func (f *Filter) h(key any, seed uint64) (uint64, error) {
-	return f.Hash(f.c().Hasher, key, seed)
+	return f.HashSalt(f.c().Hasher, key, seed)
 }
 
 func (f *Filter) mw() amq.MetricsWriter {

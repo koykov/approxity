@@ -4,10 +4,8 @@ import (
 	"math/bits"
 	"math/rand"
 	"sync"
-	"unsafe"
 
 	"github.com/koykov/amq"
-	"github.com/koykov/x2bytes"
 )
 
 type Filter struct {
@@ -110,19 +108,10 @@ func (f *Filter) Reset() {
 }
 
 func (f *Filter) calcI2FP(data any, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
-	const bufsz = 128
-	var a [bufsz]byte
-	var h struct {
-		ptr      uintptr
-		len, cap int
-	}
-	h.ptr, h.cap = uintptr(unsafe.Pointer(&a)), bufsz
-	buf := *(*[]byte)(unsafe.Pointer(&h))
-
-	if buf, err = x2bytes.ToBytes(buf, data); err != nil {
+	var hs uint64
+	if hs, err = f.Hash(f.conf.Hasher, data); err != nil {
 		return
 	}
-	hs := f.conf.Hasher.Sum64(buf)
 	fp = byte(hs%255 + 1)
 	i0 = (hs >> 32) & mask64[bp]
 	m := mask64[bp]
@@ -170,6 +159,6 @@ func (f *Filter) init() {
 	var buf []byte
 	for i := 0; i < 256; i++ {
 		buf = append(buf[:0], byte(i))
-		f.hsh[i], _ = f.Hash(c.Hasher, buf, c.Seed)
+		f.hsh[i], _ = f.Hash(c.Hasher, buf)
 	}
 }
