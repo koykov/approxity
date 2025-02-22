@@ -1,6 +1,9 @@
 package bloom
 
-import "github.com/koykov/amq"
+import (
+	"github.com/koykov/amq"
+	"github.com/koykov/hash"
+)
 
 type Config struct {
 	// Setting up this section enables concurrent read/write operations.
@@ -9,7 +12,7 @@ type Config struct {
 	// Mandatory param.
 	Size uint64
 	// Hasher to calculate hash sum of the items.
-	Hasher amq.Hasher
+	Hasher hash.Hasher64[[]byte]
 	// How many hash checks filter may do to reduce false positives cases.
 	HashChecksLimit uint64
 	// Metrics writer handler.
@@ -36,7 +39,7 @@ func (c *Config) WithSize(size uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHasher(hasher amq.Hasher) *Config {
+func (c *Config) WithHasher(hasher hash.Hasher[[]byte]) *Config {
 	c.Hasher = hasher
 	return c
 }
