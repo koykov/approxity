@@ -23,6 +23,17 @@ func (b *bucket) set(i uint64, fp byte) error {
 	return nil
 }
 
+func (b *bucket) unset(fp byte) bool {
+	bb := b.b()
+	for i := 0; i < bucketsz; i++ {
+		if bb[i] == fp {
+			bb[i] = 0
+			return true
+		}
+	}
+	return false
+}
+
 func (b *bucket) fpv(i uint64) byte {
 	return b.b()[i]
 }

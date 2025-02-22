@@ -71,7 +71,18 @@ func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
-	// todo implement me
+	i0, i1, fp, err := f.calcI2FP(key, f.bp, 0)
+	if err != nil {
+		return err
+	}
+	b := &f.buckets[i0]
+	if b.unset(fp) {
+		return nil
+	}
+	b = &f.buckets[i1]
+	if b.unset(fp) {
+		return nil
+	}
 	return nil
 }
 
