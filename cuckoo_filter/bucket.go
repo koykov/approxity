@@ -18,19 +18,25 @@ func (b *bucket) add(fp byte) error {
 }
 
 func (b *bucket) set(i uint64, fp byte) error {
-	b.b()[i] = fp
+	bb := b.b()
+	bb[i] = fp
 	return nil
 }
 
-func (b *bucket) get(i uint64) byte {
+func (b *bucket) fpv(i uint64) byte {
 	return b.b()[i]
 }
 
-func (b *bucket) b() []byte {
-	type sh struct {
-		p    uintptr
-		l, c int
+func (b *bucket) fpi(fp byte) int {
+	bb := b.b()
+	for i := 0; i < bucketsz; i++ {
+		if bb[i] == fp {
+			return i
+		}
 	}
-	h := sh{p: uintptr(unsafe.Pointer(b)), l: bucketsz, c: bucketsz}
-	return *(*[]byte)(unsafe.Pointer(&h))
+	return -1
+}
+
+func (b *bucket) b() *[bucketsz]byte {
+	return (*[bucketsz]byte)(unsafe.Pointer(b))
 }
