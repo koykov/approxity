@@ -3,7 +3,7 @@ package cuckoo
 import (
 	"testing"
 
-	"github.com/koykov/amq/hasher"
+	"github.com/koykov/hash/metro"
 )
 
 var dataset = []struct {
@@ -43,7 +43,7 @@ func TestFilter(t *testing.T) {
 		t.Run("sync", func(t *testing.T) {
 			f, err := NewFilter(&Config{
 				Size:   1e6,
-				Hasher: &hasher.CRC64{},
+				Hasher: metro.Hasher64[[]byte]{Seed: 1234},
 			})
 			if err != nil {
 				t.Fatal(err)
@@ -51,13 +51,12 @@ func TestFilter(t *testing.T) {
 			for j := 0; j < len(ds.pos); j++ {
 				_ = f.Set(ds.pos[j])
 			}
-			// todo uncomment
-			// for j := 0; j < len(ds.neg); j++ {
-			// 	assertBool(t, f.Contains(ds.neg[j]), false)
-			// }
-			// for j := 0; j < len(ds.neg); j++ {
-			// 	assertBool(t, f.Contains(ds.pos[j]), true)
-			// }
+			for j := 0; j < len(ds.neg); j++ {
+				assertBool(t, f.Contains(ds.neg[j]), false)
+			}
+			for j := 0; j < len(ds.neg); j++ {
+				assertBool(t, f.Contains(ds.pos[j]), true)
+			}
 		})
 	}
 }
