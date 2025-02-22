@@ -1,7 +1,6 @@
 package cuckoo
 
 import (
-	"math"
 	"math/bits"
 	"math/rand"
 	"sync"
@@ -41,11 +40,11 @@ func (f *Filter) Set(key any) error {
 	if err != nil {
 		return err
 	}
-	b := f.buckets[i0]
+	b := &f.buckets[i0]
 	if err = b.add(fp); err == nil {
 		return nil
 	}
-	b = f.buckets[i1]
+	b = &f.buckets[i1]
 	if err = b.add(fp); err == nil {
 		return nil
 	}
@@ -56,7 +55,7 @@ func (f *Filter) Set(key any) error {
 	for k := uint64(0); k < f.conf.KicksLimit; k++ {
 		j := uint64(rand.Intn(bucketsz))
 		pfp := fp
-		fp = f.buckets[i].get(j)
+		fp = f.buckets[i].fpv(j)
 		_ = f.buckets[i].set(j, pfp)
 
 		m := mask64[f.bp]
@@ -80,8 +79,16 @@ func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
-	// todo implement me
-	return false
+	i0, i1, fp, err := f.calcI2FP(key, f.bp, 0)
+	if err != nil {
+		return false
+	}
+	b := &f.buckets[i0]
+	if i := b.fpi(fp); i != -1 {
+		return true
+	}
+	b = &f.buckets[i1]
+	return b.fpi(fp) != -1
 }
 
 func (f *Filter) Reset() {
@@ -128,8 +135,6 @@ func (f *Filter) init() {
 	if c.Seed == 0 {
 		c.Seed = defaultSeed
 	}
-	buckets := uint64(math.Ceil(float64(c.Size) / float64(bucketsz)))
-	f.buckets = make([]bucket, buckets)
 
 	pow2 := func(n uint64) uint64 {
 		n--
@@ -144,6 +149,12 @@ func (f *Filter) init() {
 	}
 	b := pow2(c.Size) / bucketsz
 	f.bp = uint64(bits.TrailingZeros64(b))
+
+	bc := pow2(c.Size) / bucketsz
+	if bc == 0 {
+		bc = 1
+	}
+	f.buckets = make([]bucket, bc)
 
 	var buf []byte
 	for i := 0; i < 256; i++ {
