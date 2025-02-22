@@ -4,8 +4,10 @@ import (
 	"math/bits"
 	"math/rand"
 	"sync"
+	"unsafe"
 
 	"github.com/koykov/amq"
+	"github.com/koykov/openrt"
 )
 
 type Filter struct {
@@ -104,7 +106,7 @@ func (f *Filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
 	}
-	// todo implement me
+	openrt.MemclrUnsafe(unsafe.Pointer(&f.buckets[0]), len(f.buckets)*bucketsz)
 }
 
 func (f *Filter) calcI2FP(data any, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {

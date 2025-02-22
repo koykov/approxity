@@ -57,6 +57,10 @@ func TestFilter(t *testing.T) {
 			for j := 0; j < len(ds.neg); j++ {
 				assertBool(t, f.Contains(ds.pos[j]), true)
 			}
+			f.Reset()
+			for j := 0; j < len(ds.pos); j++ {
+				assertBool(t, f.Contains(ds.pos[j]), false)
+			}
 		})
 	}
 }
