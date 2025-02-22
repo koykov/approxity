@@ -60,3 +60,26 @@ func TestFilter(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkFilter(b *testing.B) {
+	for i := 0; i < len(dataset); i++ {
+		ds := &dataset[i]
+		b.Run("sync", func(b *testing.B) {
+			f, err := NewFilter(&Config{
+				Size:   1e6,
+				Hasher: metro.Hasher64[[]byte]{Seed: 1234},
+			})
+			if err != nil {
+				b.Fatal(err)
+			}
+			for j := 0; j < len(ds.pos); j++ {
+				_ = f.Set(ds.pos[j])
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for k := 0; k < b.N; k++ {
+				f.Contains(&ds.all[k%len(ds.all)])
+			}
+		})
+	}
+}

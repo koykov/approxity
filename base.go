@@ -20,7 +20,7 @@ func (b Base) Hash(hasher Hasher, data any) (_ uint64, err error) {
 }
 
 func (b Base) hash(hasher Hasher, data any, salt uint64, saltext bool) (_ uint64, err error) {
-	const bufsz = 128
+	const bufsz = 64
 	var a [bufsz]byte
 	var h struct {
 		ptr      uintptr
