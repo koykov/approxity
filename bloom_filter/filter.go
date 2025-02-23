@@ -47,6 +47,12 @@ func (f *Filter) Set(key any) error {
 	return f.mw().Set(nil)
 }
 
+// HSet sets new predefined hash key to the filter.
+func (f *Filter) HSet(hkey uint64) error {
+	f.vec.Set(hkey % f.c().Size)
+	return f.mw().Set(nil)
+}
+
 // Unset removes key from the filter.
 func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil {
@@ -59,6 +65,12 @@ func (f *Filter) Unset(key any) error {
 		}
 		f.vec.Unset(h % f.c().Size)
 	}
+	return f.mw().Unset(nil)
+}
+
+// HUnset removes predefined hash key from the filter.
+func (f *Filter) HUnset(hkey uint64) error {
+	f.vec.Unset(hkey % f.c().Size)
 	return f.mw().Unset(nil)
 }
 
@@ -77,6 +89,11 @@ func (f *Filter) Contains(key any) bool {
 		}
 	}
 	return f.mw().Contains(true)
+}
+
+// HContains checks if predefined hash key is in the filter.
+func (f *Filter) HContains(hkey uint64) bool {
+	return f.mw().Contains(f.vec.Get(hkey%f.c().Size) == 1)
 }
 
 func (f *Filter) Reset() {
