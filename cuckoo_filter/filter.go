@@ -34,25 +34,25 @@ func NewFilter(conf *Config) (*Filter, error) {
 
 func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
-		return f.err
+		return f.mw().Set(f.err)
 	}
 	i0, i1, fp, err := f.calcI2FP(key, f.bp, 0)
 	if err != nil {
-		return err
+		return f.mw().Set(err)
 	}
 	b := &f.buckets[i0]
 	if err = b.add(fp); err == nil {
-		return nil
+		return f.mw().Set(nil)
 	}
 	b = &f.buckets[i1]
 	if err = b.add(fp); err == nil {
-		return nil
+		return f.mw().Set(nil)
 	}
 	i := i0
 	if rand.Intn(2) == 1 {
 		i = i1
 	}
-	for k := uint64(0); k < f.conf.KicksLimit; k++ {
+	for k := uint64(0); k < f.c().KicksLimit; k++ {
 		j := uint64(rand.Intn(bucketsz))
 		pfp := fp
 		fp = f.buckets[i].fpv(j)
@@ -61,45 +61,45 @@ func (f *Filter) Set(key any) error {
 		m := mask64[f.bp]
 		i = (i & m) ^ (f.hsh[fp] & m)
 		if err = f.buckets[i].add(fp); err == nil {
-			return nil
+			return f.mw().Set(nil)
 		}
 	}
-	return ErrFullFilter
+	return f.mw().Set(ErrFullFilter)
 }
 
 func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil {
-		return f.err
+		return f.mw().Unset(f.err)
 	}
 	i0, i1, fp, err := f.calcI2FP(key, f.bp, 0)
 	if err != nil {
-		return err
+		return f.mw().Unset(err)
 	}
 	b := &f.buckets[i0]
 	if b.unset(fp) {
-		return nil
+		return f.mw().Unset(nil)
 	}
 	b = &f.buckets[i1]
 	if b.unset(fp) {
-		return nil
+		return f.mw().Unset(nil)
 	}
-	return nil
+	return f.mw().Unset(nil)
 }
 
 func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
-		return false
+		return f.mw().Contains(false)
 	}
 	i0, i1, fp, err := f.calcI2FP(key, f.bp, 0)
 	if err != nil {
-		return false
+		return f.mw().Contains(false)
 	}
 	b := &f.buckets[i0]
 	if i := b.fpi(fp); i != -1 {
-		return true
+		return f.mw().Contains(true)
 	}
 	b = &f.buckets[i1]
-	return b.fpi(fp) != -1
+	return f.mw().Contains(b.fpi(fp) != -1)
 }
 
 func (f *Filter) Reset() {
@@ -111,7 +111,7 @@ func (f *Filter) Reset() {
 
 func (f *Filter) calcI2FP(data any, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
 	var hs uint64
-	if hs, err = f.Hash(f.conf.Hasher, data); err != nil {
+	if hs, err = f.Hash(f.c().Hasher, data); err != nil {
 		return
 	}
 	fp = byte(hs%255 + 1)
@@ -160,4 +160,12 @@ func (f *Filter) init() {
 		buf = append(buf[:0], byte(i))
 		f.hsh[i], _ = f.Hash(c.Hasher, buf)
 	}
+}
+
+func (f *Filter) c() *Config {
+	return f.conf
+}
+
+func (f *Filter) mw() amq.MetricsWriter {
+	return f.conf.MetricsWriter
 }
