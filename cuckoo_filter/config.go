@@ -27,6 +27,10 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
+func NewConfig(size uint64, hasher amq.Hasher) *Config {
+	return &Config{Size: size, Hasher: hasher}
+}
+
 func (c *Config) WithConcurrency() *Config {
 	c.Concurrent = &ConcurrentConfig{}
 	return c

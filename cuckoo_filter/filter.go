@@ -4,20 +4,20 @@ import (
 	"math/bits"
 	"math/rand"
 	"sync"
-	"unsafe"
 
 	"github.com/koykov/amq"
-	"github.com/koykov/openrt"
 )
+
+const bucketsz = 4
 
 type Filter struct {
 	amq.Base
 	once sync.Once
 	conf *Config
 
-	buckets []bucket
-	bp      uint64
-	hsh     [256]uint64
+	vec ivector
+	bp  uint64
+	hsh [256]uint64
 
 	err error
 }
@@ -55,12 +55,10 @@ func (f *Filter) HSet(hkey uint64) error {
 }
 
 func (f *Filter) hset(i0, i1 uint64, fp byte) (err error) {
-	b := &f.buckets[i0]
-	if err = b.add(fp); err == nil {
+	if err = f.vec.add(i0, fp); err == nil {
 		return f.mw().Set(nil)
 	}
-	b = &f.buckets[i1]
-	if err = b.add(fp); err == nil {
+	if err = f.vec.add(i1, fp); err == nil {
 		return f.mw().Set(nil)
 	}
 	i := i0
@@ -70,12 +68,12 @@ func (f *Filter) hset(i0, i1 uint64, fp byte) (err error) {
 	for k := uint64(0); k < f.c().KicksLimit; k++ {
 		j := uint64(rand.Intn(bucketsz))
 		pfp := fp
-		fp = f.buckets[i].fpv(j)
-		_ = f.buckets[i].set(j, pfp)
+		fp = f.vec.fpv(i, j)
+		_ = f.vec.set(i, j, pfp)
 
 		m := mask64[f.bp]
 		i = (i & m) ^ (f.hsh[fp] & m)
-		if err = f.buckets[i].add(fp); err == nil {
+		if err = f.vec.add(i, fp); err == nil {
 			return f.mw().Set(nil)
 		}
 	}
@@ -90,7 +88,7 @@ func (f *Filter) Unset(key any) error {
 	if err != nil {
 		return f.mw().Unset(err)
 	}
-	return f.hset(i0, i1, fp)
+	return f.hunset(i0, i1, fp)
 }
 
 func (f *Filter) HUnset(hkey uint64) error {
@@ -105,12 +103,10 @@ func (f *Filter) HUnset(hkey uint64) error {
 }
 
 func (f *Filter) hunset(i0, i1 uint64, fp byte) (err error) {
-	b := &f.buckets[i0]
-	if b.unset(fp) {
+	if f.vec.unset(i0, fp) {
 		return f.mw().Unset(nil)
 	}
-	b = &f.buckets[i1]
-	b.unset(fp)
+	f.vec.unset(i1, fp)
 	return f.mw().Unset(nil)
 }
 
@@ -137,23 +133,21 @@ func (f *Filter) HContains(hkey uint64) bool {
 }
 
 func (f *Filter) hcontains(i0, i1 uint64, fp byte) bool {
-	b := &f.buckets[i0]
-	if i := b.fpi(fp); i != -1 {
+	if f.vec.fpi(i0, fp) != -1 {
 		return f.mw().Contains(true)
 	}
-	b = &f.buckets[i1]
-	return f.mw().Contains(b.fpi(fp) != -1)
+	return f.mw().Contains(f.vec.fpi(i1, fp) != -1)
 }
 
 func (f *Filter) Size() uint64 {
-	return 0 // todo implement me
+	return f.vec.size()
 }
 
 func (f *Filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
 	}
-	openrt.MemclrUnsafe(unsafe.Pointer(&f.buckets[0]), len(f.buckets)*bucketsz)
+	f.vec.reset()
 	f.mw().Reset()
 }
 
@@ -208,7 +202,11 @@ func (f *Filter) init() {
 	if bc == 0 {
 		bc = 1
 	}
-	f.buckets = make([]bucket, bc)
+	if c.Concurrent != nil {
+		f.vec = newCnvector(bc, c.Concurrent.WriteAttemptsLimit)
+	} else {
+		f.vec = newVector(bc)
+	}
 	f.mw().Capacity(c.Size)
 
 	var buf []byte
