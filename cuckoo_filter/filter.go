@@ -40,6 +40,21 @@ func (f *Filter) Set(key any) error {
 	if err != nil {
 		return f.mw().Set(err)
 	}
+	return f.hset(i0, i1, fp)
+}
+
+func (f *Filter) HSet(hkey uint64) error {
+	if f.once.Do(f.init); f.err != nil {
+		return f.mw().Set(f.err)
+	}
+	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp, 0)
+	if err != nil {
+		return f.mw().Set(err)
+	}
+	return f.hset(i0, i1, fp)
+}
+
+func (f *Filter) hset(i0, i1 uint64, fp byte) (err error) {
 	b := &f.buckets[i0]
 	if err = b.add(fp); err == nil {
 		return f.mw().Set(nil)
@@ -75,14 +90,27 @@ func (f *Filter) Unset(key any) error {
 	if err != nil {
 		return f.mw().Unset(err)
 	}
+	return f.hset(i0, i1, fp)
+}
+
+func (f *Filter) HUnset(hkey uint64) error {
+	if f.once.Do(f.init); f.err != nil {
+		return f.mw().Unset(f.err)
+	}
+	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp, 0)
+	if err != nil {
+		return f.mw().Unset(err)
+	}
+	return f.hunset(i0, i1, fp)
+}
+
+func (f *Filter) hunset(i0, i1 uint64, fp byte) (err error) {
 	b := &f.buckets[i0]
 	if b.unset(fp) {
 		return f.mw().Unset(nil)
 	}
 	b = &f.buckets[i1]
-	if b.unset(fp) {
-		return f.mw().Unset(nil)
-	}
+	b.unset(fp)
 	return f.mw().Unset(nil)
 }
 
@@ -94,6 +122,21 @@ func (f *Filter) Contains(key any) bool {
 	if err != nil {
 		return f.mw().Contains(false)
 	}
+	return f.hcontains(i0, i1, fp)
+}
+
+func (f *Filter) HContains(hkey uint64) bool {
+	if f.once.Do(f.init); f.err != nil {
+		return f.mw().Contains(false)
+	}
+	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp, 0)
+	if err != nil {
+		return f.mw().Contains(false)
+	}
+	return f.hcontains(i0, i1, fp)
+}
+
+func (f *Filter) hcontains(i0, i1 uint64, fp byte) bool {
 	b := &f.buckets[i0]
 	if i := b.fpi(fp); i != -1 {
 		return f.mw().Contains(true)
@@ -109,13 +152,17 @@ func (f *Filter) Reset() {
 	openrt.MemclrUnsafe(unsafe.Pointer(&f.buckets[0]), len(f.buckets)*bucketsz)
 }
 
-func (f *Filter) calcI2FP(data any, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
-	var hs uint64
-	if hs, err = f.Hash(f.c().Hasher, data); err != nil {
+func (f *Filter) calcI2FP(key any, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
+	var hkey uint64
+	if hkey, err = f.Hash(f.c().Hasher, key); err != nil {
 		return
 	}
-	fp = byte(hs%255 + 1)
-	i0 = (hs >> 32) & mask64[bp]
+	return f.hcalcI2FP(hkey, bp, i)
+}
+
+func (f *Filter) hcalcI2FP(hkey uint64, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
+	fp = byte(hkey%255 + 1)
+	i0 = (hkey >> 32) & mask64[bp]
 	m := mask64[bp]
 	i1 = (i & m) ^ (f.hsh[fp] & m)
 	return
@@ -130,6 +177,9 @@ func (f *Filter) init() {
 	if c.Hasher == nil {
 		f.err = amq.ErrNoHasher
 		return
+	}
+	if c.MetricsWriter == nil {
+		c.MetricsWriter = amq.DummyMetricsWriter{}
 	}
 	if c.KicksLimit == 0 {
 		c.KicksLimit = defaultKicksLimit
