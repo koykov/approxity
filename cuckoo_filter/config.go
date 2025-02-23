@@ -8,10 +8,16 @@ import (
 const defaultKicksLimit = 500
 
 type Config struct {
-	Concurrent    *ConcurrentConfig
-	Size          uint64
-	KicksLimit    uint64
-	Hasher        amq.Hasher
+	// Setting up this section enables concurrent read/write operations.
+	Concurrent *ConcurrentConfig
+	// The size of the filter in bits.
+	// Mandatory param.
+	Size uint64
+	// Hasher to calculate hash sum of the items.
+	Hasher amq.Hasher
+	// How many kicks may filter do to set the item.
+	KicksLimit uint64
+	// Metrics writer handler.
 	MetricsWriter amq.MetricsWriter
 }
 
