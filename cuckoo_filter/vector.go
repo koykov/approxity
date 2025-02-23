@@ -17,20 +17,21 @@ type ivector interface {
 	reset()
 }
 
-var vecmask = [4]uint32{
+var vecmask = [bucketsz]uint32{
 	math.MaxUint8,
 	math.MaxUint8 << 8,
 	math.MaxUint8 << 16,
 	math.MaxUint8 << 24,
 }
 
+// Synchronized ivector implementation.
 type vector struct {
 	buf []uint32
 	s   uint64
 }
 
 func (vec *vector) add(i uint64, fp byte) error {
-	for j := 0; j < 4; j++ {
+	for j := 0; j < bucketsz; j++ {
 		if vec.buf[i]&vecmask[j] == 0 {
 			vec.buf[i] |= uint32(fp) << j
 			vec.s++
@@ -46,7 +47,7 @@ func (vec *vector) set(i, j uint64, fp byte) error {
 }
 
 func (vec *vector) unset(i uint64, fp byte) bool {
-	for j := 0; j < 4; j++ {
+	for j := 0; j < bucketsz; j++ {
 		if vec.buf[i]&vecmask[j] == uint32(fp)<<j {
 			vec.buf[i] &= ^vecmask[j]
 			vec.s--
@@ -61,7 +62,7 @@ func (vec *vector) fpv(i, j uint64) byte {
 }
 
 func (vec *vector) fpi(i uint64, fp byte) int {
-	for j := 0; j < 4; j++ {
+	for j := 0; j < bucketsz; j++ {
 		if vec.buf[i]&vecmask[j] == uint32(fp)<<j {
 			return j
 		}
@@ -74,7 +75,7 @@ func (vec *vector) size() uint64 {
 }
 
 func (vec *vector) reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*4)
+	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*bucketsz)
 }
 
 func newVector(size uint64) *vector {

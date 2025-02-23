@@ -8,15 +8,16 @@ import (
 	"github.com/koykov/amq"
 )
 
+const bucketsz = 4
+
 type Filter struct {
 	amq.Base
 	once sync.Once
 	conf *Config
 
-	buckets []bucket
-	vec     ivector
-	bp      uint64
-	hsh     [256]uint64
+	vec ivector
+	bp  uint64
+	hsh [256]uint64
 
 	err error
 }

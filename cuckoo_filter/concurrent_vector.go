@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 )
 
+// Concurrent ivector implementation.
 type cnvector struct {
 	buf []uint32
 	lim uint64
@@ -13,7 +14,7 @@ type cnvector struct {
 
 func (vec *cnvector) add(i uint64, fp byte) error {
 	for k := uint64(0); k < vec.lim+1; k++ {
-		for j := 0; j < 4; j++ {
+		for j := 0; j < bucketsz; j++ {
 			if o := atomic.LoadUint32(&vec.buf[i]); o&vecmask[j] == 0 {
 				n := o | uint32(fp)<<j
 				if atomic.CompareAndSwapUint32(&vec.buf[i], o, n) {
@@ -39,7 +40,7 @@ func (vec *cnvector) set(i, j uint64, fp byte) error {
 }
 
 func (vec *cnvector) unset(i uint64, fp byte) bool {
-	for j := 0; j < 4; j++ {
+	for j := 0; j < bucketsz; j++ {
 		if o := atomic.LoadUint32(&vec.buf[i]); o&vecmask[j] == uint32(fp)<<j {
 			n := o & ^vecmask[j]
 			if atomic.CompareAndSwapUint32(&vec.buf[i], o, n) {
@@ -56,7 +57,7 @@ func (vec *cnvector) fpv(i, j uint64) byte {
 }
 
 func (vec *cnvector) fpi(i uint64, fp byte) int {
-	for j := 0; j < 4; j++ {
+	for j := 0; j < bucketsz; j++ {
 		if atomic.LoadUint32(&vec.buf[i])&vecmask[j] == uint32(fp)<<j {
 			return j
 		}
