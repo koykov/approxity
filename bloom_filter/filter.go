@@ -96,6 +96,11 @@ func (f *Filter) HContains(hkey uint64) bool {
 	return f.mw().Contains(f.vec.Get(hkey%f.c().Size) == 1)
 }
 
+// Size returns number of items added to the filter.
+func (f *Filter) Size() uint64 {
+	return f.vec.Size()
+}
+
 func (f *Filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return

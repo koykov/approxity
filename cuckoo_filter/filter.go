@@ -145,6 +145,10 @@ func (f *Filter) hcontains(i0, i1 uint64, fp byte) bool {
 	return f.mw().Contains(b.fpi(fp) != -1)
 }
 
+func (f *Filter) Size() uint64 {
+	return 0 // todo implement me
+}
+
 func (f *Filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
