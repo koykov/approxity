@@ -1,7 +1,12 @@
 package cuckoo
 
 import (
+	"context"
+	"math"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/koykov/hash/metro"
 )
@@ -62,6 +67,56 @@ func TestFilter(t *testing.T) {
 				assertBool(t, f.Contains(ds.pos[j]), false)
 			}
 		})
+		t.Run("concurrent", func(t *testing.T) {
+			f, err := NewFilter(NewConfig(1e6, metro.Hasher64[[]byte]{Seed: 1234}).
+				WithConcurrency().WithWriteAttemptsLimit(5))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			var wg sync.WaitGroup
+			wg.Add(3)
+
+			go func() {
+				defer wg.Done()
+				for i := 0; ; i++ {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						_ = f.Set(&ds.pos[i%len(ds.pos)])
+					}
+				}
+			}()
+
+			go func() {
+				defer wg.Done()
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						_ = f.Unset(&ds.all[i%len(ds.all)])
+					}
+				}
+			}()
+
+			go func() {
+				defer wg.Done()
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						f.Contains(&ds.all[(i % len(ds.all))])
+					}
+				}
+			}()
+
+			wg.Wait()
+		})
 	}
 }
 
@@ -84,6 +139,27 @@ func BenchmarkFilter(b *testing.B) {
 			for k := 0; k < b.N; k++ {
 				f.Contains(&ds.all[k%len(ds.all)])
 			}
+		})
+		b.Run("concurrent", func(b *testing.B) {
+			b.ReportAllocs()
+
+			f, _ := NewFilter(NewConfig(1e6, metro.Hasher64[[]byte]{Seed: 1234}).
+				WithConcurrency().WithWriteAttemptsLimit(5))
+
+			b.RunParallel(func(pb *testing.PB) {
+				var i uint64 = math.MaxUint64
+				for pb.Next() {
+					ci := atomic.AddUint64(&i, 1)
+					switch ci % 100 {
+					case 99:
+						_ = f.Set(&ds.pos[ci%uint64(len(ds.pos))])
+					case 98:
+						_ = f.Unset(&ds.all[ci%uint64(len(ds.all))])
+					default:
+						f.Contains(&ds.all[ci%uint64(len(ds.all))])
+					}
+				}
+			})
 		})
 	}
 }
