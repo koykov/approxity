@@ -106,6 +106,7 @@ func (f *Filter) Reset() {
 		return
 	}
 	f.vec.Reset()
+	f.mw().Reset()
 }
 
 func (f *Filter) init() {
@@ -123,6 +124,7 @@ func (f *Filter) init() {
 	} else {
 		f.vec, f.err = bitvector.NewVector(c.Size)
 	}
+	f.mw().Capacity(c.Size)
 	if c.MetricsWriter == nil {
 		c.MetricsWriter = amq.DummyMetricsWriter{}
 	}

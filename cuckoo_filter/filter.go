@@ -154,6 +154,7 @@ func (f *Filter) Reset() {
 		return
 	}
 	openrt.MemclrUnsafe(unsafe.Pointer(&f.buckets[0]), len(f.buckets)*bucketsz)
+	f.mw().Reset()
 }
 
 func (f *Filter) calcI2FP(key any, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
@@ -208,6 +209,7 @@ func (f *Filter) init() {
 		bc = 1
 	}
 	f.buckets = make([]bucket, bc)
+	f.mw().Capacity(c.Size)
 
 	var buf []byte
 	for i := 0; i < 256; i++ {
