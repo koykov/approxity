@@ -14,7 +14,7 @@ type Config struct {
 	// Hasher to calculate hash sum of the items.
 	Hasher hash.Hasher64[[]byte]
 	// How many hash checks filter may do to reduce false positives cases.
-	HashChecksLimit uint64
+	NumberHashFunctions uint64
 	// Metrics writer handler.
 	MetricsWriter amq.MetricsWriter
 }
@@ -52,8 +52,8 @@ func (c *Config) WithWriteAttemptsLimit(limit uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHashChecksLimit(limit uint64) *Config {
-	c.HashChecksLimit = limit
+func (c *Config) WithNumberHashFunctions(number uint64) *Config {
+	c.NumberHashFunctions = number
 	return c
 }
 

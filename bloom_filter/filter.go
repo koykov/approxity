@@ -37,7 +37,7 @@ func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
-	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
+	for i := uint64(0); i < f.c().NumberHashFunctions+1; i++ {
 		h, err := f.h(key, i)
 		if err != nil {
 			return f.mw().Set(err)
@@ -58,7 +58,7 @@ func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
-	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
+	for i := uint64(0); i < f.c().NumberHashFunctions+1; i++ {
 		h, err := f.h(key, i)
 		if err != nil {
 			return f.mw().Unset(err)
@@ -79,7 +79,7 @@ func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
-	for i := uint64(0); i < f.c().HashChecksLimit+1; i++ {
+	for i := uint64(0); i < f.c().NumberHashFunctions+1; i++ {
 		h, err := f.h(key, i)
 		if err != nil {
 			return f.mw().Contains(false)
