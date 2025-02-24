@@ -119,15 +119,15 @@ func (f *Filter) init() {
 		f.err = amq.ErrNoHasher
 		return
 	}
+	if c.MetricsWriter == nil {
+		c.MetricsWriter = amq.DummyMetricsWriter{}
+	}
 	if c.Concurrent != nil {
 		f.vec, f.err = bitvector.NewConcurrentVector(c.Size, c.Concurrent.WriteAttemptsLimit)
 	} else {
 		f.vec, f.err = bitvector.NewVector(c.Size)
 	}
 	f.mw().Capacity(c.Size)
-	if c.MetricsWriter == nil {
-		c.MetricsWriter = amq.DummyMetricsWriter{}
-	}
 }
 
 func (f *Filter) c() *Config {
