@@ -10,12 +10,12 @@ import (
 type Base struct{}
 
 // HashSalt calculates hash sum of data + salt using given hasher.
-func (b Base) HashSalt(hasher Hasher, data any, salt uint64) (_ uint64, err error) {
+func (b Base) HashSalt(hasher Hasher, data any, salt uint64) (uint64, error) {
 	return b.hash(hasher, data, salt, true)
 }
 
 // Hash calculates hash sum of data using given hasher.
-func (b Base) Hash(hasher Hasher, data any) (_ uint64, err error) {
+func (b Base) Hash(hasher Hasher, data any) (uint64, error) {
 	return b.hash(hasher, data, 0, false)
 }
 

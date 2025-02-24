@@ -47,7 +47,7 @@ func (f *Filter) HSet(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Set(f.err)
 	}
-	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp, 0)
+	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp)
 	if err != nil {
 		return f.mw().Set(err)
 	}
@@ -95,7 +95,7 @@ func (f *Filter) HUnset(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Unset(f.err)
 	}
-	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp, 0)
+	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp)
 	if err != nil {
 		return f.mw().Unset(err)
 	}
@@ -125,7 +125,7 @@ func (f *Filter) HContains(hkey uint64) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Contains(false)
 	}
-	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp, 0)
+	i0, i1, fp, err := f.hcalcI2FP(hkey, f.bp)
 	if err != nil {
 		return f.mw().Contains(false)
 	}
@@ -156,14 +156,14 @@ func (f *Filter) calcI2FP(key any, bp, i uint64) (i0 uint64, i1 uint64, fp byte,
 	if hkey, err = f.Hash(f.c().Hasher, key); err != nil {
 		return
 	}
-	return f.hcalcI2FP(hkey, bp, i)
+	return f.hcalcI2FP(hkey, bp)
 }
 
-func (f *Filter) hcalcI2FP(hkey uint64, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
+func (f *Filter) hcalcI2FP(hkey, bp uint64) (i0, i1 uint64, fp byte, err error) {
 	fp = byte(hkey%255 + 1)
 	i0 = (hkey >> 32) & mask64[bp]
 	m := mask64[bp]
-	i1 = (i & m) ^ (f.hsh[fp] & m)
+	i1 = (i0 & m) ^ (f.hsh[fp] & m)
 	return
 }
 

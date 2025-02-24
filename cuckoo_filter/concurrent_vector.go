@@ -16,7 +16,7 @@ func (vec *cnvector) add(i uint64, fp byte) error {
 	for k := uint64(0); k < vec.lim+1; k++ {
 		for j := 0; j < bucketsz; j++ {
 			if o := atomic.LoadUint32(&vec.buf[i]); o&vecmask[j] == 0 {
-				n := o | uint32(fp)<<j
+				n := o | uint32(fp)<<(j*8)
 				if atomic.CompareAndSwapUint32(&vec.buf[i], o, n) {
 					atomic.AddUint64(&vec.s, 1)
 					return nil
@@ -31,7 +31,7 @@ func (vec *cnvector) add(i uint64, fp byte) error {
 func (vec *cnvector) set(i, j uint64, fp byte) error {
 	for k := uint64(0); k < vec.lim+1; k++ {
 		o := atomic.LoadUint32(&vec.buf[i])
-		n := o | uint32(fp)<<j
+		n := o | uint32(fp)<<(j*8)
 		if atomic.CompareAndSwapUint32(&vec.buf[i], o, n) {
 			return nil
 		}
@@ -41,7 +41,7 @@ func (vec *cnvector) set(i, j uint64, fp byte) error {
 
 func (vec *cnvector) unset(i uint64, fp byte) bool {
 	for j := 0; j < bucketsz; j++ {
-		if o := atomic.LoadUint32(&vec.buf[i]); o&vecmask[j] == uint32(fp)<<j {
+		if o := atomic.LoadUint32(&vec.buf[i]); o&vecmask[j] == uint32(fp)<<(j*8) {
 			n := o & ^vecmask[j]
 			if atomic.CompareAndSwapUint32(&vec.buf[i], o, n) {
 				atomic.AddUint64(&vec.s, math.MaxUint64)
@@ -53,12 +53,12 @@ func (vec *cnvector) unset(i uint64, fp byte) bool {
 }
 
 func (vec *cnvector) fpv(i, j uint64) byte {
-	return byte(atomic.LoadUint32(&vec.buf[i]) & vecmask[j] >> j)
+	return byte(atomic.LoadUint32(&vec.buf[i]) & vecmask[j] >> (j * 8))
 }
 
 func (vec *cnvector) fpi(i uint64, fp byte) int {
 	for j := 0; j < bucketsz; j++ {
-		if atomic.LoadUint32(&vec.buf[i])&vecmask[j] == uint32(fp)<<j {
+		if atomic.LoadUint32(&vec.buf[i])&vecmask[j] == uint32(fp)<<(j*8) {
 			return j
 		}
 	}

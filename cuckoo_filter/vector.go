@@ -33,7 +33,7 @@ type vector struct {
 func (vec *vector) add(i uint64, fp byte) error {
 	for j := 0; j < bucketsz; j++ {
 		if vec.buf[i]&vecmask[j] == 0 {
-			vec.buf[i] |= uint32(fp) << j
+			vec.buf[i] |= uint32(fp) << (j * 8)
 			vec.s++
 			return nil
 		}
@@ -42,13 +42,13 @@ func (vec *vector) add(i uint64, fp byte) error {
 }
 
 func (vec *vector) set(i, j uint64, fp byte) error {
-	vec.buf[i] |= uint32(fp << j)
+	vec.buf[i] |= uint32(fp) << (j * 8)
 	return nil
 }
 
 func (vec *vector) unset(i uint64, fp byte) bool {
 	for j := 0; j < bucketsz; j++ {
-		if vec.buf[i]&vecmask[j] == uint32(fp)<<j {
+		if vec.buf[i]&vecmask[j] == uint32(fp)<<(j*8) {
 			vec.buf[i] &= ^vecmask[j]
 			vec.s--
 			return true
@@ -58,12 +58,12 @@ func (vec *vector) unset(i uint64, fp byte) bool {
 }
 
 func (vec *vector) fpv(i, j uint64) byte {
-	return byte(vec.buf[i] & vecmask[j] >> j)
+	return byte(vec.buf[i] & vecmask[j] >> (j * 8))
 }
 
 func (vec *vector) fpi(i uint64, fp byte) int {
 	for j := 0; j < bucketsz; j++ {
-		if vec.buf[i]&vecmask[j] == uint32(fp)<<j {
+		if vec.buf[i]&vecmask[j] == uint32(fp)<<(j*8) {
 			return j
 		}
 	}
