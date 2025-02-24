@@ -10,7 +10,7 @@ type MetricsWriter interface {
 
 type DummyMetricsWriter struct{}
 
-func (DummyMetricsWriter) Capacity(cap uint64)         {}
+func (DummyMetricsWriter) Capacity(_ uint64)           {}
 func (DummyMetricsWriter) Set(err error) error         { return err }
 func (DummyMetricsWriter) Unset(err error) error       { return err }
 func (DummyMetricsWriter) Contains(positive bool) bool { return positive }

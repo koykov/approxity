@@ -193,11 +193,3 @@ func BenchMeConcurrently(b *testing.B, f Interface) {
 		})
 	}
 }
-
-func assertBool(tb testing.TB, value, expected bool) bool {
-	if value != expected {
-		tb.Errorf("expected %v, got %v", expected, value)
-		return false
-	}
-	return true
-}
