@@ -54,24 +54,15 @@ func (f *Filter) HSet(hkey uint64) error {
 }
 
 // Unset removes key from the filter.
-func (f *Filter) Unset(key any) error {
-	if f.once.Do(f.init); f.err != nil {
-		return f.err
-	}
-	for i := uint64(0); i < f.c().NumberHashFunctions+1; i++ {
-		h, err := f.h(key, i)
-		if err != nil {
-			return f.mw().Unset(err)
-		}
-		f.vec.Unset(h % f.c().Size)
-	}
-	return f.mw().Unset(nil)
+// Caution! Bloom filter doesn't support this operation!
+func (f *Filter) Unset(_ any) error {
+	return f.mw().Unset(amq.ErrUnsupportedOp)
 }
 
 // HUnset removes predefined hash key from the filter.
-func (f *Filter) HUnset(hkey uint64) error {
-	f.vec.Unset(hkey % f.c().Size)
-	return f.mw().Unset(nil)
+// Caution! Bloom filter doesn't support this operation!
+func (f *Filter) HUnset(_ uint64) error {
+	return f.mw().Unset(amq.ErrUnsupportedOp)
 }
 
 // Contains checks if key is in the filter.
