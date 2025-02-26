@@ -4,15 +4,12 @@ import (
 	"testing"
 
 	"github.com/koykov/amq"
-	"github.com/koykov/hash/metro"
+	"github.com/koykov/hash/xxhash"
 )
 
-const (
-	testsz   = 1e7
-	testseed = uint64(1234)
-)
+const testsz = 1e7
 
-var testh = metro.Hasher64[[]byte]{Seed: testseed}
+var testh = xxhash.Hasher64[[]byte]{}
 
 func TestFilter(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
