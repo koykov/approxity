@@ -12,7 +12,7 @@ type Config struct {
 	// Mandatory param.
 	Size uint64
 	// Hasher to calculate hash sum of the items.
-	Hasher hash.Hasher64[[]byte]
+	Hasher amq.Hasher
 	// How many hash checks filter may do to reduce false positives cases.
 	NumberHashFunctions uint64
 	// Metrics writer handler.
@@ -25,8 +25,25 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
+// NewConfig returns new config with given size and hasher.
+//
+// Note, size represent total size of the filter, not desired number of items, so it may be not optimal.
+// Use OptimalSize function to calculate proper size and OptimalNumberHashFunctions function to calculate proper number of
+// hash functions. Or use NewOptimalConfig function, it will calculate optimal params itself.
 func NewConfig(size uint64, hasher amq.Hasher) *Config {
 	return &Config{Size: size, Hasher: hasher}
+}
+
+// NewOptimalConfig returns new config with optimal size and number of hash functions calculated by given desired number
+// of items and false positive probability.
+func NewOptimalConfig(size uint64, fpp float64, hasher amq.Hasher) *Config {
+	m := OptimalSize(size, fpp)
+	k := OptimalNumberHashFunctions(size, m)
+	return &Config{
+		Size:                m,
+		Hasher:              hasher,
+		NumberHashFunctions: k,
+	}
 }
 
 func (c *Config) WithConcurrency() *Config {

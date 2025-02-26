@@ -7,22 +7,23 @@ import (
 	"github.com/koykov/hash/xxhash"
 )
 
-const testsz = 1e7
+const (
+	testsz  = 1e6
+	testfpp = 0.01
+)
 
 var testh = xxhash.Hasher64[[]byte]{}
 
 func TestFilter(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
-		f, err := NewFilter(NewConfig(testsz, testh).
-			WithNumberHashFunctions(3))
+		f, err := NewFilter(NewOptimalConfig(testsz, testfpp, testh))
 		if err != nil {
 			t.Fatal(err)
 		}
 		amq.TestMe(t, f)
 	})
 	t.Run("concurrent", func(t *testing.T) {
-		f, err := NewFilter(NewConfig(testsz, testh).
-			WithNumberHashFunctions(3).
+		f, err := NewFilter(NewOptimalConfig(testsz, testfpp, testh).
 			WithConcurrency().WithWriteAttemptsLimit(5))
 		if err != nil {
 			t.Fatal(err)
