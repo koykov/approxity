@@ -16,11 +16,11 @@ The minimal working example:
 ```go
 import (
     "github.com/koykov/amq/bloom_filter"
-    "github.com/koykov/hash/metro"
+    "github.com/koykov/hash/xxhash"
 )
 
 func main() {
-    f, err := bloom.NewFilter(bloom.NewConfig(1e7, metro.Hasher64[[]byte]{Seed: 1234}))
+    f, err := bloom.NewFilter(bloom.NewConfig(1000, 0.01, xxhash.Hasher64[[]byte]{}))
     _ = err
     _ = f.Set("foobar")
     print(f.Contains("foobar")) // true
@@ -33,9 +33,7 @@ import "github.com/koykov/amq/metrics/prometheus"
 
 func func main() {
     // set filter size and hasher
-    config := bloom.NewConfig(1e7, metro.Hasher64[[]byte]{Seed: 1234}).
-        // set number of hash functions
-        WithNumberHashFunctions(10).
+    config := bloom.NewConfig(1000, 0.01, xxhash.Hasher64[[]byte]{Seed: 1234}).
         // switch to race protected bit array (atomic based)
         WithConcurrency().
         // cover with metrics
@@ -49,22 +47,5 @@ func func main() {
 
 ### Optimal params calculation
 
-If you know preliminary how many items the filter will contain and desired FPP (false positive probability) you may
-calculate optimal `m` and `k` params using the following function:
-```go
-import "github.com/koykov/amq/bloom_filter"
-
-const n = uint64(1e7)   // items planning to put to the filter
-const fpp = 0.01        // false positive probability
-
-func main() {
-	m := bloom.OptimalSize(n, fpp)
-	k := bloom.OptimalNumberHashFunctions(n, m)
-    println(m) // 95850584 (~11.43 MB)
-    println(k) // 7
-	
-	f, _ := bloom.NewFilter(bloom.NewConfig(m, <some_hasher>).
-		WithNumberHashFunctions(k))
-	_ = f
-}
-```
+There is no need to calculate optimal size `m` and number of hash functions `k` due to filter makes it itself using
+desired number of items (`Config.ItemsNumber`) and false positive probability (`Config.FPP`) params.
