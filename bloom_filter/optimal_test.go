@@ -21,9 +21,9 @@ func TestOptimal(t *testing.T) {
 		}
 		for _, st := range stages {
 			t.Run(st.key, func(t *testing.T) {
-				n := OptimalSize(st.m, st.fpp)
+				n := optimalM(st.m, st.fpp)
 				if n != st.n {
-					t.Errorf("OptimalSize(%d, %f) = %d, want %d", st.m, st.fpp, n, st.n)
+					t.Errorf("optimalM(%d, %f) = %d, want %d", st.m, st.fpp, n, st.n)
 				}
 			})
 		}
@@ -40,9 +40,9 @@ func TestOptimal(t *testing.T) {
 		}
 		for _, st := range stages {
 			t.Run(fmt.Sprintf("%d_%d", st.m, st.n), func(t *testing.T) {
-				k := OptimalNumberHashFunctions(st.m, st.n)
+				k := optimalK(st.m, st.n)
 				if k != st.k {
-					t.Errorf("OptimalNumberHashFunctions(%d, %d) = %d, want %d", st.m, st.n, k, st.k)
+					t.Errorf("optimalK(%d, %d) = %d, want %d", st.m, st.n, k, st.k)
 				}
 			})
 		}

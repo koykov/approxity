@@ -15,6 +15,7 @@ type Filter struct {
 	amq.Base
 	once sync.Once
 	conf *Config
+	m, k uint64
 	vec  bitvector.Interface
 
 	err error
@@ -37,19 +38,19 @@ func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
-	for i := uint64(0); i < f.c().NumberHashFunctions+1; i++ {
+	for i := uint64(0); i < f.k; i++ {
 		h, err := f.h(key, i)
 		if err != nil {
 			return f.mw().Set(err)
 		}
-		f.vec.Set(h % f.c().Size)
+		f.vec.Set(h % f.m)
 	}
 	return f.mw().Set(nil)
 }
 
 // HSet sets new predefined hash key to the filter.
 func (f *Filter) HSet(hkey uint64) error {
-	f.vec.Set(hkey % f.c().Size)
+	f.vec.Set(hkey % f.m)
 	return f.mw().Set(nil)
 }
 
@@ -70,12 +71,12 @@ func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
-	for i := uint64(0); i < f.c().NumberHashFunctions+1; i++ {
+	for i := uint64(0); i < f.k; i++ {
 		h, err := f.h(key, i)
 		if err != nil {
 			return f.mw().Contains(false)
 		}
-		if f.vec.Get(h%f.c().Size) == 0 {
+		if f.vec.Get(h%f.m) == 0 {
 			return f.mw().Contains(false)
 		}
 	}
@@ -84,7 +85,12 @@ func (f *Filter) Contains(key any) bool {
 
 // HContains checks if predefined hash key is in the filter.
 func (f *Filter) HContains(hkey uint64) bool {
-	return f.mw().Contains(f.vec.Get(hkey%f.c().Size) == 1)
+	return f.mw().Contains(f.vec.Get(hkey%f.m) == 1)
+}
+
+// Capacity returns filter capacity.
+func (f *Filter) Capacity() uint64 {
+	return f.m
 }
 
 // Size returns number of items added to the filter.
@@ -102,8 +108,8 @@ func (f *Filter) Reset() {
 
 func (f *Filter) init() {
 	c := f.conf
-	if c.Size == 0 {
-		f.err = amq.ErrBadSize
+	if c.ItemsNumber == 0 {
+		f.err = amq.ErrNoItemsNumber
 		return
 	}
 	if c.Hasher == nil {
@@ -113,12 +119,18 @@ func (f *Filter) init() {
 	if c.MetricsWriter == nil {
 		c.MetricsWriter = amq.DummyMetricsWriter{}
 	}
-	if c.Concurrent != nil {
-		f.vec, f.err = bitvector.NewConcurrentVector(c.Size, c.Concurrent.WriteAttemptsLimit)
-	} else {
-		f.vec, f.err = bitvector.NewVector(c.Size)
+	if c.FPP <= 0 {
+		c.FPP = defaultFPP
 	}
-	f.mw().Capacity(c.Size)
+
+	f.m = optimalM(c.ItemsNumber, c.FPP)
+	f.k = optimalK(c.ItemsNumber, f.m)
+	if c.Concurrent != nil {
+		f.vec, f.err = bitvector.NewConcurrentVector(f.m, c.Concurrent.WriteAttemptsLimit)
+	} else {
+		f.vec, f.err = bitvector.NewVector(f.m)
+	}
+	f.mw().Capacity(f.m)
 }
 
 func (f *Filter) c() *Config {

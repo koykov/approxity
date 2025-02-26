@@ -5,16 +5,21 @@ import (
 	"github.com/koykov/hash"
 )
 
+const defaultFPP = 0.01
+
 type Config struct {
-	// Setting up this section enables concurrent read/write operations.
-	Concurrent *ConcurrentConfig
-	// The size of the filter in bits.
+	// Number of desired items to store in the filter
 	// Mandatory param.
-	Size uint64
+	ItemsNumber uint64
+	// False positive probability value.
+	// If this param omit, defaultFPP (0.01) will use instead.
+	FPP float64
 	// Hasher to calculate hash sum of the items.
 	Hasher amq.Hasher
 	// How many hash checks filter may do to reduce false positives cases.
 	NumberHashFunctions uint64
+	// Setting up this section enables concurrent read/write operations.
+	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
 	MetricsWriter amq.MetricsWriter
 }
@@ -25,24 +30,11 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
-// NewConfig returns new config with given size and hasher.
-//
-// Note, size represent total size of the filter, not desired number of items, so it may be not optimal.
-// Use OptimalSize function to calculate proper size and OptimalNumberHashFunctions function to calculate proper number of
-// hash functions. Or use NewOptimalConfig function, it will calculate optimal params itself.
-func NewConfig(size uint64, hasher amq.Hasher) *Config {
-	return &Config{Size: size, Hasher: hasher}
-}
-
-// NewOptimalConfig returns new config with optimal size and number of hash functions calculated by given desired number
-// of items and false positive probability.
-func NewOptimalConfig(size uint64, fpp float64, hasher amq.Hasher) *Config {
-	m := OptimalSize(size, fpp)
-	k := OptimalNumberHashFunctions(size, m)
+func NewConfig(items uint64, fpp float64, hasher amq.Hasher) *Config {
 	return &Config{
-		Size:                m,
-		Hasher:              hasher,
-		NumberHashFunctions: k,
+		ItemsNumber: items,
+		FPP:         fpp,
+		Hasher:      hasher,
 	}
 }
 
@@ -51,8 +43,8 @@ func (c *Config) WithConcurrency() *Config {
 	return c
 }
 
-func (c *Config) WithSize(size uint64) *Config {
-	c.Size = size
+func (c *Config) WithItemsNumber(items uint64) *Config {
+	c.ItemsNumber = items
 	return c
 }
 
