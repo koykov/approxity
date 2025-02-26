@@ -46,3 +46,25 @@ func func main() {
 	...
 }
 ```
+
+### Optimal params calculation
+
+If you know preliminary how many items the filter will contain and desired FPP (false positive probability) you may
+calculate optimal `m` and `k` params using the following function:
+```go
+import "github.com/koykov/amq/bloom_filter"
+
+const n = uint64(1e7)   // items planning to put to the filter
+const fpp = 0.01        // false positive probability
+
+func main() {
+	m := bloom.OptimalSize(n, fpp)
+	k := bloom.OptimalNumberHashFunctions(n, m)
+    println(m) // 95850584 (~11.43 MB)
+    println(k) // 7
+	
+	f, _ := bloom.NewFilter(bloom.NewConfig(m, <some_hasher>).
+		WithNumberHashFunctions(k))
+	_ = f
+}
+```
