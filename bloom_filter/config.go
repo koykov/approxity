@@ -15,9 +15,8 @@ type Config struct {
 	// If this param omit, defaultFPP (0.01) will use instead.
 	FPP float64
 	// Hasher to calculate hash sum of the items.
+	// Mandatory param.
 	Hasher amq.Hasher
-	// How many hash checks filter may do to reduce false positives cases.
-	NumberHashFunctions uint64
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
@@ -58,11 +57,6 @@ func (c *Config) WithWriteAttemptsLimit(limit uint64) *Config {
 		c.Concurrent = &ConcurrentConfig{}
 	}
 	c.Concurrent.WriteAttemptsLimit = limit
-	return c
-}
-
-func (c *Config) WithNumberHashFunctions(number uint64) *Config {
-	c.NumberHashFunctions = number
 	return c
 }
 
