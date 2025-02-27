@@ -16,6 +16,7 @@ type Filter struct {
 	conf *Config
 
 	vec ivector
+	m   uint64
 	bp  uint64
 	hsh [256]uint64
 
@@ -169,8 +170,8 @@ func (f *Filter) hcalcI2FP(hkey, bp uint64) (i0, i1 uint64, fp byte, err error) 
 
 func (f *Filter) init() {
 	c := f.conf
-	if c.Size == 0 {
-		f.err = amq.ErrBadSize
+	if c.ItemsNumber == 0 {
+		f.err = amq.ErrNoItemsNumber
 		return
 	}
 	if c.Hasher == nil {
@@ -184,30 +185,17 @@ func (f *Filter) init() {
 		c.KicksLimit = defaultKicksLimit
 	}
 
-	pow2 := func(n uint64) uint64 {
-		n--
-		n |= n >> 1
-		n |= n >> 2
-		n |= n >> 4
-		n |= n >> 8
-		n |= n >> 16
-		n |= n >> 32
-		n++
-		return n
-	}
-	b := pow2(c.Size) / bucketsz
-	f.bp = uint64(bits.TrailingZeros64(b))
-
-	bc := pow2(c.Size) / bucketsz
-	if bc == 0 {
-		bc = 1
+	f.m = optimalM(c.ItemsNumber)
+	f.bp = uint64(bits.TrailingZeros64(f.m))
+	if f.m == 0 {
+		f.m = 1
 	}
 	if c.Concurrent != nil {
-		f.vec = newCnvector(bc, c.Concurrent.WriteAttemptsLimit)
+		f.vec = newCnvector(f.m, c.Concurrent.WriteAttemptsLimit)
 	} else {
-		f.vec = newVector(bc)
+		f.vec = newVector(f.m)
 	}
-	f.mw().Capacity(c.Size)
+	f.mw().Capacity(c.ItemsNumber)
 
 	var buf []byte
 	for i := 0; i < 256; i++ {

@@ -8,15 +8,16 @@ import (
 const defaultKicksLimit = 500
 
 type Config struct {
-	// Setting up this section enables concurrent read/write operations.
-	Concurrent *ConcurrentConfig
-	// The size of the filter in bits.
+	// Number of desired items to store in the filter
 	// Mandatory param.
-	Size uint64
+	ItemsNumber uint64
 	// Hasher to calculate hash sum of the items.
+	// Mandatory param.
 	Hasher amq.Hasher
 	// How many kicks may filter do to set the item.
 	KicksLimit uint64
+	// Setting up this section enables concurrent read/write operations.
+	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
 	MetricsWriter amq.MetricsWriter
 }
@@ -27,8 +28,8 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
-func NewConfig(size uint64, hasher amq.Hasher) *Config {
-	return &Config{Size: size, Hasher: hasher}
+func NewConfig(items uint64, hasher amq.Hasher) *Config {
+	return &Config{ItemsNumber: items, Hasher: hasher}
 }
 
 func (c *Config) WithConcurrency() *Config {
@@ -36,8 +37,8 @@ func (c *Config) WithConcurrency() *Config {
 	return c
 }
 
-func (c *Config) WithSize(size uint64) *Config {
-	c.Size = size
+func (c *Config) WithItemsNumber(items uint64) *Config {
+	c.ItemsNumber = items
 	return c
 }
 
