@@ -4,7 +4,8 @@ The cuckoo filter is a minimized hash table that uses cuckoo hashing to resolve 
 complexity by only keeping a fingerprint of the value to be stored in the set. Much like the bloom filter uses single
 bits to store data and the counting bloom filter uses a small integer, the cuckoo filter uses a small `f`-bit fingerprint
 to represent the data. The value of `f` is decided on the ideal false positive probability the programmer wants. This
-implementation use `f` containing 8 bits (`uint8` value).
+implementation use `f` containing 8 bits (`uint8` value), that is optimal for FPP 0.03 and load factor 0.95, see
+[explanation](https://brilliant.org/wiki/cuckoo-filter/#cuckoo-vs-bloom-filters).
 
 ## Cuckoo hashing
 
@@ -23,11 +24,11 @@ The minimal working example:
 ```go
 import (
     "github.com/koykov/cuckoo_filter"
-    "github.com/koykov/hash/metro"
+    "github.com/koykov/hash/xxhash"
 )
 
 func main() {
-    f, err := cuckoo.NewFilter(cuckoo.NewConfig(1e7, metro.Hasher64[[]byte]{Seed: 1234}))
+    f, err := cuckoo.NewFilter(cuckoo.NewConfig(1e7, xxhash.Hasher64[[]byte]{}))
     _ = err
     _ = f.Set("foobar")
     print(f.Contains("foobar")) // true
@@ -37,19 +38,21 @@ func main() {
 
 Similar to [bloom filter](../bloom_filter/readme.md#usage) cuckoo allows to initiate config more detailed:
 ```go
-import (
-    "github.com/koykov/cuckoo_filter"
-    "github.com/koykov/hash/metro"
-)
+import "github.com/koykov/amq/metrics/prometheus"
 
 func main() {
-    // set filter size and hasher
-    f, _ := cuckoo.NewFilter(cuckoo.NewConfig(1e7, metro.Hasher64[[]byte]{Seed: 1234}).
+    // set items number and hasher
+    f, _ := cuckoo.NewFilter(cuckoo.NewConfig(1e7, xxhash.Hasher64[[]byte]{}).
 		// limit for cuckoo kicks to avoid infinite loop
         WithKicksLimit(10).
-        // switch to race protected bit array (atomic based)
+        // switch to race protected buckets array (atomic based)
         WithConcurrency().
         // cover with metrics
         WithMetricsWriter(prometheus.NewPrometheusMetrics("example_filter")))
 	...
 ```
+
+### Optimal size calculation
+
+There is no need to calculate optimal size due to filter makes it itself using `Config.ItemsNumber` param as desired
+number of items to store in the filter.
