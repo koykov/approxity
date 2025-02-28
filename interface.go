@@ -14,6 +14,10 @@ type Interface interface {
 	HUnset(hkey uint64) error
 	// HContains check if precalculated hash key is in the filter.
 	HContains(hkey uint64) bool
+	// Capacity returns filter capacity.
+	Capacity() uint64
+	// Size returns number of items added to the filter.
+	Size() uint64
 	// Reset flushes the filter.
 	Reset()
 }

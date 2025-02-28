@@ -65,6 +65,10 @@ func (vec *cnvector) fpi(i uint64, fp byte) int {
 	return -1
 }
 
+func (vec *cnvector) capacity() uint64 {
+	return uint64(len(vec.buf))
+}
+
 func (vec *cnvector) size() uint64 {
 	return atomic.LoadUint64(&vec.s)
 }

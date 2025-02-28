@@ -90,7 +90,7 @@ func (f *Filter) HContains(hkey uint64) bool {
 
 // Capacity returns filter capacity.
 func (f *Filter) Capacity() uint64 {
-	return f.m
+	return f.vec.Capacity()
 }
 
 // Size returns number of items added to the filter.

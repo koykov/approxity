@@ -13,6 +13,7 @@ type ivector interface {
 	unset(i uint64, fp byte) bool
 	fpv(i, j uint64) byte
 	fpi(i uint64, fp byte) int
+	capacity() uint64
 	size() uint64
 	reset()
 }
@@ -68,6 +69,10 @@ func (vec *vector) fpi(i uint64, fp byte) int {
 		}
 	}
 	return -1
+}
+
+func (vec *vector) capacity() uint64 {
+	return uint64(len(vec.buf))
 }
 
 func (vec *vector) size() uint64 {
