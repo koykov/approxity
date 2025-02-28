@@ -32,43 +32,57 @@ func TestFilter(t *testing.T) {
 		amq.TestMeConcurrently(t, f)
 	})
 	t.Run("writer", func(t *testing.T) {
-		f, _ := NewFilter(NewConfig(10, 0.01, testh))
-		_ = f.Set("foobar")
-		_ = f.Set("qwerty")
-		fh, err := os.OpenFile("testdata/filter.bin", os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			t.Fatal(err)
+		testWrite := func(t *testing.T, f *Filter, path string, expect int64) {
+			_ = f.Set("foobar")
+			_ = f.Set("qwerty")
+			fh, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = fh.Close() }()
+			n, err := f.WriteTo(fh)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != expect {
+				t.Fatalf("expected %d bytes, got %d", expect, n)
+			}
 		}
-		defer func() { _ = fh.Close() }()
-		_ = f.Set("foobar")
-		_ = f.Set("qwerty")
-		n, err := f.WriteTo(fh)
-		if err != nil {
-			t.Fatal(err)
-		}
-		expect := int64(45)
-		if n != expect {
-			t.Fatalf("expected %d bytes, got %d", expect, n)
-		}
+		t.Run("sync", func(t *testing.T) {
+			f, _ := NewFilter(NewConfig(10, 0.01, testh))
+			testWrite(t, f, "testdata/filter.bin", 45)
+		})
+		t.Run("concurrent", func(t *testing.T) {
+			f, _ := NewFilter(NewConfig(10, 0.01, testh).WithConcurrency())
+			testWrite(t, f, "testdata/concurrent_filter.bin", 56)
+		})
 	})
 	t.Run("reader", func(t *testing.T) {
-		f, _ := NewFilter(NewConfig(10, 0.01, testh))
-		fh, err := os.OpenFile("testdata/filter.bin", os.O_RDONLY, 0644)
-		if err != nil {
-			t.Fatal(err)
+		testRead := func(t *testing.T, f *Filter, path string, expect int64) {
+			fh, err := os.OpenFile(path, os.O_RDONLY, 0644)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = fh.Close() }()
+			n, err := f.ReadFrom(fh)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != expect {
+				t.Fatalf("expected %d bytes, got %d", expect, n)
+			}
+			if !f.Contains("foobar") || !f.Contains("qwerty") {
+				t.Fatal("filter does not contain expected values")
+			}
 		}
-		defer func() { _ = fh.Close() }()
-		n, err := f.ReadFrom(fh)
-		if err != nil {
-			t.Fatal(err)
-		}
-		expect := int64(45)
-		if n != expect {
-			t.Fatalf("expected %d bytes, got %d", expect, n)
-		}
-		if !f.Contains("foobar") || !f.Contains("qwerty") {
-			t.Fatal("filter does not contain expected values")
-		}
+		t.Run("sync", func(t *testing.T) {
+			f, _ := NewFilter(NewConfig(10, 0.01, testh))
+			testRead(t, f, "testdata/filter.bin", 45)
+		})
+		t.Run("concurrent", func(t *testing.T) {
+			f, _ := NewFilter(NewConfig(10, 0.01, testh).WithConcurrency())
+			testRead(t, f, "testdata/concurrent_filter.bin", 56)
+		})
 	})
 }
 
