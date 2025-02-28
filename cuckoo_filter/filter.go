@@ -134,10 +134,10 @@ func (f *Filter) HContains(hkey uint64) bool {
 }
 
 func (f *Filter) hcontains(i0, i1 uint64, fp byte) bool {
-	if f.vec.fpi(i0, fp) != -1 {
+	if f.vec.fpi(i0, fp) != -1 || f.vec.fpi(i1, fp) != -1 {
 		return f.mw().Contains(true)
 	}
-	return f.mw().Contains(f.vec.fpi(i1, fp) != -1)
+	return f.mw().Contains(false)
 }
 
 func (f *Filter) Capacity() uint64 {
