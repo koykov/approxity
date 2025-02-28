@@ -1,6 +1,8 @@
 package bloom
 
 import (
+	"fmt"
+	"io"
 	"sync"
 
 	"github.com/koykov/amq"
@@ -96,6 +98,32 @@ func (f *Filter) Capacity() uint64 {
 // Size returns number of items added to the filter.
 func (f *Filter) Size() uint64 {
 	return f.vec.Size()
+}
+
+func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
+	if f.once.Do(f.init); f.err != nil {
+		return 0, f.err
+	}
+	expect := f.vec.Capacity() / 8 // bitvector returns capacity in bits, so recalculate to bytes
+	n, err := f.vec.ReadFrom(r)
+	if err != nil {
+		return n, err
+	}
+	hlen := uint64(32) // header size of vector in bytes
+	if f.conf.Concurrent != nil {
+		hlen = 40 // header size of concurrent vector
+	}
+	if actual := uint64(n) - hlen; actual != expect {
+		return n, fmt.Errorf("expected %d bytes, but got %d", expect, actual)
+	}
+	return n, nil
+}
+
+func (f *Filter) WriteTo(w io.Writer) (int64, error) {
+	if f.once.Do(f.init); f.err != nil {
+		return 0, f.err
+	}
+	return f.vec.WriteTo(w)
 }
 
 // Reset flushes filter data.

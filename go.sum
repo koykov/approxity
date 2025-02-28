@@ -1,5 +1,5 @@
-github.com/koykov/bitvector v0.0.0-20250223202917-4219d1278309 h1:omTV9c1T8savMzR/SBz+cZAR/YlP4+mt2P15ZdhoQSQ=
-github.com/koykov/bitvector v0.0.0-20250223202917-4219d1278309/go.mod h1:KMT512J5l5vPCk55NNEWwXtH8GueCtUl37Rxz5OGpyo=
+github.com/koykov/bitvector v0.0.0-20250228214909-5e4b6cf63d2d h1:nQjTL3sogN8ha4VHsKW3uadY4i1B8U2jEsbzo01YR+k=
+github.com/koykov/bitvector v0.0.0-20250228214909-5e4b6cf63d2d/go.mod h1:KMT512J5l5vPCk55NNEWwXtH8GueCtUl37Rxz5OGpyo=
 github.com/koykov/hash v1.0.1-0.20250222191613-f4d675dddc83 h1:qOu36QLVQOdnL8vQjj5R+HRsKIhD907TTDWi2y9QV/U=
 github.com/koykov/hash v1.0.1-0.20250222191613-f4d675dddc83/go.mod h1:G+yDmfd72sOLN1tTHs+wDJD+1Ps8bAFSZx2TIrgjvHE=
 github.com/koykov/openrt v0.0.0-20240728195600-ccc3242946f9 h1:BZvoBH5eeWfqd74OnY4G3u81zPl52mYg2rF9I2dM0cE=
