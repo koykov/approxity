@@ -81,22 +81,23 @@ func TestMe(t *testing.T, f Interface) {
 			for j := 0; j < len(ds.positive); j++ {
 				_ = f.Set(ds.positive[j])
 			}
-			var falsePositive, falseNegative int
+			var falseNegative, falsePositive int
 			for j := 0; j < len(ds.negative); j++ {
 				if f.Contains(ds.negative[j]) {
-					falseNegative++
-				}
-			}
-			if falseNegative > 0 {
-				t.Logf("%d of %d negatives (%d total) gives false positive value", falseNegative, len(ds.negative), len(ds.all))
-			}
-			for j := 0; j < len(ds.positive); j++ {
-				if !f.Contains(ds.positive[j]) {
 					falsePositive++
 				}
 			}
 			if falsePositive > 0 {
-				t.Logf("%d of %d positives (%d total) gives false negative value", falsePositive, len(ds.positive), len(ds.all))
+				// Just warn, it's OK to have small amount of false positives.
+				t.Logf("%d of %d negatives (%d total) gives false positive value", falsePositive, len(ds.negative), len(ds.all))
+			}
+			for j := 0; j < len(ds.positive); j++ {
+				if !f.Contains(ds.positive[j]) {
+					falseNegative++
+				}
+			}
+			if falseNegative > 0 {
+				t.Errorf("%d of %d positives (%d total) gives false negative value", falseNegative, len(ds.positive), len(ds.all))
 			}
 		})
 	}
