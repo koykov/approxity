@@ -40,7 +40,7 @@ func (b Base) hash(hasher Hasher, data any, salt uint64, saltext bool) (_ uint64
 		buf = append(buf, *x...)
 	default:
 		if buf, err = x2bytes.ToBytes(buf, data); err != nil {
-			return 0, err
+			return 0, ErrEncoding
 		}
 	}
 	if saltext {

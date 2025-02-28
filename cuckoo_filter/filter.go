@@ -10,6 +10,10 @@ import (
 
 const bucketsz = 4
 
+// Filter represents Cuckoo filter.
+// By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
+// Concurrent reading allowed afterward.
+// If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
 type Filter struct {
 	amq.Base
 	once sync.Once
@@ -23,6 +27,7 @@ type Filter struct {
 	err error
 }
 
+// NewFilter creates new filter.
 func NewFilter(conf *Config) (*Filter, error) {
 	f := &Filter{
 		conf: conf.copy(),
@@ -33,6 +38,7 @@ func NewFilter(conf *Config) (*Filter, error) {
 	return f, nil
 }
 
+// Set adds new key to the filter.
 func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Set(f.err)
@@ -44,6 +50,7 @@ func (f *Filter) Set(key any) error {
 	return f.hset(i0, i1, fp)
 }
 
+// HSet sets new predefined hash key to the filter.
 func (f *Filter) HSet(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Set(f.err)
@@ -81,6 +88,7 @@ func (f *Filter) hset(i0, i1 uint64, fp byte) (err error) {
 	return f.mw().Set(ErrFullFilter)
 }
 
+// Unset removes key from the filter.
 func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Unset(f.err)
@@ -92,6 +100,7 @@ func (f *Filter) Unset(key any) error {
 	return f.hunset(i0, i1, fp)
 }
 
+// HUnset removes predefined hash key from the filter.
 func (f *Filter) HUnset(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Unset(f.err)
@@ -111,6 +120,7 @@ func (f *Filter) hunset(i0, i1 uint64, fp byte) (err error) {
 	return f.mw().Unset(nil)
 }
 
+// Contains checks if key is in the filter.
 func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Contains(false)
@@ -122,6 +132,7 @@ func (f *Filter) Contains(key any) bool {
 	return f.hcontains(i0, i1, fp)
 }
 
+// HContains checks if predefined hash key is in the filter.
 func (f *Filter) HContains(hkey uint64) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Contains(false)
@@ -140,14 +151,17 @@ func (f *Filter) hcontains(i0, i1 uint64, fp byte) bool {
 	return f.mw().Contains(false)
 }
 
+// Capacity returns filter capacity.
 func (f *Filter) Capacity() uint64 {
 	return f.vec.capacity()
 }
 
+// Size returns number of items added to the filter.
 func (f *Filter) Size() uint64 {
 	return f.vec.size()
 }
 
+// Reset flushes filter data.
 func (f *Filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return

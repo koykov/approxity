@@ -21,7 +21,7 @@ type Filter struct {
 	err error
 }
 
-// NewFilter creates new Bloom filter.
+// NewFilter creates new filter.
 func NewFilter(config *Config) (*Filter, error) {
 	if config == nil {
 		return nil, amq.ErrBadConfig
@@ -98,6 +98,7 @@ func (f *Filter) Size() uint64 {
 	return f.vec.Size()
 }
 
+// Reset flushes filter data.
 func (f *Filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
@@ -133,12 +134,8 @@ func (f *Filter) init() {
 	f.mw().Capacity(f.m)
 }
 
-func (f *Filter) c() *Config {
-	return f.conf
-}
-
-func (f *Filter) h(key any, seed uint64) (uint64, error) {
-	return f.HashSalt(f.c().Hasher, key, seed)
+func (f *Filter) h(key any, salt uint64) (uint64, error) {
+	return f.HashSalt(f.conf.Hasher, key, salt)
 }
 
 func (f *Filter) mw() amq.MetricsWriter {

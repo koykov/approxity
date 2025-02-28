@@ -7,4 +7,5 @@ var (
 	ErrNoItemsNumber = errors.New("desired number of items must be greater than 0")
 	ErrNoHasher      = errors.New("no hasher provided")
 	ErrUnsupportedOp = errors.New("unsupported operation")
+	ErrEncoding      = errors.New("item encoding error")
 )
