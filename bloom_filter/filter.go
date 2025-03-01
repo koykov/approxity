@@ -109,11 +109,11 @@ func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
 	if err != nil {
 		return n, err
 	}
-	hlen := uint64(32) // header size of vector in bytes
+	hsz := uint64(32) // header size of vector in bytes
 	if f.conf.Concurrent != nil {
-		hlen = 40 // header size of concurrent vector
+		hsz = 40 // header size of concurrent vector
 	}
-	if actual := uint64(n) - hlen; actual != expect {
+	if actual := uint64(n) - hsz; actual != expect {
 		return n, fmt.Errorf("expected %d bytes, but got %d", expect, actual)
 	}
 	return n, nil

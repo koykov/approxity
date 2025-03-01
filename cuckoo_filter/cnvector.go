@@ -1,8 +1,16 @@
 package cuckoo
 
 import (
+	"encoding/binary"
+	"io"
 	"math"
 	"sync/atomic"
+	"unsafe"
+)
+
+const (
+	cnVectorDumpSignature = 0x581fd98fe7144b7d
+	cnVectorDumpVersion   = 1.0
 )
 
 // Concurrent ivector implementation.
@@ -77,6 +85,69 @@ func (vec *cnvector) reset() {
 	for i := 0; i < len(vec.buf); i++ {
 		atomic.StoreUint32(&vec.buf[i], 0)
 	}
+}
+
+func (vec *cnvector) writeTo(w io.Writer) (n int64, err error) {
+	var (
+		buf [24]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], cnVectorDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(cnVectorDumpVersion))
+	binary.LittleEndian.PutUint64(buf[16:24], vec.s)
+	m, err = w.Write(buf[:])
+	n += int64(m)
+	if err != nil {
+		return int64(m), err
+	}
+
+	var h struct {
+		p    uintptr
+		l, c int
+	}
+	h.p = uintptr(unsafe.Pointer(&vec.buf[0]))
+	h.l, h.c = len(vec.buf)*4, cap(vec.buf)*4
+	m, err = w.Write(*(*[]byte)(unsafe.Pointer(&h)))
+	n += int64(m)
+	return n, err
+}
+
+func (vec *cnvector) readFrom(r io.Reader) (n int64, err error) {
+	var (
+		buf [24]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+
+	sign, ver, s := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
+		binary.LittleEndian.Uint64(buf[16:24])
+
+	if sign != cnVectorDumpSignature {
+		return n, ErrInvalidSignature
+	}
+	if ver != math.Float64bits(cnVectorDumpVersion) {
+		return n, ErrVersionMismatch
+	}
+	vec.s = s
+
+	var h struct {
+		p    uintptr
+		l, c int
+	}
+	h.p = uintptr(unsafe.Pointer(&vec.buf[0]))
+	h.l, h.c = len(vec.buf)*4, cap(vec.buf)*4
+	payloadBuf := *(*[]byte)(unsafe.Pointer(&h))
+
+	m, err = r.Read(payloadBuf)
+	n += int64(m)
+	if err == io.EOF {
+		err = nil
+	}
+	return
 }
 
 func newCnvector(size, lim uint64) *cnvector {

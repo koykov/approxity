@@ -1,6 +1,8 @@
 package cuckoo
 
 import (
+	"fmt"
+	"io"
 	"math/bits"
 	"math/rand"
 	"sync"
@@ -159,6 +161,29 @@ func (f *Filter) Capacity() uint64 {
 // Size returns number of items added to the filter.
 func (f *Filter) Size() uint64 {
 	return f.vec.size()
+}
+
+func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
+	if f.once.Do(f.init); f.err != nil {
+		return 0, f.err
+	}
+	expect := f.vec.capacity() * 4 // vector returns capacity of uint32 vector
+	n, err := f.vec.readFrom(r)
+	if err != nil {
+		return n, err
+	}
+	hsz := uint64(24) // header size of vector in bytes
+	if actual := uint64(n) - hsz; actual != expect {
+		return n, fmt.Errorf("expected %d bytes, but got %d", expect, actual)
+	}
+	return n, nil
+}
+
+func (f *Filter) WriteTo(w io.Writer) (int64, error) {
+	if f.once.Do(f.init); f.err != nil {
+		return 0, f.err
+	}
+	return f.vec.writeTo(w)
 }
 
 // Reset flushes filter data.

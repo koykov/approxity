@@ -1,7 +1,11 @@
 package amq
 
+import "io"
+
 // Interface describes AMQ struct interface.
 type Interface interface {
+	io.ReaderFrom
+	io.WriterTo
 	// Set add new key to the filter.
 	Set(key any) error
 	// Unset remove key from the filter.
