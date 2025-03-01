@@ -9,18 +9,18 @@ import (
 )
 
 const (
-	cnVectorDumpSignature = 0x581fd98fe7144b7d
-	cnVectorDumpVersion   = 1.0
+	cnvecDumpSignature = 0x581fd98fe7144b7d
+	cnvecDumpVersion   = 1.0
 )
 
-// Concurrent ivector implementation.
-type cnvector struct {
+// Concurrent vector implementation.
+type cnvec struct {
 	buf []uint32
 	lim uint64
 	s   uint64
 }
 
-func (vec *cnvector) add(i uint64, fp byte) error {
+func (vec *cnvec) add(i uint64, fp byte) error {
 	for k := uint64(0); k < vec.lim+1; k++ {
 		for j := 0; j < bucketsz; j++ {
 			if o := atomic.LoadUint32(&vec.buf[i]); o&vecmask[j] == 0 {
@@ -36,7 +36,7 @@ func (vec *cnvector) add(i uint64, fp byte) error {
 	return ErrWriteLimitReach
 }
 
-func (vec *cnvector) set(i, j uint64, fp byte) error {
+func (vec *cnvec) set(i, j uint64, fp byte) error {
 	for k := uint64(0); k < vec.lim+1; k++ {
 		o := atomic.LoadUint32(&vec.buf[i])
 		n := o | uint32(fp)<<(j*8)
@@ -47,7 +47,7 @@ func (vec *cnvector) set(i, j uint64, fp byte) error {
 	return nil
 }
 
-func (vec *cnvector) unset(i uint64, fp byte) bool {
+func (vec *cnvec) unset(i uint64, fp byte) bool {
 	for j := 0; j < bucketsz; j++ {
 		if o := atomic.LoadUint32(&vec.buf[i]); o&vecmask[j] == uint32(fp)<<(j*8) {
 			n := o & ^vecmask[j]
@@ -60,11 +60,11 @@ func (vec *cnvector) unset(i uint64, fp byte) bool {
 	return false
 }
 
-func (vec *cnvector) fpv(i, j uint64) byte {
+func (vec *cnvec) fpv(i, j uint64) byte {
 	return byte(atomic.LoadUint32(&vec.buf[i]) & vecmask[j] >> (j * 8))
 }
 
-func (vec *cnvector) fpi(i uint64, fp byte) int {
+func (vec *cnvec) fpi(i uint64, fp byte) int {
 	for j := 0; j < bucketsz; j++ {
 		if atomic.LoadUint32(&vec.buf[i])&vecmask[j] == uint32(fp)<<(j*8) {
 			return j
@@ -73,27 +73,27 @@ func (vec *cnvector) fpi(i uint64, fp byte) int {
 	return -1
 }
 
-func (vec *cnvector) capacity() uint64 {
+func (vec *cnvec) capacity() uint64 {
 	return uint64(len(vec.buf))
 }
 
-func (vec *cnvector) size() uint64 {
+func (vec *cnvec) size() uint64 {
 	return atomic.LoadUint64(&vec.s)
 }
 
-func (vec *cnvector) reset() {
+func (vec *cnvec) reset() {
 	for i := 0; i < len(vec.buf); i++ {
 		atomic.StoreUint32(&vec.buf[i], 0)
 	}
 }
 
-func (vec *cnvector) writeTo(w io.Writer) (n int64, err error) {
+func (vec *cnvec) writeTo(w io.Writer) (n int64, err error) {
 	var (
 		buf [24]byte
 		m   int
 	)
-	binary.LittleEndian.PutUint64(buf[0:8], cnVectorDumpSignature)
-	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(cnVectorDumpVersion))
+	binary.LittleEndian.PutUint64(buf[0:8], cnvecDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(cnvecDumpVersion))
 	binary.LittleEndian.PutUint64(buf[16:24], vec.s)
 	m, err = w.Write(buf[:])
 	n += int64(m)
@@ -112,7 +112,7 @@ func (vec *cnvector) writeTo(w io.Writer) (n int64, err error) {
 	return n, err
 }
 
-func (vec *cnvector) readFrom(r io.Reader) (n int64, err error) {
+func (vec *cnvec) readFrom(r io.Reader) (n int64, err error) {
 	var (
 		buf [24]byte
 		m   int
@@ -126,10 +126,10 @@ func (vec *cnvector) readFrom(r io.Reader) (n int64, err error) {
 	sign, ver, s := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
 		binary.LittleEndian.Uint64(buf[16:24])
 
-	if sign != cnVectorDumpSignature {
+	if sign != cnvecDumpSignature {
 		return n, ErrInvalidSignature
 	}
-	if ver != math.Float64bits(cnVectorDumpVersion) {
+	if ver != math.Float64bits(cnvecDumpVersion) {
 		return n, ErrVersionMismatch
 	}
 	vec.s = s
@@ -150,8 +150,8 @@ func (vec *cnvector) readFrom(r io.Reader) (n int64, err error) {
 	return
 }
 
-func newCnvector(size, lim uint64) *cnvector {
-	return &cnvector{
+func newCnvec(size, lim uint64) *cnvec {
+	return &cnvec{
 		buf: make([]uint32, size),
 		lim: lim,
 	}

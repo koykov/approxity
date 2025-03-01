@@ -10,37 +10,17 @@ import (
 )
 
 const (
-	vectorDumpSignature = 0x19329bb7706377b1
-	vectorDumpVersion   = 1.0
+	syncvecDumpSignature = 0x19329bb7706377b1
+	syncvecDumpVersion   = 1.0
 )
 
-type ivector interface {
-	add(i uint64, fp byte) error
-	set(i, j uint64, fp byte) error
-	unset(i uint64, fp byte) bool
-	fpv(i, j uint64) byte
-	fpi(i uint64, fp byte) int
-	capacity() uint64
-	size() uint64
-	reset()
-	writeTo(w io.Writer) (n int64, err error)
-	readFrom(r io.Reader) (n int64, err error)
-}
-
-var vecmask = [bucketsz]uint32{
-	math.MaxUint8,
-	math.MaxUint8 << 8,
-	math.MaxUint8 << 16,
-	math.MaxUint8 << 24,
-}
-
-// Synchronized ivector implementation.
-type vector struct {
+// Synchronized vector implementation.
+type syncvec struct {
 	buf []uint32
 	s   uint64
 }
 
-func (vec *vector) add(i uint64, fp byte) error {
+func (vec *syncvec) add(i uint64, fp byte) error {
 	for j := 0; j < bucketsz; j++ {
 		if vec.buf[i]&vecmask[j] == 0 {
 			vec.buf[i] |= uint32(fp) << (j * 8)
@@ -51,12 +31,12 @@ func (vec *vector) add(i uint64, fp byte) error {
 	return ErrFullBucket
 }
 
-func (vec *vector) set(i, j uint64, fp byte) error {
+func (vec *syncvec) set(i, j uint64, fp byte) error {
 	vec.buf[i] |= uint32(fp) << (j * 8)
 	return nil
 }
 
-func (vec *vector) unset(i uint64, fp byte) bool {
+func (vec *syncvec) unset(i uint64, fp byte) bool {
 	for j := 0; j < bucketsz; j++ {
 		if vec.buf[i]&vecmask[j] == uint32(fp)<<(j*8) {
 			vec.buf[i] &= ^vecmask[j]
@@ -67,11 +47,11 @@ func (vec *vector) unset(i uint64, fp byte) bool {
 	return false
 }
 
-func (vec *vector) fpv(i, j uint64) byte {
+func (vec *syncvec) fpv(i, j uint64) byte {
 	return byte(vec.buf[i] & vecmask[j] >> (j * 8))
 }
 
-func (vec *vector) fpi(i uint64, fp byte) int {
+func (vec *syncvec) fpi(i uint64, fp byte) int {
 	for j := 0; j < bucketsz; j++ {
 		if vec.buf[i]&vecmask[j] == uint32(fp)<<(j*8) {
 			return j
@@ -80,25 +60,25 @@ func (vec *vector) fpi(i uint64, fp byte) int {
 	return -1
 }
 
-func (vec *vector) capacity() uint64 {
+func (vec *syncvec) capacity() uint64 {
 	return uint64(len(vec.buf))
 }
 
-func (vec *vector) size() uint64 {
+func (vec *syncvec) size() uint64 {
 	return vec.s
 }
 
-func (vec *vector) reset() {
+func (vec *syncvec) reset() {
 	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*bucketsz)
 }
 
-func (vec *vector) writeTo(w io.Writer) (n int64, err error) {
+func (vec *syncvec) writeTo(w io.Writer) (n int64, err error) {
 	var (
 		buf [24]byte
 		m   int
 	)
-	binary.LittleEndian.PutUint64(buf[0:8], vectorDumpSignature)
-	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(vectorDumpVersion))
+	binary.LittleEndian.PutUint64(buf[0:8], syncvecDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(syncvecDumpVersion))
 	binary.LittleEndian.PutUint64(buf[16:24], vec.s)
 	m, err = w.Write(buf[:])
 	n += int64(m)
@@ -118,7 +98,7 @@ func (vec *vector) writeTo(w io.Writer) (n int64, err error) {
 	return
 }
 
-func (vec *vector) readFrom(r io.Reader) (n int64, err error) {
+func (vec *syncvec) readFrom(r io.Reader) (n int64, err error) {
 	var (
 		buf [24]byte
 		m   int
@@ -132,10 +112,10 @@ func (vec *vector) readFrom(r io.Reader) (n int64, err error) {
 	sign, ver, s := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
 		binary.LittleEndian.Uint64(buf[16:24])
 
-	if sign != vectorDumpSignature {
+	if sign != syncvecDumpSignature {
 		return n, ErrInvalidSignature
 	}
-	if ver != math.Float64bits(vectorDumpVersion) {
+	if ver != math.Float64bits(syncvecDumpVersion) {
 		return n, ErrVersionMismatch
 	}
 	vec.s = s
@@ -156,6 +136,6 @@ func (vec *vector) readFrom(r io.Reader) (n int64, err error) {
 	return
 }
 
-func newVector(size uint64) *vector {
-	return &vector{buf: make([]uint32, size)}
+func newSyncvec(size uint64) *syncvec {
+	return &syncvec{buf: make([]uint32, size)}
 }

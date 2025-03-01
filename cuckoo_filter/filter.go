@@ -10,8 +10,6 @@ import (
 	"github.com/koykov/amq"
 )
 
-const bucketsz = 4
-
 // Filter represents Cuckoo filter.
 // By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
 // Concurrent reading allowed afterward.
@@ -21,7 +19,7 @@ type Filter struct {
 	once sync.Once
 	conf *Config
 
-	vec ivector
+	vec vector
 	m   uint64
 	bp  uint64
 	hsh [256]uint64
@@ -167,12 +165,12 @@ func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	expect := f.vec.capacity() * 4 // vector returns capacity of uint32 vector
+	expect := f.vec.capacity() * 4 // syncvec returns capacity of uint32 syncvec
 	n, err := f.vec.readFrom(r)
 	if err != nil {
 		return n, err
 	}
-	hsz := uint64(24) // header size of vector in bytes
+	hsz := uint64(24) // header size of syncvec in bytes
 	if actual := uint64(n) - hsz; actual != expect {
 		return n, fmt.Errorf("expected %d bytes, but got %d", expect, actual)
 	}
@@ -234,9 +232,9 @@ func (f *Filter) init() {
 		f.m = 1
 	}
 	if c.Concurrent != nil {
-		f.vec = newCnvector(f.m, c.Concurrent.WriteAttemptsLimit)
+		f.vec = newCnvec(f.m, c.Concurrent.WriteAttemptsLimit)
 	} else {
-		f.vec = newVector(f.m)
+		f.vec = newSyncvec(f.m)
 	}
 	f.mw().Capacity(c.ItemsNumber)
 
