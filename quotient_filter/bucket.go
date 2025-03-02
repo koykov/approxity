@@ -53,3 +53,17 @@ func (b *bucket) rem() uint64 {
 func (b *bucket) raw() uint64 {
 	return uint64(*b)
 }
+
+func (b *bucket) checkLo0() bool {
+	return !b.checkbit(btypeContinuation) || (b.checkbit(btypeOccupied) || b.checkbit(btypeShifted))
+}
+
+func (b *bucket) checkcluster() bool {
+	return b.checkbit(btypeOccupied) && !b.checkbit(btypeContinuation) && !b.checkbit(btypeShifted)
+}
+
+func (b *bucket) eqbits(v bucket) bool {
+	return b.checkbit(btypeOccupied) == v.checkbit(btypeOccupied) &&
+		b.checkbit(btypeContinuation) == v.checkbit(btypeContinuation) &&
+		b.checkbit(btypeShifted) == v.checkbit(btypeShifted)
+}

@@ -123,23 +123,121 @@ func (f *Filter) hset(hkey uint64) error {
 }
 
 func (f *Filter) Unset(key any) error {
-	if f.once.Do(f.init); f.err != nil {
+	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return f.err
 	}
-	// todo implement me
-	return nil
+	hkey, err := f.Hash(f.conf.Hasher, key)
+	if err != nil {
+		return err
+	}
+	return f.hunset(hkey)
 }
 
 func (f *Filter) HUnset(hkey uint64) error {
-	if f.once.Do(f.init); f.err != nil {
+	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return f.err
 	}
-	// todo implement me
+	return f.hunset(hkey)
+}
+
+func (f *Filter) hunset(hkey uint64) error {
+	q, r := f.calcQR(hkey)
+	t := f.getBucket(q)
+	if !t.checkbit(btypeOccupied) {
+		return nil
+	}
+
+	lo := f.lo(q)
+	i := lo
+	var rem uint64
+	for {
+		b := f.getBucket(i)
+		if rem = b.rem(); rem == r {
+			break
+		} else if rem > r {
+			return nil
+		}
+		i = (i + 1) & f.qm
+		b = f.getBucket(i)
+		if !b.checkbit(btypeContinuation) {
+			break
+		}
+	}
+	if rem != r {
+		return nil
+	}
+
+	k := t
+	if i != q {
+		k = f.getBucket(lo)
+	}
+	lo0 := k.checkLo0()
+	if lo0 {
+		n := f.getBucket((i + 1) & f.qm)
+		if !n.checkbit(btypeContinuation) {
+			t.clearbit(btypeOccupied)
+			f.setBucket(q, t)
+		}
+	}
+
+	del := func(i, q uint64) {
+		var n bucket
+		c := f.getBucket(i)
+		ip := (i + 1) & f.qm
+		oi := i
+		for {
+			n = f.getBucket(ip)
+			co := c.checkbit(btypeOccupied)
+			if n.empty() || n.checkcluster() || ip == oi {
+				f.setBucket(i, 0)
+				return
+			} else {
+				un := n
+				if n.checkLo0() {
+					for {
+						q = (q + 1) & f.qm
+						x := f.getBucket(q)
+						if !x.checkbit(btypeOccupied) {
+							break
+						}
+					}
+					if co && q == i {
+						n.clearbit(btypeShifted)
+						un = n
+					}
+				}
+				if co {
+					un.setbit(btypeOccupied)
+				} else {
+					un.clearbit(btypeOccupied)
+				}
+				i = ip
+				ip = (ip + 1) & f.qm
+				c = n
+			}
+		}
+	}
+	del(i, q)
+
+	if lo0 {
+		n := f.getBucket(i)
+		un := n
+		if n.checkbit(btypeContinuation) {
+			un.clearbit(btypeContinuation)
+		}
+		if i == q && un.checkLo0() {
+			un.clearbit(btypeShifted)
+		}
+		if !un.eqbits(n) {
+			f.setBucket(i, un)
+		}
+	}
+	f.s--
 	return nil
 }
 
 func (f *Filter) Contains(key any) bool {
-	if f.once.Do(f.init); f.err != nil {
+	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return false
 	}
 	hkey, err := f.Hash(f.conf.Hasher, key)
@@ -150,7 +248,7 @@ func (f *Filter) Contains(key any) bool {
 }
 
 func (f *Filter) HContains(hkey uint64) bool {
-	if f.once.Do(f.init); f.err != nil {
+	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return false
 	}
 	return f.hcontains(hkey)
@@ -178,6 +276,14 @@ func (f *Filter) hcontains(hkey uint64) bool {
 		}
 	}
 	return false
+}
+
+func (f *Filter) Capacity() uint64 {
+	return uint64(len(f.vec))
+}
+
+func (f *Filter) Size() uint64 {
+	return f.s
 }
 
 func (f *Filter) Reset() {
