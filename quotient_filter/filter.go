@@ -3,8 +3,10 @@ package quotient
 import (
 	"io"
 	"sync"
+	"unsafe"
 
 	"github.com/koykov/amq"
+	"github.com/koykov/openrt"
 )
 
 type Filter struct {
@@ -290,7 +292,8 @@ func (f *Filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
 	}
-	// todo implement me
+	openrt.MemclrUnsafe(unsafe.Pointer(&f.vec[0]), len(f.vec)*8)
+	f.s = 0
 }
 
 func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
