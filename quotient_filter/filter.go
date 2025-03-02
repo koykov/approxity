@@ -266,9 +266,9 @@ func (f *Filter) hcontains(hkey uint64) bool {
 	i := f.lo(q)
 	b = f.getBucket(i)
 	for {
-		if b.rem() == r {
+		if rem := b.rem(); rem == r {
 			return true
-		} else if b.rem() > r {
+		} else if rem > r {
 			return false
 		}
 		i = (i + 1) & f.qmask
@@ -364,6 +364,7 @@ func (f *Filter) getBucket(q uint64) bucket {
 	i, off, bits := f.bucketIOB(q)
 	v := (f.vec[i] >> off) & f.bmask
 	if bits > 0 {
+		i++
 		v = v | (f.vec[i]&lowMask(uint64(bits)))<<(f.bsz-uint64(bits))
 	}
 	return bucket(v)
@@ -379,7 +380,7 @@ func (f *Filter) setBucket(q uint64, b bucket) {
 	if bits > 0 {
 		nb = f.vec[i+1]
 		nb &^= lowMask(uint64(bits))
-		nb |= b.raw()>>f.bsz - uint64(bits)
+		nb |= b.raw() >> (f.bsz - uint64(bits))
 		f.vec[i+1] = nb
 	}
 }
