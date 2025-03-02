@@ -11,14 +11,14 @@ import (
 
 type Filter struct {
 	amq.Base
-	conf       *Config
-	once       sync.Once
-	qb, rb     uint64 // quotient and remainder bits
-	bs         uint64 // bucket size (rb+3)
-	m          uint64 // total filter size
-	bm, qm, rm uint64 // bucket mask, quotient mask, remainder mask
-	vec        []uint64
-	s          uint64
+	conf                 *Config
+	once                 sync.Once
+	qbits, rbits         uint64 // quotient and remainder bits
+	bsz                  uint64 // bucket size (rbits+3)
+	m                    uint64 // total filter size
+	bmask, qmask, rmmask uint64 // bucket mask, quotient mask, remainder mask
+	vec                  []uint64
+	s                    uint64 // items counter
 
 	err error
 }
@@ -85,7 +85,7 @@ func (f *Filter) hset(hkey uint64) error {
 			} else if rem > r {
 				break
 			}
-			i = (i + 1) & f.qm
+			i = (i + 1) & f.qmask
 			if lob = f.getBucket(i); !lob.checkbit(btypeContinuation) {
 				break
 			}
@@ -115,7 +115,7 @@ func (f *Filter) hset(hkey uint64) error {
 		}
 		f.setBucket(i, c)
 		c = p
-		i = (i + 1) & f.qm
+		i = (i + 1) & f.qmask
 		if pe {
 			break
 		}
@@ -159,7 +159,7 @@ func (f *Filter) hunset(hkey uint64) error {
 		} else if rem > r {
 			return nil
 		}
-		i = (i + 1) & f.qm
+		i = (i + 1) & f.qmask
 		b = f.getBucket(i)
 		if !b.checkbit(btypeContinuation) {
 			break
@@ -175,7 +175,7 @@ func (f *Filter) hunset(hkey uint64) error {
 	}
 	lo0 := k.checkLo0()
 	if lo0 {
-		n := f.getBucket((i + 1) & f.qm)
+		n := f.getBucket((i + 1) & f.qmask)
 		if !n.checkbit(btypeContinuation) {
 			t.clearbit(btypeOccupied)
 			f.setBucket(q, t)
@@ -185,7 +185,7 @@ func (f *Filter) hunset(hkey uint64) error {
 	del := func(i, q uint64) {
 		var n bucket
 		c := f.getBucket(i)
-		ip := (i + 1) & f.qm
+		ip := (i + 1) & f.qmask
 		oi := i
 		for {
 			n = f.getBucket(ip)
@@ -197,7 +197,7 @@ func (f *Filter) hunset(hkey uint64) error {
 				un := n
 				if n.checkLo0() {
 					for {
-						q = (q + 1) & f.qm
+						q = (q + 1) & f.qmask
 						x := f.getBucket(q)
 						if !x.checkbit(btypeOccupied) {
 							break
@@ -214,7 +214,7 @@ func (f *Filter) hunset(hkey uint64) error {
 					un.clearbit(btypeOccupied)
 				}
 				i = ip
-				ip = (ip + 1) & f.qm
+				ip = (ip + 1) & f.qmask
 				c = n
 			}
 		}
@@ -271,7 +271,7 @@ func (f *Filter) hcontains(hkey uint64) bool {
 		} else if b.rem() > r {
 			return false
 		}
-		i = (i + 1) & f.qm
+		i = (i + 1) & f.qmask
 		b = f.getBucket(i)
 		if !b.checkbit(btypeContinuation) {
 			break
@@ -340,54 +340,54 @@ func (f *Filter) init() {
 		return
 	}
 
-	if f.m, f.qb, f.rb = optimalMQR(c.ItemsNumber, c.FPP, c.LoadFactor); f.qb+f.qb > 64 {
+	if f.m, f.qbits, f.rbits = optimalMQR(c.ItemsNumber, c.FPP, c.LoadFactor); f.qbits+f.qbits > 64 {
 		f.err = ErrBucketOverflow
 		return
 	}
-	f.bs = f.rb + 3
+	f.bsz = f.rbits + 3
 	f.vec = make([]uint64, f.m)
 	f.mw().Capacity(f.m)
 
-	f.qm, f.rm, f.bm = lowMask(f.qb), lowMask(f.rb), lowMask(f.bs)
+	f.qmask, f.rmmask, f.bmask = lowMask(f.qbits), lowMask(f.rbits), lowMask(f.bsz)
 }
 
 func (f *Filter) overflow() bool {
-	return f.s >= 1<<f.qb
+	return f.s >= 1<<f.qbits
 }
 
 func (f *Filter) calcQR(hkey uint64) (q, r uint64) {
-	q, r = (hkey>>f.rb)&f.qm, hkey&f.rm
+	q, r = (hkey>>f.rbits)&f.qmask, hkey&f.rmmask
 	return
 }
 
 func (f *Filter) getBucket(q uint64) bucket {
 	i, off, bits := f.bucketIOB(q)
-	v := (f.vec[i] >> off) & f.bm
+	v := (f.vec[i] >> off) & f.bmask
 	if bits > 0 {
-		v = v | (f.vec[i]&lowMask(uint64(bits)))<<(f.bs-uint64(bits))
+		v = v | (f.vec[i]&lowMask(uint64(bits)))<<(f.bsz-uint64(bits))
 	}
 	return bucket(v)
 }
 
 func (f *Filter) setBucket(q uint64, b bucket) {
 	i, off, bits := f.bucketIOB(q)
-	b = b & bucket(f.bm)
+	b = b & bucket(f.bmask)
 	nb := f.vec[i]
-	nb &= ^(f.bm << off)
+	nb &= ^(f.bmask << off)
 	nb |= b.raw() << off
 	f.vec[i] = nb
 	if bits > 0 {
 		nb = f.vec[i+1]
 		nb &^= lowMask(uint64(bits))
-		nb |= b.raw()>>f.bs - uint64(bits)
+		nb |= b.raw()>>f.bsz - uint64(bits)
 		f.vec[i+1] = nb
 	}
 }
 
 func (f *Filter) bucketIOB(q uint64) (i, off uint64, bits int64) {
-	bi := f.bs * q
+	bi := f.bsz * q
 	i, off = bi/64, bi%64
-	bits = int64(off + f.bs - 64)
+	bits = int64(off + f.bsz - 64)
 	return
 }
 
@@ -398,19 +398,19 @@ func (f *Filter) lo(q uint64) (lo uint64) {
 		if b = f.getBucket(i); !b.checkbit(btypeShifted) {
 			break
 		}
-		i = (i - 1) & f.qm
+		i = (i - 1) & f.qmask
 	}
 	lo = i
 	for i != q {
 		for {
-			lo = (lo + 1) & f.qm
+			lo = (lo + 1) & f.qmask
 			b = f.getBucket(lo)
 			if !b.checkbit(btypeContinuation) {
 				break
 			}
 		}
 		for {
-			i = (i + 1) & f.qm
+			i = (i + 1) & f.qmask
 			b = f.getBucket(i)
 			if b.checkbit(btypeOccupied) {
 				break
