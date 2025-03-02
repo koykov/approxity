@@ -142,15 +142,41 @@ func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
-	// todo implement me
-	return false
+	hkey, err := f.Hash(f.conf.Hasher, key)
+	if err != nil {
+		return false
+	}
+	return f.hcontains(hkey)
 }
 
 func (f *Filter) HContains(hkey uint64) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
-	// todo implement me
+	return f.hcontains(hkey)
+}
+
+func (f *Filter) hcontains(hkey uint64) bool {
+	q, r := f.calcQR(hkey)
+	b := f.getBucket(q)
+	if !b.checkbit(btypeOccupied) {
+		return false
+	}
+
+	i := f.lo(q)
+	b = f.getBucket(i)
+	for {
+		if b.rem() == r {
+			return true
+		} else if b.rem() > r {
+			return false
+		}
+		i = (i + 1) & f.qm
+		b = f.getBucket(i)
+		if !b.checkbit(btypeContinuation) {
+			break
+		}
+	}
 	return false
 }
 
@@ -227,7 +253,7 @@ func (f *Filter) calcQR(hkey uint64) (q, r uint64) {
 
 func (f *Filter) getBucket(q uint64) bucket {
 	i, off, bits := f.bucketIOB(q)
-	v := (f.vec[i] >> off) & f.qm
+	v := (f.vec[i] >> off) & f.bm
 	if bits > 0 {
 		v = v | (f.vec[i]&lowMask(uint64(bits)))<<(f.bs-uint64(bits))
 	}
@@ -260,7 +286,7 @@ func (f *Filter) lo(q uint64) (lo uint64) {
 	var b bucket
 	i := q
 	for {
-		if b = f.getBucket(i); b.checkbit(btypeShifted) {
+		if b = f.getBucket(i); !b.checkbit(btypeShifted) {
 			break
 		}
 		i = (i - 1) & f.qm
@@ -274,14 +300,13 @@ func (f *Filter) lo(q uint64) (lo uint64) {
 				break
 			}
 		}
-		// todo check
-		// for {
-		// 	i = (i + 1) & f.qm
-		// 	b = f.getBucket(i)
-		// 	if b.checkbit(btypeOccupied) {
-		// 		break
-		// 	}
-		// }
+		for {
+			i = (i + 1) & f.qm
+			b = f.getBucket(i)
+			if b.checkbit(btypeOccupied) {
+				break
+			}
+		}
 	}
 	return
 }
