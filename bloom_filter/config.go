@@ -5,7 +5,7 @@ import (
 	"github.com/koykov/hash"
 )
 
-const defaultFPP = 0.01
+const defaultFPP = .01
 
 type Config struct {
 	// Number of desired items to store in the filter

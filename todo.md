@@ -1,6 +1,7 @@
 Research and implement:
 * [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter) [+]
-* [Cuckoo filter](https://en.wikipedia.org/wiki/Cuckoo_filter)
+* [Cuckoo filter](https://en.wikipedia.org/wiki/Cuckoo_filter) [+]
+* [Quotient filter](https://en.wikipedia.org/wiki/Quotient_filter) [~]
 * [Count sketch](https://en.wikipedia.org/wiki/Count_sketch)
 * [Count-min sketch](https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch)
 * [HyperLogLog](https://en.wikipedia.org/wiki/HyperLogLog)

@@ -26,13 +26,15 @@ type Filter struct {
 // NewFilter creates new filter.
 func NewFilter(config *Config) (*Filter, error) {
 	if config == nil {
-		return nil, amq.ErrBadConfig
+		return nil, amq.ErrInvalidConfig
 	}
 	f := &Filter{
 		conf: config.copy(),
 	}
-	f.once.Do(f.init)
-	return f, f.err
+	if f.once.Do(f.init); f.err != nil {
+		return nil, f.err
+	}
+	return f, nil
 }
 
 // Set adds new key to the filter.
@@ -148,8 +150,12 @@ func (f *Filter) init() {
 	if c.MetricsWriter == nil {
 		c.MetricsWriter = amq.DummyMetricsWriter{}
 	}
-	if c.FPP <= 0 {
+	if c.FPP == 0 {
 		c.FPP = defaultFPP
+	}
+	if c.FPP < 0 || c.FPP > 1 {
+		f.err = amq.ErrInvalidFPP
+		return
 	}
 
 	f.m = optimalM(c.ItemsNumber, c.FPP)
