@@ -77,7 +77,7 @@ func (f *Filter) hset(hkey uint64) error {
 
 	lo := f.lo(q)
 	i := lo
-	for b.checkbit(btypeOccupied) {
+	if b.checkbit(btypeOccupied) {
 		lob := f.getBucket(i)
 		for {
 			if rem := b.rem(); rem == r {
