@@ -40,7 +40,7 @@ var bias [15]map[uint64]uint64
 
 func biasfn(p uint64, e float64) float64 {
 	_ = bias[14]
-	v, ok := bias[p][uint64(e)]
+	v, ok := bias[p][math.Float64bits(e)]
 	if !ok {
 		return e
 	}
