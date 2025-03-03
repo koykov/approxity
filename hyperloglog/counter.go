@@ -14,9 +14,7 @@ type counter struct {
 	conf *Config
 	once sync.Once
 	a    float64
-	// b    uint64
-	m    uint64
-	mpw2 uint64
+	m    float64
 	vec  []uint8
 
 	err error
@@ -123,8 +121,7 @@ func (c *counter) init() {
 		return
 	}
 
-	c.m = 1 << c.conf.Precision
-	c.mpw2 = c.m * c.m
+	c.m = float64(uint64(1) << c.conf.Precision)
 
 	// alpha approximation, see https://en.wikipedia.org/wiki/HyperLogLog#Practical_considerations for details
 	switch c.m {
@@ -135,6 +132,6 @@ func (c *counter) init() {
 	case 64:
 		c.a = .709
 	default:
-		c.a = .7213 / (1 + 1.079/float64(c.m))
+		c.a = .7213 / (1 + 1.079/c.m)
 	}
 }
