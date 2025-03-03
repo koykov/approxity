@@ -25,3 +25,15 @@ type Filter interface {
 	// Reset flushes the filter.
 	Reset()
 }
+
+// Counter describes AMQ unique counter interface.
+type Counter interface {
+	io.ReaderFrom
+	io.WriterTo
+	// Add adds new key to the counter.
+	Add(key any) error
+	// HAdd adds new precalculated hash key to the counter.
+	HAdd(hkey uint64) error
+	// Count returns number of unique keys added to the counter.
+	Count() uint64
+}
