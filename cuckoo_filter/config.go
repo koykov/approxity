@@ -1,9 +1,6 @@
 package cuckoo
 
-import (
-	"github.com/koykov/amq"
-	"github.com/koykov/hash"
-)
+import "github.com/koykov/amq"
 
 const defaultKicksLimit = 500
 
@@ -42,7 +39,7 @@ func (c *Config) WithItemsNumber(items uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHasher(hasher hash.Hasher[[]byte]) *Config {
+func (c *Config) WithHasher(hasher amq.Hasher) *Config {
 	c.Hasher = hasher
 	return c
 }
