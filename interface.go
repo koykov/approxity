@@ -36,4 +36,6 @@ type Counter interface {
 	HAdd(hkey uint64) error
 	// Count returns number of unique keys added to the counter.
 	Count() uint64
+	// Reset flushes the counter.
+	Reset()
 }
