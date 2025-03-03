@@ -19,7 +19,7 @@ func TestFilter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	amq.TestMe(t, f)
+	amq.TestFilter(t, f)
 }
 
 func BenchmarkFilter(b *testing.B) {
@@ -27,5 +27,5 @@ func BenchmarkFilter(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	amq.BenchMe(b, f)
+	amq.BenchFilter(b, f)
 }

@@ -18,7 +18,7 @@ func TestFilter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		amq.TestMe(t, f)
+		amq.TestFilter(t, f)
 	})
 	t.Run("concurrent", func(t *testing.T) {
 		f, err := NewFilter(NewConfig(testsz, testh).
@@ -26,7 +26,7 @@ func TestFilter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		amq.TestMeConcurrently(t, f)
+		amq.TestFilterConcurrently(t, f)
 	})
 	t.Run("writer", func(t *testing.T) {
 		testWrite := func(t *testing.T, f amq.Filter, path string, expect int64) {
@@ -89,7 +89,7 @@ func BenchmarkFilter(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		amq.BenchMe(b, f)
+		amq.BenchFilter(b, f)
 	})
 	b.Run("concurrent", func(b *testing.B) {
 		f, err := NewFilter(NewConfig(testsz, testh).
@@ -97,6 +97,6 @@ func BenchmarkFilter(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		amq.BenchMeConcurrently(b, f)
+		amq.BenchFilterConcurrently(b, f)
 	})
 }

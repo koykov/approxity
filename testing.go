@@ -73,7 +73,7 @@ func init() {
 	}
 }
 
-func TestMe(t *testing.T, f Interface) {
+func TestFilter(t *testing.T, f Filter) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		t.Run(ds.name, func(t *testing.T) {
@@ -103,7 +103,7 @@ func TestMe(t *testing.T, f Interface) {
 	}
 }
 
-func TestMeConcurrently(t *testing.T, f Interface) {
+func TestFilterConcurrently(t *testing.T, f Filter) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		t.Run(ds.name, func(t *testing.T) {
@@ -154,7 +154,7 @@ func TestMeConcurrently(t *testing.T, f Interface) {
 	}
 }
 
-func BenchMe(b *testing.B, f Interface) {
+func BenchFilter(b *testing.B, f Filter) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		b.Run(ds.name, func(b *testing.B) {
@@ -171,7 +171,7 @@ func BenchMe(b *testing.B, f Interface) {
 	}
 }
 
-func BenchMeConcurrently(b *testing.B, f Interface) {
+func BenchFilterConcurrently(b *testing.B, f Filter) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		b.Run(ds.name, func(b *testing.B) {
