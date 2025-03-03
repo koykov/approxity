@@ -2,8 +2,8 @@ package amq
 
 import "io"
 
-// Interface describes AMQ struct interface.
-type Interface interface {
+// Filter describes AMQ filter interface.
+type Filter interface {
 	io.ReaderFrom
 	io.WriterTo
 	// Set add new key to the filter.

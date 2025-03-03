@@ -9,11 +9,11 @@ import (
 	"github.com/koykov/bitvector"
 )
 
-// Filter represents Bloom filter.
+// Bloom filter implementation.
 // By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
 // Concurrent reading allowed afterward.
 // If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
-type Filter struct {
+type filter struct {
 	amq.Base
 	once sync.Once
 	conf *Config
@@ -24,11 +24,11 @@ type Filter struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter(config *Config) (*Filter, error) {
+func NewFilter(config *Config) (amq.Filter, error) {
 	if config == nil {
 		return nil, amq.ErrInvalidConfig
 	}
-	f := &Filter{
+	f := &filter{
 		conf: config.copy(),
 	}
 	if f.once.Do(f.init); f.err != nil {
@@ -38,7 +38,7 @@ func NewFilter(config *Config) (*Filter, error) {
 }
 
 // Set adds new key to the filter.
-func (f *Filter) Set(key any) error {
+func (f *filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
@@ -53,25 +53,25 @@ func (f *Filter) Set(key any) error {
 }
 
 // HSet sets new predefined hash key to the filter.
-func (f *Filter) HSet(hkey uint64) error {
+func (f *filter) HSet(hkey uint64) error {
 	f.vec.Set(hkey % f.m)
 	return f.mw().Set(nil)
 }
 
 // Unset removes key from the filter.
 // Caution! Bloom filter doesn't support this operation!
-func (f *Filter) Unset(_ any) error {
+func (f *filter) Unset(_ any) error {
 	return f.mw().Unset(amq.ErrUnsupportedOp)
 }
 
 // HUnset removes predefined hash key from the filter.
 // Caution! Bloom filter doesn't support this operation!
-func (f *Filter) HUnset(_ uint64) error {
+func (f *filter) HUnset(_ uint64) error {
 	return f.mw().Unset(amq.ErrUnsupportedOp)
 }
 
 // Contains checks if key is in the filter.
-func (f *Filter) Contains(key any) bool {
+func (f *filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return false
 	}
@@ -88,21 +88,21 @@ func (f *Filter) Contains(key any) bool {
 }
 
 // HContains checks if predefined hash key is in the filter.
-func (f *Filter) HContains(hkey uint64) bool {
+func (f *filter) HContains(hkey uint64) bool {
 	return f.mw().Contains(f.vec.Get(hkey%f.m) == 1)
 }
 
 // Capacity returns filter capacity.
-func (f *Filter) Capacity() uint64 {
+func (f *filter) Capacity() uint64 {
 	return f.vec.Capacity()
 }
 
 // Size returns number of items added to the filter.
-func (f *Filter) Size() uint64 {
+func (f *filter) Size() uint64 {
 	return f.vec.Size()
 }
 
-func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
+func (f *filter) ReadFrom(r io.Reader) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
@@ -121,7 +121,7 @@ func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
 	return n, nil
 }
 
-func (f *Filter) WriteTo(w io.Writer) (int64, error) {
+func (f *filter) WriteTo(w io.Writer) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
@@ -129,7 +129,7 @@ func (f *Filter) WriteTo(w io.Writer) (int64, error) {
 }
 
 // Reset flushes filter data.
-func (f *Filter) Reset() {
+func (f *filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
 	}
@@ -137,7 +137,7 @@ func (f *Filter) Reset() {
 	f.mw().Reset()
 }
 
-func (f *Filter) init() {
+func (f *filter) init() {
 	c := f.conf
 	if c.ItemsNumber == 0 {
 		f.err = amq.ErrNoItemsNumber
@@ -168,10 +168,10 @@ func (f *Filter) init() {
 	f.mw().Capacity(f.m)
 }
 
-func (f *Filter) h(key any, salt uint64) (uint64, error) {
+func (f *filter) h(key any, salt uint64) (uint64, error) {
 	return f.HashSalt(f.conf.Hasher, key, salt)
 }
 
-func (f *Filter) mw() amq.MetricsWriter {
+func (f *filter) mw() amq.MetricsWriter {
 	return f.conf.MetricsWriter
 }
