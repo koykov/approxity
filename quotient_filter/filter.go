@@ -9,8 +9,8 @@ import (
 	"github.com/koykov/openrt"
 )
 
-// Filter represents Quotient filter.
-type Filter struct {
+// Quotient filter implementation.
+type filter struct {
 	amq.Base
 	conf                 *Config
 	once                 sync.Once
@@ -25,11 +25,11 @@ type Filter struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter(config *Config) (*Filter, error) {
+func NewFilter(config *Config) (amq.Filter, error) {
 	if config == nil {
 		return nil, amq.ErrInvalidConfig
 	}
-	f := &Filter{
+	f := &filter{
 		conf: config.copy(),
 	}
 	if f.once.Do(f.init); f.err != nil {
@@ -39,7 +39,7 @@ func NewFilter(config *Config) (*Filter, error) {
 }
 
 // Set adds new key to the filter.
-func (f *Filter) Set(key any) error {
+func (f *filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
@@ -54,7 +54,7 @@ func (f *Filter) Set(key any) error {
 }
 
 // HSet sets new predefined hash key to the filter.
-func (f *Filter) HSet(hkey uint64) error {
+func (f *filter) HSet(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
 	}
@@ -64,7 +64,7 @@ func (f *Filter) HSet(hkey uint64) error {
 	return f.hset(hkey)
 }
 
-func (f *Filter) hset(hkey uint64) error {
+func (f *filter) hset(hkey uint64) error {
 	q, r := f.calcQR(hkey)
 	b := f.getBucket(q)
 	nb := newBucket(r)
@@ -129,7 +129,7 @@ func (f *Filter) hset(hkey uint64) error {
 }
 
 // Unset removes key from the filter.
-func (f *Filter) Unset(key any) error {
+func (f *filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return f.err
 	}
@@ -141,14 +141,14 @@ func (f *Filter) Unset(key any) error {
 }
 
 // HUnset removes predefined hash key from the filter.
-func (f *Filter) HUnset(hkey uint64) error {
+func (f *filter) HUnset(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return f.err
 	}
 	return f.hunset(hkey)
 }
 
-func (f *Filter) hunset(hkey uint64) error {
+func (f *filter) hunset(hkey uint64) error {
 	q, r := f.calcQR(hkey)
 	t := f.getBucket(q)
 	if !t.checkbit(btypeOccupied) {
@@ -245,7 +245,7 @@ func (f *Filter) hunset(hkey uint64) error {
 }
 
 // Contains checks if key is in the filter.
-func (f *Filter) Contains(key any) bool {
+func (f *filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return false
 	}
@@ -257,14 +257,14 @@ func (f *Filter) Contains(key any) bool {
 }
 
 // HContains checks if predefined hash key is in the filter.
-func (f *Filter) HContains(hkey uint64) bool {
+func (f *filter) HContains(hkey uint64) bool {
 	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return false
 	}
 	return f.hcontains(hkey)
 }
 
-func (f *Filter) hcontains(hkey uint64) bool {
+func (f *filter) hcontains(hkey uint64) bool {
 	q, r := f.calcQR(hkey)
 	b := f.getBucket(q)
 	if !b.checkbit(btypeOccupied) {
@@ -289,17 +289,17 @@ func (f *Filter) hcontains(hkey uint64) bool {
 }
 
 // Capacity returns filter capacity.
-func (f *Filter) Capacity() uint64 {
+func (f *filter) Capacity() uint64 {
 	return uint64(len(f.vec))
 }
 
 // Size returns number of items added to the filter.
-func (f *Filter) Size() uint64 {
+func (f *filter) Size() uint64 {
 	return f.s
 }
 
 // Reset flushes filter data.
-func (f *Filter) Reset() {
+func (f *filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
 	}
@@ -307,21 +307,21 @@ func (f *Filter) Reset() {
 	f.s = 0
 }
 
-func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
+func (f *filter) ReadFrom(r io.Reader) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
 	return 0, amq.ErrUnsupportedOp
 }
 
-func (f *Filter) WriteTo(w io.Writer) (int64, error) {
+func (f *filter) WriteTo(w io.Writer) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
 	return 0, amq.ErrUnsupportedOp
 }
 
-func (f *Filter) init() {
+func (f *filter) init() {
 	c := f.conf
 	if c.ItemsNumber == 0 {
 		f.err = amq.ErrNoItemsNumber
@@ -360,16 +360,16 @@ func (f *Filter) init() {
 	f.qmask, f.rmmask, f.bmask = lowMask(f.qbits), lowMask(f.rbits), lowMask(f.bsz)
 }
 
-func (f *Filter) overflow() bool {
+func (f *filter) overflow() bool {
 	return f.s >= 1<<f.qbits
 }
 
-func (f *Filter) calcQR(hkey uint64) (q, r uint64) {
+func (f *filter) calcQR(hkey uint64) (q, r uint64) {
 	q, r = (hkey>>f.rbits)&f.qmask, hkey&f.rmmask
 	return
 }
 
-func (f *Filter) getBucket(q uint64) bucket {
+func (f *filter) getBucket(q uint64) bucket {
 	i, off, bits := f.bucketIOB(q)
 	v := (f.vec[i] >> off) & f.bmask
 	if bits > 0 {
@@ -379,7 +379,7 @@ func (f *Filter) getBucket(q uint64) bucket {
 	return bucket(v)
 }
 
-func (f *Filter) setBucket(q uint64, b bucket) {
+func (f *filter) setBucket(q uint64, b bucket) {
 	i, off, bits := f.bucketIOB(q)
 	b = b & bucket(f.bmask)
 	nb := f.vec[i]
@@ -394,14 +394,14 @@ func (f *Filter) setBucket(q uint64, b bucket) {
 	}
 }
 
-func (f *Filter) bucketIOB(q uint64) (i, off uint64, bits int64) {
+func (f *filter) bucketIOB(q uint64) (i, off uint64, bits int64) {
 	bi := f.bsz * q
 	i, off = bi/64, bi%64
 	bits = int64(off + f.bsz - 64)
 	return
 }
 
-func (f *Filter) lo(q uint64) (lo uint64) {
+func (f *filter) lo(q uint64) (lo uint64) {
 	var b bucket
 	i := q
 	for {
@@ -430,7 +430,7 @@ func (f *Filter) lo(q uint64) (lo uint64) {
 	return
 }
 
-func (f *Filter) mw() amq.MetricsWriter {
+func (f *filter) mw() amq.MetricsWriter {
 	return f.conf.MetricsWriter
 }
 
