@@ -29,7 +29,7 @@ func TestFilter(t *testing.T) {
 		amq.TestMeConcurrently(t, f)
 	})
 	t.Run("writer", func(t *testing.T) {
-		testWrite := func(t *testing.T, f *Filter, path string, expect int64) {
+		testWrite := func(t *testing.T, f amq.Filter, path string, expect int64) {
 			_ = f.Set("foobar")
 			_ = f.Set("qwerty")
 			fh, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
@@ -55,7 +55,7 @@ func TestFilter(t *testing.T) {
 		})
 	})
 	t.Run("reader", func(t *testing.T) {
-		testRead := func(t *testing.T, f *Filter, path string, expect int64) {
+		testRead := func(t *testing.T, f amq.Filter, path string, expect int64) {
 			fh, err := os.OpenFile(path, os.O_RDONLY, 0644)
 			if err != nil {
 				t.Fatal(err)
