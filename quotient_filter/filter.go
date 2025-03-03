@@ -9,6 +9,7 @@ import (
 	"github.com/koykov/openrt"
 )
 
+// Filter represents Quotient filter.
 type Filter struct {
 	amq.Base
 	conf                 *Config
@@ -23,6 +24,7 @@ type Filter struct {
 	err error
 }
 
+// NewFilter creates new filter.
 func NewFilter(config *Config) (*Filter, error) {
 	if config == nil {
 		return nil, amq.ErrInvalidConfig
@@ -36,6 +38,7 @@ func NewFilter(config *Config) (*Filter, error) {
 	return f, nil
 }
 
+// Set adds new key to the filter.
 func (f *Filter) Set(key any) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
@@ -50,6 +53,7 @@ func (f *Filter) Set(key any) error {
 	return f.hset(hkey)
 }
 
+// HSet sets new predefined hash key to the filter.
 func (f *Filter) HSet(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
@@ -124,6 +128,7 @@ func (f *Filter) hset(hkey uint64) error {
 	return nil
 }
 
+// Unset removes key from the filter.
 func (f *Filter) Unset(key any) error {
 	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return f.err
@@ -135,6 +140,7 @@ func (f *Filter) Unset(key any) error {
 	return f.hunset(hkey)
 }
 
+// HUnset removes predefined hash key from the filter.
 func (f *Filter) HUnset(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return f.err
@@ -238,6 +244,7 @@ func (f *Filter) hunset(hkey uint64) error {
 	return nil
 }
 
+// Contains checks if key is in the filter.
 func (f *Filter) Contains(key any) bool {
 	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return false
@@ -249,6 +256,7 @@ func (f *Filter) Contains(key any) bool {
 	return f.hcontains(hkey)
 }
 
+// HContains checks if predefined hash key is in the filter.
 func (f *Filter) HContains(hkey uint64) bool {
 	if f.once.Do(f.init); f.err != nil || f.s == 0 {
 		return false
@@ -280,14 +288,17 @@ func (f *Filter) hcontains(hkey uint64) bool {
 	return false
 }
 
+// Capacity returns filter capacity.
 func (f *Filter) Capacity() uint64 {
 	return uint64(len(f.vec))
 }
 
+// Size returns number of items added to the filter.
 func (f *Filter) Size() uint64 {
 	return f.s
 }
 
+// Reset flushes filter data.
 func (f *Filter) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
@@ -300,16 +311,14 @@ func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	// todo implement me
-	return 0, nil
+	return 0, amq.ErrUnsupportedOp
 }
 
 func (f *Filter) WriteTo(w io.Writer) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	// todo implement me
-	return 0, nil
+	return 0, amq.ErrUnsupportedOp
 }
 
 func (f *Filter) init() {
