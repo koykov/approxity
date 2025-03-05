@@ -81,7 +81,7 @@ func (c *counter) Count() uint64 {
 	}
 
 	h := e
-	if z < c.m {
+	if z < float64(uint64(1)<<c.conf.Precision) {
 		h = c.linearEstimation(z)
 	}
 	if h <= threshold[c.conf.Precision-4] {

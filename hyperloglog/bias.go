@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"math"
 	"os"
-	"unsafe"
 )
 
 // empirical bias correction pairs
@@ -42,8 +41,7 @@ type biasp struct{ d, e float64 }
 func biasfn(p uint64, e float64) float64 {
 	_ = bias[14]
 	const k = 6 // K-nn
-	var a [96]byte
-	keys := *(*[6]biasp)(unsafe.Pointer(&a))
+	var keys [6]biasp
 	ssize := len(bias[p])
 	var eidx int
 	{
@@ -58,12 +56,11 @@ func biasfn(p uint64, e float64) float64 {
 	}
 	{
 		// std::partial_sort_copy
-		lo, hi := 0, ssize
+		lo, hi := 0, k
 		if eidx > k {
-			lo = eidx - k
-		}
-		if eidx+k < ssize {
-			hi = eidx + k
+			lo, hi = eidx-k, eidx
+		} else if eidx+k <= ssize {
+			lo, hi = eidx, eidx+k
 		}
 		for i := lo; i < hi; i++ {
 			keys[i-lo].d, keys[i-lo].e = bias[p][i][0], bias[p][i][1]
@@ -89,7 +86,7 @@ func biasPivot(p []biasp, lo, hi int, e float64) int {
 	i := lo - 1
 	_ = p[len(p)-1]
 	for j := lo; j <= hi-1; j++ {
-		if p[j].d-e < pi.d-e {
+		if math.Abs(p[j].d-e) < math.Abs(pi.d-e) {
 			i++
 			p[i], p[j] = p[j], p[i]
 		}
