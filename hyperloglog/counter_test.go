@@ -28,8 +28,6 @@ func TestCounter(t *testing.T) {
 			}
 		}
 		e := c.Count()
-		t.Log(e)
-		t.Log(e < uint64(float64(count)*(1+relative)))
-		t.Log(e > uint64(float64(count)*(1-relative)))
+		t.Log(e, e < uint64(float64(count)*(1+relative)) && e > uint64(float64(count)*(1-relative)))
 	})
 }

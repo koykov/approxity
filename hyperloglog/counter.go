@@ -53,20 +53,15 @@ func (c *counter) HAdd(hkey uint64) error {
 
 func (c *counter) hadd(hkey uint64) error {
 	p := c.conf.Precision
-	i := hkey >> (64 - p)
 	r := 64 - p
+	var idx uint64
+	idx = hkey >> r
 	if h := hkey << p; h > 0 {
 		if lz := uint64(bits.LeadingZeros64(h)) + 1; lz < r {
 			r = lz
 		}
 	}
-	c.vec[i] = uint8(r)
-	// i := (hkey >> (64 - p)) & ((1 << p) - 1)
-	// w := hkey<<p | 1<<(p-1)
-	// lbp1 := uint8(bits.LeadingZeros64(w)) + 1
-	// if mx := c.vec[i]; lbp1 > mx {
-	// 	c.vec[i] = lbp1
-	// }
+	c.vec[idx] = uint8(r)
 	return nil
 }
 
