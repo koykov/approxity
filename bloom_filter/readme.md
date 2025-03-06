@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-    f, err := bloom.NewFilter(bloom.NewConfig(1000, 0.01, xxhash.Hasher64[[]byte]{}))
+    f, err := bloom.NewFilter[string](bloom.NewConfig(1000, 0.01, xxhash.Hasher64[[]byte]{}))
     _ = err
     _ = f.Set("foobar")
     print(f.Contains("foobar")) // true
@@ -33,7 +33,7 @@ import "github.com/koykov/amq/metrics/prometheus"
 
 func func main() {
     // set filter size and hasher
-    config := bloom.NewConfig(1000, 0.01, xxhash.Hasher64[[]byte]{Seed: 1234}).
+    config := bloom.NewConfig[string](1000, 0.01, xxhash.Hasher64[[]byte]{Seed: 1234}).
         // switch to race protected bit array (atomic based)
         WithConcurrency().
         // cover with metrics

@@ -28,7 +28,7 @@ import (
 )
 
 func main() {
-    f, err := cuckoo.NewFilter(cuckoo.NewConfig(1e7, xxhash.Hasher64[[]byte]{}))
+    f, err := cuckoo.NewFilter[string](cuckoo.NewConfig(1e7, xxhash.Hasher64[[]byte]{}))
     _ = err
     _ = f.Set("foobar")
     print(f.Contains("foobar")) // true
@@ -42,7 +42,7 @@ import "github.com/koykov/amq/metrics/prometheus"
 
 func main() {
     // set items number and hasher
-    f, _ := cuckoo.NewFilter(cuckoo.NewConfig(1e7, xxhash.Hasher64[[]byte]{}).
+    f, _ := cuckoo.NewFilter[string](cuckoo.NewConfig(1e7, xxhash.Hasher64[[]byte]{}).
 		// limit for cuckoo kicks to avoid infinite loop
         WithKicksLimit(10).
         // switch to race protected buckets array (atomic based)

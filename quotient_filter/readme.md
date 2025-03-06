@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	f, err := quotient.NewFilter(quotient.NewConfig(1e3, 0.01, xxhash.Hasher64[[]byte]{}))
+	f, err := quotient.NewFilter[string](quotient.NewConfig(1e3, 0.01, xxhash.Hasher64[[]byte]{}))
     _ = err
 	_ = f.Set("foobar")
 	print(f.Contains("foobar")) // true
