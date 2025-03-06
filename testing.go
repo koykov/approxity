@@ -154,24 +154,24 @@ func TestMeConcurrently[T []byte](t *testing.T, f Filter[T]) {
 	}
 }
 
-func BenchMe[T *[]byte](b *testing.B, f Filter[T]) {
+func BenchMe[T []byte](b *testing.B, f Filter[T]) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		b.Run(ds.name, func(b *testing.B) {
 			f.Reset()
 			for j := 0; j < len(ds.positive); j++ {
-				_ = f.Set(&ds.positive[j])
+				_ = f.Set(ds.positive[j])
 			}
 			b.ReportAllocs()
 			b.ResetTimer()
 			for k := 0; k < b.N; k++ {
-				f.Contains(&ds.all[k%len(ds.all)])
+				f.Contains(ds.all[k%len(ds.all)])
 			}
 		})
 	}
 }
 
-func BenchMeConcurrently[T *[]byte](b *testing.B, f Filter[T]) {
+func BenchMeConcurrently[T []byte](b *testing.B, f Filter[T]) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		b.Run(ds.name, func(b *testing.B) {
@@ -183,11 +183,11 @@ func BenchMeConcurrently[T *[]byte](b *testing.B, f Filter[T]) {
 					ci := atomic.AddUint64(&j, 1)
 					switch ci % 100 {
 					case 99:
-						_ = f.Set(&ds.positive[ci%uint64(len(ds.positive))])
+						_ = f.Set(ds.positive[ci%uint64(len(ds.positive))])
 					case 98:
-						_ = f.Unset(&ds.all[ci%uint64(len(ds.all))])
+						_ = f.Unset(ds.all[ci%uint64(len(ds.all))])
 					default:
-						f.Contains(&ds.all[ci%uint64(len(ds.all))])
+						f.Contains(ds.all[ci%uint64(len(ds.all))])
 					}
 				}
 			})

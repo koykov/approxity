@@ -14,8 +14,8 @@ import (
 // By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
 // Concurrent reading allowed afterward.
 // If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
-type filter struct {
-	amq.Base
+type filter[T amq.Hashable] struct {
+	amq.Base[T]
 	once sync.Once
 	conf *Config
 
@@ -28,8 +28,8 @@ type filter struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter(conf *Config) (amq.Filter, error) {
-	f := &filter{
+func NewFilter[T amq.Hashable](conf *Config) (amq.Filter[T], error) {
+	f := &filter[T]{
 		conf: conf.copy(),
 	}
 	if f.once.Do(f.init); f.err != nil {
@@ -39,7 +39,7 @@ func NewFilter(conf *Config) (amq.Filter, error) {
 }
 
 // Set adds new key to the filter.
-func (f *filter) Set(key any) error {
+func (f *filter[T]) Set(key T) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Set(f.err)
 	}
@@ -51,7 +51,7 @@ func (f *filter) Set(key any) error {
 }
 
 // HSet sets new predefined hash key to the filter.
-func (f *filter) HSet(hkey uint64) error {
+func (f *filter[T]) HSet(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Set(f.err)
 	}
@@ -62,7 +62,7 @@ func (f *filter) HSet(hkey uint64) error {
 	return f.hset(i0, i1, fp)
 }
 
-func (f *filter) hset(i0, i1 uint64, fp byte) (err error) {
+func (f *filter[T]) hset(i0, i1 uint64, fp byte) (err error) {
 	if err = f.vec.add(i0, fp); err == nil {
 		return f.mw().Set(nil)
 	}
@@ -89,7 +89,7 @@ func (f *filter) hset(i0, i1 uint64, fp byte) (err error) {
 }
 
 // Unset removes key from the filter.
-func (f *filter) Unset(key any) error {
+func (f *filter[T]) Unset(key T) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Unset(f.err)
 	}
@@ -101,7 +101,7 @@ func (f *filter) Unset(key any) error {
 }
 
 // HUnset removes predefined hash key from the filter.
-func (f *filter) HUnset(hkey uint64) error {
+func (f *filter[T]) HUnset(hkey uint64) error {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Unset(f.err)
 	}
@@ -112,7 +112,7 @@ func (f *filter) HUnset(hkey uint64) error {
 	return f.hunset(i0, i1, fp)
 }
 
-func (f *filter) hunset(i0, i1 uint64, fp byte) (err error) {
+func (f *filter[T]) hunset(i0, i1 uint64, fp byte) (err error) {
 	if f.vec.unset(i0, fp) {
 		return f.mw().Unset(nil)
 	}
@@ -121,7 +121,7 @@ func (f *filter) hunset(i0, i1 uint64, fp byte) (err error) {
 }
 
 // Contains checks if key is in the filter.
-func (f *filter) Contains(key any) bool {
+func (f *filter[T]) Contains(key T) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Contains(false)
 	}
@@ -133,7 +133,7 @@ func (f *filter) Contains(key any) bool {
 }
 
 // HContains checks if predefined hash key is in the filter.
-func (f *filter) HContains(hkey uint64) bool {
+func (f *filter[T]) HContains(hkey uint64) bool {
 	if f.once.Do(f.init); f.err != nil {
 		return f.mw().Contains(false)
 	}
@@ -144,7 +144,7 @@ func (f *filter) HContains(hkey uint64) bool {
 	return f.hcontains(i0, i1, fp)
 }
 
-func (f *filter) hcontains(i0, i1 uint64, fp byte) bool {
+func (f *filter[T]) hcontains(i0, i1 uint64, fp byte) bool {
 	if f.vec.fpi(i0, fp) != -1 || f.vec.fpi(i1, fp) != -1 {
 		return f.mw().Contains(true)
 	}
@@ -152,16 +152,16 @@ func (f *filter) hcontains(i0, i1 uint64, fp byte) bool {
 }
 
 // Capacity returns filter capacity.
-func (f *filter) Capacity() uint64 {
+func (f *filter[T]) Capacity() uint64 {
 	return f.vec.capacity()
 }
 
 // Size returns number of items added to the filter.
-func (f *filter) Size() uint64 {
+func (f *filter[T]) Size() uint64 {
 	return f.vec.size()
 }
 
-func (f *filter) ReadFrom(r io.Reader) (int64, error) {
+func (f *filter[T]) ReadFrom(r io.Reader) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
@@ -177,7 +177,7 @@ func (f *filter) ReadFrom(r io.Reader) (int64, error) {
 	return n, nil
 }
 
-func (f *filter) WriteTo(w io.Writer) (int64, error) {
+func (f *filter[T]) WriteTo(w io.Writer) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
@@ -185,7 +185,7 @@ func (f *filter) WriteTo(w io.Writer) (int64, error) {
 }
 
 // Reset flushes filter data.
-func (f *filter) Reset() {
+func (f *filter[T]) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
 	}
@@ -193,7 +193,7 @@ func (f *filter) Reset() {
 	f.mw().Reset()
 }
 
-func (f *filter) calcI2FP(key any, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
+func (f *filter[T]) calcI2FP(key T, bp, i uint64) (i0 uint64, i1 uint64, fp byte, err error) {
 	var hkey uint64
 	if hkey, err = f.Hash(f.c().Hasher, key); err != nil {
 		return
@@ -201,7 +201,7 @@ func (f *filter) calcI2FP(key any, bp, i uint64) (i0 uint64, i1 uint64, fp byte,
 	return f.hcalcI2FP(hkey, bp)
 }
 
-func (f *filter) hcalcI2FP(hkey, bp uint64) (i0, i1 uint64, fp byte, err error) {
+func (f *filter[T]) hcalcI2FP(hkey, bp uint64) (i0, i1 uint64, fp byte, err error) {
 	fp = byte(hkey%255 + 1)
 	i0 = (hkey >> 32) & mask64[bp]
 	m := mask64[bp]
@@ -209,7 +209,7 @@ func (f *filter) hcalcI2FP(hkey, bp uint64) (i0, i1 uint64, fp byte, err error) 
 	return
 }
 
-func (f *filter) init() {
+func (f *filter[T]) init() {
 	c := f.conf
 	if c.ItemsNumber == 0 {
 		f.err = amq.ErrNoItemsNumber
@@ -241,14 +241,14 @@ func (f *filter) init() {
 	var buf []byte
 	for i := 0; i < 256; i++ {
 		buf = append(buf[:0], byte(i))
-		f.hsh[i], _ = f.Hash(c.Hasher, buf)
+		f.hsh[i] = c.Hasher.Sum64(buf)
 	}
 }
 
-func (f *filter) c() *Config {
+func (f *filter[T]) c() *Config {
 	return f.conf
 }
 
-func (f *filter) mw() amq.MetricsWriter {
+func (f *filter[T]) mw() amq.MetricsWriter {
 	return f.conf.MetricsWriter
 }
