@@ -61,7 +61,7 @@ func (c *counter) hadd(hkey uint64) error {
 			r = lz
 		}
 	}
-	c.vec[idx] = uint8(r)
+	c.vec[idx] = maxu8(uint8(r), c.vec[idx])
 	return nil
 }
 
@@ -69,15 +69,15 @@ func (c *counter) Count() uint64 {
 	if c.once.Do(c.init); c.err != nil || len(c.vec) == 0 {
 		return 0
 	}
-	e, z := c.rawEstimation()
+	e, nz := c.rawEstimation()
 
 	if e < 5*c.m {
 		e = e - biasfn(c.conf.Precision-4, e)
 	}
 
 	h := e
-	if z < float64(uint64(1)<<c.conf.Precision) {
-		h = c.linearEstimation(z)
+	if nz < float64(uint64(1)<<c.conf.Precision) {
+		h = c.linearEstimation(nz)
 	}
 	if h <= threshold[c.conf.Precision-4] {
 		return uint64(h)
@@ -85,13 +85,13 @@ func (c *counter) Count() uint64 {
 	return uint64(e)
 }
 
-func (c *counter) rawEstimation() (raw, z float64) {
+func (c *counter) rawEstimation() (raw, nz float64) {
 	_ = c.vec[len(c.vec)-1]
 	for i := 0; i < len(c.vec); i++ {
 		n := c.vec[i]
 		raw += 1 / math.Pow(2, float64(n))
-		if n == 0 {
-			z++
+		if n > 0 {
+			nz++
 		}
 	}
 	raw = c.a * c.m * c.m / raw
@@ -155,3 +155,10 @@ func (c *counter) init() {
 }
 
 var threshold = [15]float64{10, 20, 40, 80, 220, 400, 900, 1800, 3100, 6500, 11500, 20000, 50000, 120000, 350000}
+
+func maxu8(a, b uint8) uint8 {
+	if a > b {
+		return a
+	}
+	return b
+}
