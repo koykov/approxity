@@ -13,14 +13,14 @@ import (
 	"time"
 )
 
-type dataset struct {
+type dataset[T []byte] struct {
 	name     string
-	positive [][]byte
-	negative [][]byte
-	all      [][]byte
+	positive []T
+	negative []T
+	all      []T
 }
 
-var datasets []dataset
+var datasets []dataset[[]byte]
 
 func init() {
 	fread := func(dst [][]byte, path string) ([][]byte, error) {
@@ -46,7 +46,7 @@ func init() {
 			if info == nil || !info.IsDir() || cpath == path {
 				return nil
 			}
-			var ds dataset
+			var ds dataset[[]byte]
 			if ds.positive, err = fread(ds.positive, cpath+"/positive.txt"); err != nil {
 				return err
 			}
@@ -59,7 +59,7 @@ func init() {
 		})
 	}
 	// Try to compose dataset based on system's dictionaries.
-	sysDS := dataset{name: "system/dict"}
+	sysDS := dataset[[]byte]{name: "system/dict"}
 	if words, err := fread(nil, "/usr/share/dict/words"); err == nil && len(words) > 0 {
 		sysDS.all = words
 		for i := 0; i < len(words); i++ {
@@ -73,7 +73,7 @@ func init() {
 	}
 }
 
-func TestFilter(t *testing.T, f Filter) {
+func TestMe[T []byte](t *testing.T, f Filter[T]) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		t.Run(ds.name, func(t *testing.T) {
@@ -103,7 +103,7 @@ func TestFilter(t *testing.T, f Filter) {
 	}
 }
 
-func TestFilterConcurrently(t *testing.T, f Filter) {
+func TestMeConcurrently[T []byte](t *testing.T, f Filter[T]) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		t.Run(ds.name, func(t *testing.T) {
@@ -120,7 +120,7 @@ func TestFilterConcurrently(t *testing.T, f Filter) {
 					case <-ctx.Done():
 						return
 					default:
-						_ = f.Set(&ds.positive[j%len(ds.positive)])
+						_ = f.Set(ds.positive[j%len(ds.positive)])
 					}
 				}
 			}()
@@ -132,7 +132,7 @@ func TestFilterConcurrently(t *testing.T, f Filter) {
 					case <-ctx.Done():
 						return
 					default:
-						_ = f.Unset(&ds.all[j%len(ds.all)])
+						_ = f.Unset(ds.all[j%len(ds.all)])
 					}
 				}
 			}()
@@ -144,7 +144,7 @@ func TestFilterConcurrently(t *testing.T, f Filter) {
 					case <-ctx.Done():
 						return
 					default:
-						f.Contains(&ds.all[(j % len(ds.all))])
+						f.Contains(ds.all[(j % len(ds.all))])
 					}
 				}
 			}()
@@ -154,13 +154,13 @@ func TestFilterConcurrently(t *testing.T, f Filter) {
 	}
 }
 
-func BenchFilter(b *testing.B, f Filter) {
+func BenchMe[T *[]byte](b *testing.B, f Filter[T]) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		b.Run(ds.name, func(b *testing.B) {
 			f.Reset()
 			for j := 0; j < len(ds.positive); j++ {
-				_ = f.Set(ds.positive[j])
+				_ = f.Set(&ds.positive[j])
 			}
 			b.ReportAllocs()
 			b.ResetTimer()
@@ -171,7 +171,7 @@ func BenchFilter(b *testing.B, f Filter) {
 	}
 }
 
-func BenchFilterConcurrently(b *testing.B, f Filter) {
+func BenchMeConcurrently[T *[]byte](b *testing.B, f Filter[T]) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		b.Run(ds.name, func(b *testing.B) {
