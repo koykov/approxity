@@ -21,7 +21,7 @@ var beta = [15][8]uint64{
 	{0xbfd758d24ce3749e, 0x3fefe9ea5635c955, 0x3ff8db50cf17bc7b, 0x3ff42633d44a1f18, 0xbff8883b183dcf95, 0x3fde97b90668ef09, 0xbfae7820b1e8f330, 0x3f67d852b2199895},
 }
 
-func betafn(p uint64, z float64) float64 {
+func betaEstimation(p uint64, z float64) float64 {
 	zl := math.Log(z + 1)
 	_ = beta[14]
 	return math.Float64frombits(beta[p][0])*z + math.Float64frombits(beta[p][1])*zl +

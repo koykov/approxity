@@ -17,9 +17,9 @@ func TestBias(t *testing.T) {
 	for i := 0; i < len(biasStages); i++ {
 		stage := &biasStages[i]
 		t.Run("", func(t *testing.T) {
-			r := biasfn(stage.p, stage.e)
+			r := biasEstimation(stage.p, stage.e)
 			if !fuzzeq(r, stage.r, 0.0001) {
-				t.Errorf("biasfn(%d, %f) = %f, want %f", stage.p, stage.r, r, stage.r)
+				t.Errorf("biasEstimation(%d, %f) = %f, want %f", stage.p, stage.r, r, stage.r)
 			}
 		})
 	}
@@ -32,7 +32,7 @@ func BenchmarkBias(b *testing.B) {
 			b.Run("", func(b *testing.B) {
 				b.ReportAllocs()
 				for i := 0; i < b.N; i++ {
-					_ = biasfn(stage.p, stage.e)
+					_ = biasEstimation(stage.p, stage.e)
 				}
 			})
 		}

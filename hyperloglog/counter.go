@@ -72,7 +72,7 @@ func (c *counter) Count() uint64 {
 	e, nz := c.rawEstimation()
 
 	if e < 5*c.m {
-		e = e - biasfn(c.conf.Precision-4, e)
+		e = e - biasEstimation(c.conf.Precision-4, e)
 	}
 
 	h := e

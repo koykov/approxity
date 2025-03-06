@@ -38,7 +38,7 @@ func init() {
 
 type biasp struct{ d, e float64 }
 
-func biasfn(p uint64, e float64) float64 {
+func biasEstimation(p uint64, e float64) float64 {
 	_ = bias[14]
 	const k = 6 // K-nn
 	var keys [6]biasp
