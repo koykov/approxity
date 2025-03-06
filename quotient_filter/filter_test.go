@@ -15,17 +15,17 @@ const (
 var testh = xxhash.Hasher64[[]byte]{}
 
 func TestFilter(t *testing.T) {
-	f, err := NewFilter(NewConfig(testSz, testFPP, testh))
+	f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh))
 	if err != nil {
 		t.Fatal(err)
 	}
-	amq.TestFilter(t, f)
+	amq.TestMe(t, f)
 }
 
 func BenchmarkFilter(b *testing.B) {
-	f, err := NewFilter(NewConfig(testSz, testFPP, testh))
+	f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh))
 	if err != nil {
 		b.Fatal(err)
 	}
-	amq.BenchFilter(b, f)
+	amq.BenchMe(b, f)
 }
