@@ -17,22 +17,22 @@ var testh = xxhash.Hasher64[[]byte]{}
 
 func TestFilter(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
-		f, err := NewFilter(NewConfig(testSz, testFPP, testh))
+		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh))
 		if err != nil {
 			t.Fatal(err)
 		}
-		amq.TestFilter(t, f)
+		amq.TestMe(t, f)
 	})
 	t.Run("concurrent", func(t *testing.T) {
-		f, err := NewFilter(NewConfig(testSz, testFPP, testh).
+		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).
 			WithConcurrency().WithWriteAttemptsLimit(5))
 		if err != nil {
 			t.Fatal(err)
 		}
-		amq.TestFilterConcurrently(t, f)
+		amq.TestMeConcurrently(t, f)
 	})
 	t.Run("writer", func(t *testing.T) {
-		testWrite := func(t *testing.T, f amq.Filter, path string, expect int64) {
+		testWrite := func(t *testing.T, f amq.Filter[string], path string, expect int64) {
 			_ = f.Set("foobar")
 			_ = f.Set("qwerty")
 			fh, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
@@ -49,16 +49,16 @@ func TestFilter(t *testing.T) {
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
-			f, _ := NewFilter(NewConfig(10, 0.01, testh))
+			f, _ := NewFilter[string](NewConfig(10, 0.01, testh))
 			testWrite(t, f, "testdata/filter.bin", 45)
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, _ := NewFilter(NewConfig(10, 0.01, testh).WithConcurrency())
+			f, _ := NewFilter[string](NewConfig(10, 0.01, testh).WithConcurrency())
 			testWrite(t, f, "testdata/concurrent_filter.bin", 56)
 		})
 	})
 	t.Run("reader", func(t *testing.T) {
-		testRead := func(t *testing.T, f amq.Filter, path string, expect int64) {
+		testRead := func(t *testing.T, f amq.Filter[string], path string, expect int64) {
 			fh, err := os.OpenFile(path, os.O_RDONLY, 0644)
 			if err != nil {
 				t.Fatal(err)
@@ -76,11 +76,11 @@ func TestFilter(t *testing.T) {
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
-			f, _ := NewFilter(NewConfig(10, 0.01, testh))
+			f, _ := NewFilter[string](NewConfig(10, 0.01, testh))
 			testRead(t, f, "testdata/filter.bin", 45)
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, _ := NewFilter(NewConfig(10, 0.01, testh).WithConcurrency())
+			f, _ := NewFilter[string](NewConfig(10, 0.01, testh).WithConcurrency())
 			testRead(t, f, "testdata/concurrent_filter.bin", 56)
 		})
 	})
@@ -88,18 +88,18 @@ func TestFilter(t *testing.T) {
 
 func BenchmarkFilter(b *testing.B) {
 	b.Run("sync", func(b *testing.B) {
-		f, err := NewFilter(NewConfig(testSz, testFPP, testh))
+		f, err := NewFilter[*[]byte](NewConfig(testSz, testFPP, testh))
 		if err != nil {
 			b.Fatal(err)
 		}
-		amq.BenchFilter(b, f)
+		amq.BenchMe(b, f)
 	})
 	b.Run("concurrent", func(b *testing.B) {
-		f, err := NewFilter(NewConfig(testSz, testFPP, testh).
+		f, err := NewFilter[*[]byte](NewConfig(testSz, testFPP, testh).
 			WithConcurrency().WithWriteAttemptsLimit(5))
 		if err != nil {
 			b.Fatal(err)
 		}
-		amq.BenchFilterConcurrently(b, f)
+		amq.BenchMeConcurrently(b, f)
 	})
 }
