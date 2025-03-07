@@ -34,6 +34,7 @@ func init() {
 	probes := []string{
 		"testdata",
 		"../testdata",
+		"../../testdata",
 	}
 	for _, path := range probes {
 		_ = filepath.Walk(path, func(cpath string, info fs.FileInfo, err error) error {
@@ -44,7 +45,7 @@ func init() {
 			if ds.Positives, err = fread(ds.Positives, cpath+"/positive.txt"); err != nil {
 				return err
 			}
-			if ds.Negatives, err = fread(ds.Negatives, cpath+"/Negatives.txt"); err != nil {
+			if ds.Negatives, err = fread(ds.Negatives, cpath+"/negative.txt"); err != nil {
 				return err
 			}
 			ds.Name, ds.All = info.Name(), append(ds.Positives, ds.Negatives...)
