@@ -15,3 +15,12 @@ func TestEstimator(t *testing.T) {
 	}
 	cardinality.TestMe(t, est, 0.005)
 }
+
+func BenchmarkEstimator(b *testing.B) {
+	const p = 18
+	est, err := NewEstimator[[]byte](&Config{Precision: p, Hasher: xxhash.Hasher64[[]byte]{}})
+	if err != nil {
+		b.Fatal(err)
+	}
+	cardinality.BenchMe(b, est)
+}
