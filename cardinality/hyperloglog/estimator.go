@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/bits"
 	"sync"
+	"unsafe"
 
 	"github.com/koykov/approxity"
 	"github.com/koykov/approxity/cardinality"
@@ -88,13 +89,12 @@ func (e *estimator[T]) Estimate() uint64 {
 }
 
 func (e *estimator[T]) rawEstimation() (raw, nz float64) {
-	_ = e.vec[len(e.vec)-1]
+	_, _ = e.vec[len(e.vec)-1], pow2[math.MaxUint8-1]
 	for i := 0; i < len(e.vec); i++ {
 		n := e.vec[i]
-		raw += 1 / math.Pow(2, float64(n))
-		if n > 0 {
-			nz++
-		}
+		raw += 1 / pow2[n]
+		pred := n&0b11111111 != 0
+		nz += float64(*(*uint8)(unsafe.Pointer(&pred)))
 	}
 	raw = e.a * e.m * e.m / raw
 	return
