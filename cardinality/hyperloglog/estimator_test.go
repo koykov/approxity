@@ -8,14 +8,14 @@ import (
 	"github.com/koykov/hash/xxhash"
 )
 
-func TestCounter(t *testing.T) {
+func TestEstimator(t *testing.T) {
 	const p = 18
 	m := 1 << p
 	count := 10 * m
 	relative := 3.0 / math.Sqrt(float64(m))
 	t.Run("count distincts", func(t *testing.T) {
 		var buf [8]byte
-		c, err := NewCounter[[]byte](&Config{Precision: p, Hasher: xxhash.Hasher64[[]byte]{}})
+		c, err := NewEstimator[[]byte](&Config{Precision: p, Hasher: xxhash.Hasher64[[]byte]{}})
 		if err != nil {
 			t.Fatal(err)
 		}
