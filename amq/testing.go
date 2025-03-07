@@ -12,15 +12,15 @@ import (
 )
 
 func TestMe[T []byte](t *testing.T, f Filter[T]) {
-	approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
 			f.Reset()
-			for j := 0; j < len(ds.Positives); j++ {
-				_ = f.Set(ds.Positives[j])
+			for i := 0; i < len(ds.Positives); i++ {
+				_ = f.Set(ds.Positives[i])
 			}
 			var falseNegative, falsePositive int
-			for j := 0; j < len(ds.Negatives); j++ {
-				if f.Contains(ds.Negatives[j]) {
+			for i := 0; i < len(ds.Negatives); i++ {
+				if f.Contains(ds.Negatives[i]) {
 					falsePositive++
 				}
 			}
@@ -28,8 +28,8 @@ func TestMe[T []byte](t *testing.T, f Filter[T]) {
 				// Just warn, it's OK to have small amount of false positives.
 				t.Logf("%d of %d negatives (%d total) gives false positive value", falsePositive, len(ds.Negatives), len(ds.All))
 			}
-			for j := 0; j < len(ds.Positives); j++ {
-				if !f.Contains(ds.Positives[j]) {
+			for i := 0; i < len(ds.Positives); i++ {
+				if !f.Contains(ds.Positives[i]) {
 					falseNegative++
 				}
 			}
@@ -41,7 +41,7 @@ func TestMe[T []byte](t *testing.T, f Filter[T]) {
 }
 
 func TestMeConcurrently[T []byte](t *testing.T, f Filter[T]) {
-	approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
 			f.Reset()
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -51,36 +51,36 @@ func TestMeConcurrently[T []byte](t *testing.T, f Filter[T]) {
 
 			go func() {
 				defer wg.Done()
-				for j := 0; ; j++ {
+				for i := 0; ; i++ {
 					select {
 					case <-ctx.Done():
 						return
 					default:
-						_ = f.Set(ds.Positives[j%len(ds.Positives)])
+						_ = f.Set(ds.Positives[i%len(ds.Positives)])
 					}
 				}
 			}()
 
 			go func() {
 				defer wg.Done()
-				for j := 0; ; j++ {
+				for i := 0; ; i++ {
 					select {
 					case <-ctx.Done():
 						return
 					default:
-						_ = f.Unset(ds.All[j%len(ds.All)])
+						_ = f.Unset(ds.All[i%len(ds.All)])
 					}
 				}
 			}()
 
 			go func() {
 				defer wg.Done()
-				for j := 0; ; j++ {
+				for i := 0; ; i++ {
 					select {
 					case <-ctx.Done():
 						return
 					default:
-						f.Contains(ds.All[(j % len(ds.All))])
+						f.Contains(ds.All[(i % len(ds.All))])
 					}
 				}
 			}()
@@ -91,30 +91,30 @@ func TestMeConcurrently[T []byte](t *testing.T, f Filter[T]) {
 }
 
 func BenchMe[T []byte](b *testing.B, f Filter[T]) {
-	approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
 		b.Run(ds.Name, func(b *testing.B) {
 			f.Reset()
-			for j := 0; j < len(ds.Positives); j++ {
-				_ = f.Set(ds.Positives[j])
+			for i := 0; i < len(ds.Positives); i++ {
+				_ = f.Set(ds.Positives[i])
 			}
 			b.ReportAllocs()
 			b.ResetTimer()
-			for k := 0; k < b.N; k++ {
-				f.Contains(ds.All[k%len(ds.All)])
+			for j := 0; j < b.N; j++ {
+				f.Contains(ds.All[j%len(ds.All)])
 			}
 		})
 	})
 }
 
 func BenchMeConcurrently[T []byte](b *testing.B, f Filter[T]) {
-	approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
 		b.Run(ds.Name, func(b *testing.B) {
 			f.Reset()
 			b.ReportAllocs()
 			b.RunParallel(func(pb *testing.PB) {
-				var j uint64 = math.MaxUint64
+				var i uint64 = math.MaxUint64
 				for pb.Next() {
-					ci := atomic.AddUint64(&j, 1)
+					ci := atomic.AddUint64(&i, 1)
 					switch ci % 100 {
 					case 99:
 						_ = f.Set(ds.Positives[ci%uint64(len(ds.Positives))])
