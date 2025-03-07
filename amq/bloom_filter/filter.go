@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/amq"
 	"github.com/koykov/bitvector"
 )
 
@@ -24,7 +25,7 @@ type filter[T approxity.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T approxity.Hashable](config *Config) (approxity.Filter[T], error) {
+func NewFilter[T approxity.Hashable](config *Config) (amq.Filter[T], error) {
 	if config == nil {
 		return nil, approxity.ErrInvalidConfig
 	}
@@ -148,7 +149,7 @@ func (f *filter[T]) init() {
 		return
 	}
 	if c.MetricsWriter == nil {
-		c.MetricsWriter = approxity.DummyMetricsWriter{}
+		c.MetricsWriter = amq.DummyMetricsWriter{}
 	}
 	if c.FPP == 0 {
 		c.FPP = defaultFPP
@@ -172,6 +173,6 @@ func (f *filter[T]) h(key T, salt uint64) (uint64, error) {
 	return f.HashSalt(f.conf.Hasher, key, salt)
 }
 
-func (f *filter[T]) mw() approxity.MetricsWriter {
+func (f *filter[T]) mw() amq.MetricsWriter {
 	return f.conf.MetricsWriter
 }

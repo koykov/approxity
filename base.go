@@ -2,9 +2,8 @@ package approxity
 
 import (
 	"strconv"
+	"unicode/utf8"
 	"unsafe"
-
-	"github.com/koykov/byteconv"
 )
 
 type Base[T Hashable] struct{}
@@ -65,7 +64,13 @@ func (b Base[T]) hash(hasher Hasher, data T, salt uint64, saltext bool) (_ uint6
 	case string:
 		buf = append(buf, x...)
 	case []rune:
-		byteconv.AppendR2B(buf, x)
+		if n := len(x); n > 0 {
+			_ = x[n-1]
+			for i := 0; i < n; i++ {
+				buf = utf8.AppendRune(buf, x[i])
+			}
+		}
+	// bool
 	case bool:
 		if x {
 			buf = append(buf, "true"...)

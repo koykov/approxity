@@ -1,35 +1,38 @@
-package cuckoo
+package bloom
 
 import (
 	"os"
 	"testing"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/amq"
 	"github.com/koykov/hash/xxhash"
 )
 
-const testsz = 1e7
+const (
+	testSz  = 1e6
+	testFPP = .01
+)
 
 var testh = xxhash.Hasher64[[]byte]{}
 
 func TestFilter(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
-		f, err := NewFilter[[]byte](NewConfig(testsz, testh))
+		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh))
 		if err != nil {
 			t.Fatal(err)
 		}
-		approxity.TestMe(t, f)
+		amq.TestMe(t, f)
 	})
 	t.Run("concurrent", func(t *testing.T) {
-		f, err := NewFilter[[]byte](NewConfig(testsz, testh).
+		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).
 			WithConcurrency().WithWriteAttemptsLimit(5))
 		if err != nil {
 			t.Fatal(err)
 		}
-		approxity.TestMeConcurrently(t, f)
+		amq.TestMeConcurrently(t, f)
 	})
 	t.Run("writer", func(t *testing.T) {
-		testWrite := func(t *testing.T, f approxity.Filter[string], path string, expect int64) {
+		testWrite := func(t *testing.T, f amq.Filter[string], path string, expect int64) {
 			_ = f.Set("foobar")
 			_ = f.Set("qwerty")
 			fh, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
@@ -46,16 +49,16 @@ func TestFilter(t *testing.T) {
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
-			f, _ := NewFilter[string](NewConfig(10, testh))
-			testWrite(t, f, "testdata/filter.bin", 40)
+			f, _ := NewFilter[string](NewConfig(10, 0.01, testh))
+			testWrite(t, f, "testdata/filter.bin", 45)
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, _ := NewFilter[string](NewConfig(10, testh).WithConcurrency())
-			testWrite(t, f, "testdata/concurrent_filter.bin", 40)
+			f, _ := NewFilter[string](NewConfig(10, 0.01, testh).WithConcurrency())
+			testWrite(t, f, "testdata/concurrent_filter.bin", 56)
 		})
 	})
 	t.Run("reader", func(t *testing.T) {
-		testRead := func(t *testing.T, f approxity.Filter[string], path string, expect int64) {
+		testRead := func(t *testing.T, f amq.Filter[string], path string, expect int64) {
 			fh, err := os.OpenFile(path, os.O_RDONLY, 0644)
 			if err != nil {
 				t.Fatal(err)
@@ -73,30 +76,30 @@ func TestFilter(t *testing.T) {
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
-			f, _ := NewFilter[string](NewConfig(10, testh))
-			testRead(t, f, "testdata/filter.bin", 40)
+			f, _ := NewFilter[string](NewConfig(10, 0.01, testh))
+			testRead(t, f, "testdata/filter.bin", 45)
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, _ := NewFilter[string](NewConfig(10, testh).WithConcurrency())
-			testRead(t, f, "testdata/concurrent_filter.bin", 40)
+			f, _ := NewFilter[string](NewConfig(10, 0.01, testh).WithConcurrency())
+			testRead(t, f, "testdata/concurrent_filter.bin", 56)
 		})
 	})
 }
 
 func BenchmarkFilter(b *testing.B) {
 	b.Run("sync", func(b *testing.B) {
-		f, err := NewFilter[[]byte](NewConfig(testsz, testh))
+		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh))
 		if err != nil {
 			b.Fatal(err)
 		}
-		approxity.BenchMe(b, f)
+		amq.BenchMe(b, f)
 	})
 	b.Run("concurrent", func(b *testing.B) {
-		f, err := NewFilter[[]byte](NewConfig(testsz, testh).
+		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).
 			WithConcurrency().WithWriteAttemptsLimit(5))
 		if err != nil {
 			b.Fatal(err)
 		}
-		approxity.BenchMeConcurrently(b, f)
+		amq.BenchMeConcurrently(b, f)
 	})
 }

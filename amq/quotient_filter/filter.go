@@ -6,6 +6,7 @@ import (
 	"unsafe"
 
 	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/amq"
 	"github.com/koykov/openrt"
 )
 
@@ -25,7 +26,7 @@ type filter[T approxity.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T approxity.Hashable](config *Config) (approxity.Filter[T], error) {
+func NewFilter[T approxity.Hashable](config *Config) (amq.Filter[T], error) {
 	if config == nil {
 		return nil, approxity.ErrInvalidConfig
 	}
@@ -332,7 +333,7 @@ func (f *filter[T]) init() {
 		return
 	}
 	if c.MetricsWriter == nil {
-		c.MetricsWriter = approxity.DummyMetricsWriter{}
+		c.MetricsWriter = amq.DummyMetricsWriter{}
 	}
 	if c.FPP == 0 {
 		c.FPP = defaultFPP
@@ -430,7 +431,7 @@ func (f *filter[T]) lo(q uint64) (lo uint64) {
 	return
 }
 
-func (f *filter[T]) mw() approxity.MetricsWriter {
+func (f *filter[T]) mw() amq.MetricsWriter {
 	return f.conf.MetricsWriter
 }
 

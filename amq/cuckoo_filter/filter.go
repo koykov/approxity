@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/amq"
 )
 
 // Cuckoo filter implementation.
@@ -28,7 +29,7 @@ type filter[T approxity.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T approxity.Hashable](conf *Config) (approxity.Filter[T], error) {
+func NewFilter[T approxity.Hashable](conf *Config) (amq.Filter[T], error) {
 	f := &filter[T]{
 		conf: conf.copy(),
 	}
@@ -220,7 +221,7 @@ func (f *filter[T]) init() {
 		return
 	}
 	if c.MetricsWriter == nil {
-		c.MetricsWriter = approxity.DummyMetricsWriter{}
+		c.MetricsWriter = amq.DummyMetricsWriter{}
 	}
 	if c.KicksLimit == 0 {
 		c.KicksLimit = defaultKicksLimit
@@ -249,6 +250,6 @@ func (f *filter[T]) c() *Config {
 	return f.conf
 }
 
-func (f *filter[T]) mw() approxity.MetricsWriter {
+func (f *filter[T]) mw() amq.MetricsWriter {
 	return f.conf.MetricsWriter
 }

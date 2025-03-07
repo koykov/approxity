@@ -3,7 +3,7 @@ package quotient
 import (
 	"testing"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/amq"
 	"github.com/koykov/hash/xxhash"
 )
 
@@ -19,7 +19,7 @@ func TestFilter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	approxity.TestMe(t, f)
+	amq.TestMe(t, f)
 }
 
 func BenchmarkFilter(b *testing.B) {
@@ -27,5 +27,5 @@ func BenchmarkFilter(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	approxity.BenchMe(b, f)
+	amq.BenchMe(b, f)
 }

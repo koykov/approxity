@@ -1,9 +1,13 @@
-package approxity
+package amq
 
-import "io"
+import (
+	"io"
+
+	"github.com/koykov/approxity"
+)
 
 // Filter describes AMQ filter interface.
-type Filter[T Hashable] interface {
+type Filter[T approxity.Hashable] interface {
 	io.ReaderFrom
 	io.WriterTo
 	// Set add new key to the filter.

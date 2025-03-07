@@ -1,6 +1,9 @@
 package quotient
 
-import "github.com/koykov/approxity"
+import (
+	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/amq"
+)
 
 const (
 	defaultFPP        = .01
@@ -21,7 +24,7 @@ type Config struct {
 	// Mandatory param.
 	Hasher approxity.Hasher
 	// Metrics writer handler.
-	MetricsWriter approxity.MetricsWriter
+	MetricsWriter amq.MetricsWriter
 }
 
 func NewConfig(items uint64, fpp float64, hasher approxity.Hasher) *Config {
@@ -42,7 +45,7 @@ func (c *Config) WithHasher(hasher approxity.Hasher) *Config {
 	return c
 }
 
-func (c *Config) WithMetricsWriter(mw approxity.MetricsWriter) *Config {
+func (c *Config) WithMetricsWriter(mw amq.MetricsWriter) *Config {
 	c.MetricsWriter = mw
 	return c
 }

@@ -1,6 +1,9 @@
 package cuckoo
 
-import "github.com/koykov/approxity"
+import (
+	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/amq"
+)
 
 const defaultKicksLimit = 500
 
@@ -16,7 +19,7 @@ type Config struct {
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
-	MetricsWriter approxity.MetricsWriter
+	MetricsWriter amq.MetricsWriter
 }
 
 // ConcurrentConfig configures concurrent section of config.
@@ -57,7 +60,7 @@ func (c *Config) WithKicksLimit(limit uint64) *Config {
 	return c
 }
 
-func (c *Config) WithMetricsWriter(mw approxity.MetricsWriter) *Config {
+func (c *Config) WithMetricsWriter(mw amq.MetricsWriter) *Config {
 	c.MetricsWriter = mw
 	return c
 }
