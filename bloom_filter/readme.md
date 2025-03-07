@@ -15,7 +15,7 @@ See [full description](https://en.wikipedia.org/wiki/Bloom_filter).
 The minimal working example:
 ```go
 import (
-    "github.com/koykov/amq/bloom_filter"
+    "github.com/koykov/approxity/bloom_filter"
     "github.com/koykov/hash/xxhash"
 )
 
@@ -29,7 +29,7 @@ func main() {
 ```
 , but [initial config](config.go) allows to tune filter for better efficiency:
 ```go
-import "github.com/koykov/amq/metrics/prometheus"
+import "github.com/koykov/approxity/metrics/prometheus"
 
 func func main() {
     // set filter size and hasher

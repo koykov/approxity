@@ -38,7 +38,7 @@ func main() {
 
 Similar to [bloom filter](../bloom_filter/readme.md#usage) cuckoo allows to initiate config more detailed:
 ```go
-import "github.com/koykov/amq/metrics/prometheus"
+import "github.com/koykov/approxity/metrics/prometheus"
 
 func main() {
     // set items number and hasher

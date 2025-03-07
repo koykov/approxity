@@ -1,3 +1,3 @@
-# Approximate membership query
+# Approximate probability solutions
 
 TODO ...

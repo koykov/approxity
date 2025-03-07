@@ -1,6 +1,6 @@
 package cuckoo
 
-import "github.com/koykov/amq"
+import "github.com/koykov/approxity"
 
 const defaultKicksLimit = 500
 
@@ -10,13 +10,13 @@ type Config struct {
 	ItemsNumber uint64
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher amq.Hasher
+	Hasher approxity.Hasher
 	// How many kicks may filter do to set the item.
 	KicksLimit uint64
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
-	MetricsWriter amq.MetricsWriter
+	MetricsWriter approxity.MetricsWriter
 }
 
 // ConcurrentConfig configures concurrent section of config.
@@ -25,7 +25,7 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
-func NewConfig(items uint64, hasher amq.Hasher) *Config {
+func NewConfig(items uint64, hasher approxity.Hasher) *Config {
 	return &Config{ItemsNumber: items, Hasher: hasher}
 }
 
@@ -39,7 +39,7 @@ func (c *Config) WithItemsNumber(items uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHasher(hasher amq.Hasher) *Config {
+func (c *Config) WithHasher(hasher approxity.Hasher) *Config {
 	c.Hasher = hasher
 	return c
 }
@@ -57,7 +57,7 @@ func (c *Config) WithKicksLimit(limit uint64) *Config {
 	return c
 }
 
-func (c *Config) WithMetricsWriter(mw amq.MetricsWriter) *Config {
+func (c *Config) WithMetricsWriter(mw approxity.MetricsWriter) *Config {
 	c.MetricsWriter = mw
 	return c
 }

@@ -1,4 +1,4 @@
-module github.com/koykov/amq
+module github.com/koykov/approxity
 
 go 1.18
 

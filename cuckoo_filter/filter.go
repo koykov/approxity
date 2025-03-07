@@ -7,15 +7,15 @@ import (
 	"math/rand"
 	"sync"
 
-	"github.com/koykov/amq"
+	"github.com/koykov/approxity"
 )
 
 // Cuckoo filter implementation.
 // By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
 // Concurrent reading allowed afterward.
 // If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
-type filter[T amq.Hashable] struct {
-	amq.Base[T]
+type filter[T approxity.Hashable] struct {
+	approxity.Base[T]
 	once sync.Once
 	conf *Config
 
@@ -28,7 +28,7 @@ type filter[T amq.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T amq.Hashable](conf *Config) (amq.Filter[T], error) {
+func NewFilter[T approxity.Hashable](conf *Config) (approxity.Filter[T], error) {
 	f := &filter[T]{
 		conf: conf.copy(),
 	}
@@ -212,15 +212,15 @@ func (f *filter[T]) hcalcI2FP(hkey, bp uint64) (i0, i1 uint64, fp byte, err erro
 func (f *filter[T]) init() {
 	c := f.conf
 	if c.ItemsNumber == 0 {
-		f.err = amq.ErrNoItemsNumber
+		f.err = approxity.ErrNoItemsNumber
 		return
 	}
 	if c.Hasher == nil {
-		f.err = amq.ErrNoHasher
+		f.err = approxity.ErrNoHasher
 		return
 	}
 	if c.MetricsWriter == nil {
-		c.MetricsWriter = amq.DummyMetricsWriter{}
+		c.MetricsWriter = approxity.DummyMetricsWriter{}
 	}
 	if c.KicksLimit == 0 {
 		c.KicksLimit = defaultKicksLimit
@@ -249,6 +249,6 @@ func (f *filter[T]) c() *Config {
 	return f.conf
 }
 
-func (f *filter[T]) mw() amq.MetricsWriter {
+func (f *filter[T]) mw() approxity.MetricsWriter {
 	return f.conf.MetricsWriter
 }

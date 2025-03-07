@@ -1,4 +1,4 @@
-package amq
+package approxity
 
 type MetricsWriter interface {
 	Capacity(cap uint64)

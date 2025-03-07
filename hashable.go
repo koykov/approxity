@@ -1,4 +1,4 @@
-package amq
+package approxity
 
 // Hashable is a constraint that permits any type that can be hashed.
 type Hashable interface {

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/koykov/amq"
+	"github.com/koykov/approxity"
 	"github.com/koykov/hash/xxhash"
 )
 
@@ -18,7 +18,7 @@ func TestFilter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		amq.TestMe(t, f)
+		approxity.TestMe(t, f)
 	})
 	t.Run("concurrent", func(t *testing.T) {
 		f, err := NewFilter[[]byte](NewConfig(testsz, testh).
@@ -26,10 +26,10 @@ func TestFilter(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		amq.TestMeConcurrently(t, f)
+		approxity.TestMeConcurrently(t, f)
 	})
 	t.Run("writer", func(t *testing.T) {
-		testWrite := func(t *testing.T, f amq.Filter[string], path string, expect int64) {
+		testWrite := func(t *testing.T, f approxity.Filter[string], path string, expect int64) {
 			_ = f.Set("foobar")
 			_ = f.Set("qwerty")
 			fh, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
@@ -55,7 +55,7 @@ func TestFilter(t *testing.T) {
 		})
 	})
 	t.Run("reader", func(t *testing.T) {
-		testRead := func(t *testing.T, f amq.Filter[string], path string, expect int64) {
+		testRead := func(t *testing.T, f approxity.Filter[string], path string, expect int64) {
 			fh, err := os.OpenFile(path, os.O_RDONLY, 0644)
 			if err != nil {
 				t.Fatal(err)
@@ -89,7 +89,7 @@ func BenchmarkFilter(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		amq.BenchMe(b, f)
+		approxity.BenchMe(b, f)
 	})
 	b.Run("concurrent", func(b *testing.B) {
 		f, err := NewFilter[[]byte](NewConfig(testsz, testh).
@@ -97,6 +97,6 @@ func BenchmarkFilter(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		amq.BenchMeConcurrently(b, f)
+		approxity.BenchMeConcurrently(b, f)
 	})
 }

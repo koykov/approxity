@@ -5,13 +5,13 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/koykov/amq"
+	"github.com/koykov/approxity"
 	"github.com/koykov/openrt"
 )
 
 // Quotient filter implementation.
-type filter[T amq.Hashable] struct {
-	amq.Base[T]
+type filter[T approxity.Hashable] struct {
+	approxity.Base[T]
 	conf                 *Config
 	once                 sync.Once
 	qbits, rbits         uint64 // quotient and remainder bits
@@ -25,9 +25,9 @@ type filter[T amq.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T amq.Hashable](config *Config) (amq.Filter[T], error) {
+func NewFilter[T approxity.Hashable](config *Config) (approxity.Filter[T], error) {
 	if config == nil {
-		return nil, amq.ErrInvalidConfig
+		return nil, approxity.ErrInvalidConfig
 	}
 	f := &filter[T]{
 		conf: config.copy(),
@@ -311,34 +311,34 @@ func (f *filter[T]) ReadFrom(r io.Reader) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	return 0, amq.ErrUnsupportedOp
+	return 0, approxity.ErrUnsupportedOp
 }
 
 func (f *filter[T]) WriteTo(w io.Writer) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	return 0, amq.ErrUnsupportedOp
+	return 0, approxity.ErrUnsupportedOp
 }
 
 func (f *filter[T]) init() {
 	c := f.conf
 	if c.ItemsNumber == 0 {
-		f.err = amq.ErrNoItemsNumber
+		f.err = approxity.ErrNoItemsNumber
 		return
 	}
 	if c.Hasher == nil {
-		f.err = amq.ErrNoHasher
+		f.err = approxity.ErrNoHasher
 		return
 	}
 	if c.MetricsWriter == nil {
-		c.MetricsWriter = amq.DummyMetricsWriter{}
+		c.MetricsWriter = approxity.DummyMetricsWriter{}
 	}
 	if c.FPP == 0 {
 		c.FPP = defaultFPP
 	}
 	if c.FPP < 0 || c.FPP > 1 {
-		f.err = amq.ErrInvalidFPP
+		f.err = approxity.ErrInvalidFPP
 		return
 	}
 	if c.LoadFactor == 0 {
@@ -430,7 +430,7 @@ func (f *filter[T]) lo(q uint64) (lo uint64) {
 	return
 }
 
-func (f *filter[T]) mw() amq.MetricsWriter {
+func (f *filter[T]) mw() approxity.MetricsWriter {
 	return f.conf.MetricsWriter
 }
 

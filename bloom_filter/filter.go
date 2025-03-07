@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/koykov/amq"
+	"github.com/koykov/approxity"
 	"github.com/koykov/bitvector"
 )
 
@@ -13,8 +13,8 @@ import (
 // By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
 // Concurrent reading allowed afterward.
 // If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
-type filter[T amq.Hashable] struct {
-	amq.Base[T]
+type filter[T approxity.Hashable] struct {
+	approxity.Base[T]
 	once sync.Once
 	conf *Config
 	m, k uint64
@@ -24,9 +24,9 @@ type filter[T amq.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T amq.Hashable](config *Config) (amq.Filter[T], error) {
+func NewFilter[T approxity.Hashable](config *Config) (approxity.Filter[T], error) {
 	if config == nil {
-		return nil, amq.ErrInvalidConfig
+		return nil, approxity.ErrInvalidConfig
 	}
 	f := &filter[T]{
 		conf: config.copy(),
@@ -61,13 +61,13 @@ func (f *filter[T]) HSet(hkey uint64) error {
 // Unset removes key from the filter.
 // Caution! Bloom filter doesn't support this operation!
 func (f *filter[T]) Unset(_ T) error {
-	return f.mw().Unset(amq.ErrUnsupportedOp)
+	return f.mw().Unset(approxity.ErrUnsupportedOp)
 }
 
 // HUnset removes predefined hash key from the filter.
 // Caution! Bloom filter doesn't support this operation!
 func (f *filter[T]) HUnset(_ uint64) error {
-	return f.mw().Unset(amq.ErrUnsupportedOp)
+	return f.mw().Unset(approxity.ErrUnsupportedOp)
 }
 
 // Contains checks if key is in the filter.
@@ -140,21 +140,21 @@ func (f *filter[T]) Reset() {
 func (f *filter[T]) init() {
 	c := f.conf
 	if c.ItemsNumber == 0 {
-		f.err = amq.ErrNoItemsNumber
+		f.err = approxity.ErrNoItemsNumber
 		return
 	}
 	if c.Hasher == nil {
-		f.err = amq.ErrNoHasher
+		f.err = approxity.ErrNoHasher
 		return
 	}
 	if c.MetricsWriter == nil {
-		c.MetricsWriter = amq.DummyMetricsWriter{}
+		c.MetricsWriter = approxity.DummyMetricsWriter{}
 	}
 	if c.FPP == 0 {
 		c.FPP = defaultFPP
 	}
 	if c.FPP < 0 || c.FPP > 1 {
-		f.err = amq.ErrInvalidFPP
+		f.err = approxity.ErrInvalidFPP
 		return
 	}
 
@@ -172,6 +172,6 @@ func (f *filter[T]) h(key T, salt uint64) (uint64, error) {
 	return f.HashSalt(f.conf.Hasher, key, salt)
 }
 
-func (f *filter[T]) mw() amq.MetricsWriter {
+func (f *filter[T]) mw() approxity.MetricsWriter {
 	return f.conf.MetricsWriter
 }

@@ -1,6 +1,6 @@
 package quotient
 
-import "github.com/koykov/amq"
+import "github.com/koykov/approxity"
 
 const (
 	defaultFPP        = .01
@@ -19,12 +19,12 @@ type Config struct {
 	LoadFactor float64
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher amq.Hasher
+	Hasher approxity.Hasher
 	// Metrics writer handler.
-	MetricsWriter amq.MetricsWriter
+	MetricsWriter approxity.MetricsWriter
 }
 
-func NewConfig(items uint64, fpp float64, hasher amq.Hasher) *Config {
+func NewConfig(items uint64, fpp float64, hasher approxity.Hasher) *Config {
 	return &Config{
 		ItemsNumber: items,
 		FPP:         fpp,
@@ -37,12 +37,12 @@ func (c *Config) WithItemsNumber(items uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHasher(hasher amq.Hasher) *Config {
+func (c *Config) WithHasher(hasher approxity.Hasher) *Config {
 	c.Hasher = hasher
 	return c
 }
 
-func (c *Config) WithMetricsWriter(mw amq.MetricsWriter) *Config {
+func (c *Config) WithMetricsWriter(mw approxity.MetricsWriter) *Config {
 	c.MetricsWriter = mw
 	return c
 }
