@@ -213,7 +213,7 @@ func (f *filter[T]) hcalcI2FP(hkey, bp uint64) (i0, i1 uint64, fp byte, err erro
 func (f *filter[T]) init() {
 	c := f.conf
 	if c.ItemsNumber == 0 {
-		f.err = approxity.ErrNoItemsNumber
+		f.err = amq.ErrNoItemsNumber
 		return
 	}
 	if c.Hasher == nil {

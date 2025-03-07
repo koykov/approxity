@@ -141,7 +141,7 @@ func (f *filter[T]) Reset() {
 func (f *filter[T]) init() {
 	c := f.conf
 	if c.ItemsNumber == 0 {
-		f.err = approxity.ErrNoItemsNumber
+		f.err = amq.ErrNoItemsNumber
 		return
 	}
 	if c.Hasher == nil {
@@ -155,7 +155,7 @@ func (f *filter[T]) init() {
 		c.FPP = defaultFPP
 	}
 	if c.FPP < 0 || c.FPP > 1 {
-		f.err = approxity.ErrInvalidFPP
+		f.err = amq.ErrInvalidFPP
 		return
 	}
 
