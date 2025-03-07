@@ -33,71 +33,39 @@ func (b Base[T]) hash(hasher Hasher, data T, salt uint64, saltext bool) (_ uint6
 	// int
 	case int:
 		buf = strconv.AppendInt(buf, int64(x), 10)
-	case *int:
-		buf = strconv.AppendInt(buf, int64(*x), 10)
 	case int8:
 		buf = strconv.AppendInt(buf, int64(x), 10)
-	case *int8:
-		buf = strconv.AppendInt(buf, int64(*x), 10)
 	case int16:
 		buf = strconv.AppendInt(buf, int64(x), 10)
-	case *int16:
-		buf = strconv.AppendInt(buf, int64(*x), 10)
 	case int32:
 		buf = strconv.AppendInt(buf, int64(x), 10)
-	case *int32:
-		buf = strconv.AppendInt(buf, int64(*x), 10)
 	case int64:
 		buf = strconv.AppendInt(buf, x, 10)
-	case *int64:
-		buf = strconv.AppendInt(buf, *x, 10)
 	// uint
 	case uint:
 		buf = strconv.AppendUint(buf, uint64(x), 10)
-	case *uint:
-		buf = strconv.AppendUint(buf, uint64(*x), 10)
 	case uint8:
 		buf = strconv.AppendUint(buf, uint64(x), 10)
-	case *uint8:
-		buf = strconv.AppendUint(buf, uint64(*x), 10)
 	case uint16:
 		buf = strconv.AppendUint(buf, uint64(x), 10)
-	case *uint16:
-		buf = strconv.AppendUint(buf, uint64(*x), 10)
 	case uint32:
 		buf = strconv.AppendUint(buf, uint64(x), 10)
-	case *uint32:
-		buf = strconv.AppendUint(buf, uint64(*x), 10)
 	case uint64:
 		buf = strconv.AppendUint(buf, x, 10)
-	case *uint64:
-		buf = strconv.AppendUint(buf, *x, 10)
 	case uintptr:
 		buf = strconv.AppendUint(buf, uint64(x), 10)
-	case *uintptr:
-		buf = strconv.AppendUint(buf, uint64(*x), 10)
 	// float
 	case float32:
 		buf = strconv.AppendFloat(buf, float64(x), 'f', -1, 32)
-	case *float32:
-		buf = strconv.AppendFloat(buf, float64(*x), 'f', -1, 32)
 	case float64:
 		buf = strconv.AppendFloat(buf, x, 'f', -1, 64)
-	case *float64:
-		buf = strconv.AppendFloat(buf, *x, 'f', -1, 64)
 	// byteseq
 	case []byte:
 		buf = append(buf, x...)
-	case *[]byte:
-		buf = append(buf, *x...)
 	case string:
 		buf = append(buf, x...)
-	case *string:
-		buf = append(buf, *x...)
 	case []rune:
 		byteconv.AppendR2B(buf, x)
-	case *[]rune:
-		byteconv.AppendR2B(buf, *x)
 	case bool:
 		if x {
 			buf = append(buf, "true"...)
