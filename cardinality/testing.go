@@ -45,3 +45,30 @@ func TestMe[T []byte](t *testing.T, est Estimator[T], delta float64) {
 		})
 	})
 }
+
+func BenchMe(b *testing.B, est Estimator[[]byte]) {
+	b.Run("add", func(b *testing.B) {
+		est.Reset()
+		var buf [8]byte
+		for i := 0; i < b.N; i++ {
+			binary.LittleEndian.PutUint64(buf[:], uint64(i))
+			_ = est.Add(buf[:])
+		}
+	})
+	b.Run("estimate", func(b *testing.B) {
+		var buf [8]byte
+		for i := uint64(0); i < 1e7; i++ {
+			binary.LittleEndian.PutUint64(buf[:], i)
+			_ = est.Add(buf[:])
+		}
+		b.ResetTimer()
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			_ = est.Estimate()
+		}
+	})
+
+	// approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	// 	est.Reset()
+	// })
+}
