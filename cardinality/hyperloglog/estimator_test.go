@@ -7,9 +7,12 @@ import (
 	"github.com/koykov/hash/xxhash"
 )
 
+const testP = 18
+
+var testh = xxhash.Hasher64[[]byte]{}
+
 func TestEstimator(t *testing.T) {
-	const p = 18
-	est, err := NewEstimator[[]byte](&Config{Precision: p, Hasher: xxhash.Hasher64[[]byte]{}})
+	est, err := NewEstimator[[]byte](&Config{Precision: testP, Hasher: testh})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -17,8 +20,7 @@ func TestEstimator(t *testing.T) {
 }
 
 func BenchmarkEstimator(b *testing.B) {
-	const p = 18
-	est, err := NewEstimator[[]byte](&Config{Precision: p, Hasher: xxhash.Hasher64[[]byte]{}})
+	est, err := NewEstimator[[]byte](&Config{Precision: testP, Hasher: testh})
 	if err != nil {
 		b.Fatal(err)
 	}
