@@ -71,20 +71,20 @@ func (e *estimator[T]) Estimate() uint64 {
 	if e.once.Do(e.init); e.err != nil || len(e.vec) == 0 {
 		return 0
 	}
-	e_, nz := e.rawEstimation()
+	est, nz := e.rawEstimation()
 
-	if e_ < 5*e.m {
-		e_ = e_ - biasEstimation(e.conf.Precision-4, e_)
+	if est < 5*e.m {
+		est = est - biasEstimation(e.conf.Precision-4, est)
 	}
 
-	h := e_
+	h := est
 	if nz < float64(uint64(1)<<e.conf.Precision) {
 		h = e.linearEstimation(nz)
 	}
 	if h <= threshold[e.conf.Precision-4] {
 		return uint64(h)
 	}
-	return uint64(e_)
+	return uint64(est)
 }
 
 func (e *estimator[T]) rawEstimation() (raw, nz float64) {
@@ -160,8 +160,6 @@ func (e *estimator[T]) init() {
 		e.a = .7213 / (1 + 1.079/e.m)
 	}
 }
-
-var threshold = [15]float64{10, 20, 40, 80, 220, 400, 900, 1800, 3100, 6500, 11500, 20000, 50000, 120000, 350000}
 
 func maxu8(a, b uint8) uint8 {
 	if a > b {
