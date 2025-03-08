@@ -24,6 +24,13 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
+func NewConfig(precision uint64, hasher approxity.Hasher) *Config {
+	return &Config{
+		Precision: precision,
+		Hasher:    hasher,
+	}
+}
+
 func (c *Config) WithConcurrency() *Config {
 	c.Concurrent = &ConcurrentConfig{}
 	return c

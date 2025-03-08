@@ -12,15 +12,25 @@ const testP = 18
 var testh = xxhash.Hasher64[[]byte]{}
 
 func TestEstimator(t *testing.T) {
-	est, err := NewEstimator[[]byte](&Config{Precision: testP, Hasher: testh})
-	if err != nil {
-		t.Fatal(err)
-	}
-	cardinality.TestMe(t, est, 0.005)
+	t.Run("sync", func(t *testing.T) {
+		est, err := NewEstimator[[]byte](NewConfig(testP, testh))
+		if err != nil {
+			t.Fatal(err)
+		}
+		cardinality.TestMe(t, est, 0.005)
+	})
+	t.Run("concurrent", func(t *testing.T) {
+		est, err := NewEstimator[[]byte](NewConfig(testP, testh).
+			WithConcurrency().WithWriteAttemptsLimit(5))
+		if err != nil {
+			t.Fatal(err)
+		}
+		cardinality.TestMeConcurrently(t, est, 0.005)
+	})
 }
 
 func BenchmarkEstimator(b *testing.B) {
-	est, err := NewEstimator[[]byte](&Config{Precision: testP, Hasher: testh})
+	est, err := NewEstimator[[]byte](NewConfig(testP, testh))
 	if err != nil {
 		b.Fatal(err)
 	}

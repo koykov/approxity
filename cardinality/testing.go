@@ -1,9 +1,12 @@
 package cardinality
 
 import (
+	"context"
 	"encoding/binary"
 	"math"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/koykov/approxity"
 )
@@ -39,6 +42,95 @@ func TestMe[T []byte](t *testing.T, est Estimator[T], delta float64) {
 					}
 				}
 			}
+			e := est.Estimate()
+			ratio := float64(e) / float64(len(ds.All))
+			diff := math.Abs(1 - ratio)
+			if diff > delta {
+				t.Errorf("estimation too inaccurate: ratio delta need %f, got %f", delta, diff)
+			}
+		})
+	})
+}
+
+func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T], delta float64) {
+	t.Run("distinct counting", func(t *testing.T) {
+		est.Reset()
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		var wg sync.WaitGroup
+
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				var buf [8]byte
+				for j := 0; ; j++ {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						binary.LittleEndian.PutUint64(buf[:], uint64(j))
+						_ = est.Add(buf[:])
+					}
+				}
+			}()
+		}
+
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				tick := time.NewTicker(time.Millisecond * 5)
+				defer tick.Stop()
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case <-tick.C:
+						est.Estimate()
+					}
+				}
+			}()
+		}
+
+		wg.Wait()
+	})
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+		t.Run(ds.Name, func(t *testing.T) {
+			est.Reset()
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				for i := 0; ; i++ {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						_ = est.Add(ds.All[i%len(ds.All)])
+					}
+				}
+			}()
+
+			go func() {
+				defer wg.Done()
+				tick := time.NewTicker(time.Millisecond * 5)
+				defer tick.Stop()
+				for i := 0; ; i++ {
+					select {
+					case <-ctx.Done():
+						return
+					case <-tick.C:
+						est.Estimate()
+					}
+				}
+			}()
+
+			wg.Wait()
+
 			e := est.Estimate()
 			ratio := float64(e) / float64(len(ds.All))
 			diff := math.Abs(1 - ratio)
