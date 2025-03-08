@@ -30,9 +30,19 @@ func TestEstimator(t *testing.T) {
 }
 
 func BenchmarkEstimator(b *testing.B) {
-	est, err := NewEstimator[[]byte](NewConfig(testP, testh))
-	if err != nil {
-		b.Fatal(err)
-	}
-	cardinality.BenchMe(b, est)
+	b.Run("sync", func(b *testing.B) {
+		est, err := NewEstimator[[]byte](NewConfig(testP, testh))
+		if err != nil {
+			b.Fatal(err)
+		}
+		cardinality.BenchMe(b, est)
+	})
+	b.Run("concurrent", func(b *testing.B) {
+		est, err := NewEstimator[[]byte](NewConfig(testP, testh).
+			WithConcurrency().WithWriteAttemptsLimit(5))
+		if err != nil {
+			b.Fatal(err)
+		}
+		cardinality.BenchMeConcurrently(b, est)
+	})
 }

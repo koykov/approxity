@@ -5,8 +5,10 @@ import (
 	"encoding/binary"
 	"math"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/koykov/approxity"
 )
@@ -143,6 +145,7 @@ func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T], delta float64)
 
 func BenchMe(b *testing.B, est Estimator[[]byte]) {
 	b.Run("add", func(b *testing.B) {
+		b.ReportAllocs()
 		est.Reset()
 		var buf [8]byte
 		for i := 0; i < b.N; i++ {
@@ -174,6 +177,50 @@ func BenchMe(b *testing.B, est Estimator[[]byte]) {
 			for i := 0; i < b.N; i++ {
 				est.Estimate()
 			}
+		})
+	})
+}
+
+func BenchMeConcurrently[T []byte](b *testing.B, est Estimator[T]) {
+	b.Run("add", func(b *testing.B) {
+		b.ReportAllocs()
+		est.Reset()
+		var buf [8]byte
+		for i := 0; i < b.N; i++ {
+			binary.LittleEndian.PutUint64(buf[:], uint64(i))
+			_ = est.Add(buf[:])
+		}
+	})
+	b.Run("estimate", func(b *testing.B) {
+		var buf [8]byte
+		for i := uint64(0); i < 1e7; i++ {
+			binary.LittleEndian.PutUint64(buf[:], i)
+			_ = est.Add(buf[:])
+		}
+		b.ResetTimer()
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			_ = est.Estimate()
+		}
+	})
+
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+		b.Run(ds.Name, func(b *testing.B) {
+			est.Reset()
+			b.ReportAllocs()
+			b.RunParallel(func(pb *testing.PB) {
+				var i uint64 = math.MaxUint64
+				for pb.Next() {
+					ci := atomic.AddUint64(&i, 1)
+					switch ci % 100 {
+					case 99:
+						est.Estimate()
+					default:
+						buf := *(*[8]byte)(unsafe.Pointer(&ci))
+						_ = est.Add(buf[:])
+					}
+				}
+			})
 		})
 	})
 }
