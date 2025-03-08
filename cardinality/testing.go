@@ -33,7 +33,10 @@ func TestMe[T []byte](t *testing.T, est Estimator[T], delta float64) {
 			for i := 0; i < len(ds.All); i++ {
 				_ = est.Add(ds.All[i])
 				if i%5 == 0 {
-					_ = est.Add(ds.All[i])
+					// each 5th element adds 5 times
+					for j := 0; j < 4; j++ {
+						_ = est.Add(ds.All[i])
+					}
 				}
 			}
 			e := est.Estimate()
@@ -68,7 +71,17 @@ func BenchMe(b *testing.B, est Estimator[[]byte]) {
 		}
 	})
 
-	// approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
-	// 	est.Reset()
-	// })
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+		b.Run(ds.Name, func(b *testing.B) {
+			est.Reset()
+			for i := 0; i < len(ds.All); i++ {
+				_ = est.Add(ds.All[i])
+			}
+			b.ResetTimer()
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				est.Estimate()
+			}
+		})
+	})
 }
