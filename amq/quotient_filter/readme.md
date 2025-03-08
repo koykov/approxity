@@ -17,7 +17,7 @@ See [full description](https://en.wikipedia.org/wiki/Quotient_filter).
 
 ```go
 import (
-	"github.com/koykov/quotient"
+	"github.com/koykov/approxity/amq/quotient_filter"
 	"github.com/koykov/hash/xxhash"
 )
 
