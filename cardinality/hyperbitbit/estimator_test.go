@@ -1,0 +1,32 @@
+package hyperbitbit
+
+import (
+	"testing"
+
+	"github.com/koykov/approxity/cardinality"
+	"github.com/koykov/hash/xxhash"
+)
+
+const testLgN = 5
+
+var testh = xxhash.Hasher64[[]byte]{}
+
+func TestEstimator(t *testing.T) {
+	t.Run("sync", func(t *testing.T) {
+		est, err := NewEstimator[[]byte](NewConfig(testLgN, testh))
+		if err != nil {
+			t.Fatal(err)
+		}
+		cardinality.TestMe(t, est, 0.02)
+	})
+}
+
+func BenchmarkEstimator(b *testing.B) {
+	b.Run("sync", func(b *testing.B) {
+		est, err := NewEstimator[[]byte](NewConfig(testLgN, testh))
+		if err != nil {
+			b.Fatal(err)
+		}
+		cardinality.BenchMe(b, est)
+	})
+}

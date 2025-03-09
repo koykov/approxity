@@ -1,0 +1,112 @@
+package hyperbitbit
+
+import (
+	"io"
+	"math"
+	"math/bits"
+	"sync"
+
+	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/cardinality"
+)
+
+type estimator[T approxity.Hashable] struct {
+	approxity.Base[T]
+	conf   *Config
+	once   sync.Once
+	n      uint64 // lg N
+	sketch [2]uint64
+
+	err error
+}
+
+func NewEstimator[T approxity.Hashable](conf *Config) (cardinality.Estimator[T], error) {
+	c := &estimator[T]{conf: conf.copy()}
+	if c.once.Do(c.init); c.err != nil {
+		return nil, c.err
+	}
+	return c, nil
+}
+
+func (e *estimator[T]) Add(key T) error {
+	if e.once.Do(e.init); e.err != nil {
+		return e.err
+	}
+	hkey, err := e.Hash(e.conf.Hasher, key)
+	if err != nil {
+		return err
+	}
+	return e.hadd(hkey)
+}
+
+func (e *estimator[T]) HAdd(hkey uint64) error {
+	if e.once.Do(e.init); e.err != nil {
+		return e.err
+	}
+	return e.hadd(hkey)
+}
+
+func (e *estimator[T]) hadd(hkey uint64) error {
+	k := (hkey << 58) >> 58
+	r := uint64(bits.LeadingZeros64(hkey>>6) - 6)
+
+	if r > e.n {
+		e.sketch[0] |= 1 << k
+	}
+	if r > e.n+1 {
+		e.sketch[1] |= 1 << k
+	}
+	if bits.OnesCount64(e.sketch[0]) >= 32 {
+		e.sketch[0] = e.sketch[1]
+		e.sketch[1] = 0
+		e.n++
+	}
+	return nil
+}
+
+func (e *estimator[T]) hash2(hkey uint64) uint64 {
+	const fib64 = 0x9e3779b97f4a7c15
+	return (hkey ^ (hkey >> 32)) * fib64
+}
+
+func (e *estimator[T]) Estimate() uint64 {
+	if e.once.Do(e.init); e.err != nil {
+		return 0
+	}
+	est := float64(e.n) + 5.4 + float64(bits.OnesCount64(e.sketch[0]))/32
+	est = math.Pow(2, est)
+	return uint64(est)
+}
+
+func (e *estimator[T]) WriteTo(w io.Writer) (n int64, err error) {
+	if e.once.Do(e.init); e.err != nil {
+		err = e.err
+		return
+	}
+	return
+}
+
+func (e *estimator[T]) ReadFrom(r io.Reader) (n int64, err error) {
+	if e.once.Do(e.init); e.err != nil {
+		err = e.err
+		return
+	}
+	return
+}
+
+func (e *estimator[T]) Reset() {
+	if e.once.Do(e.init); e.err != nil {
+		return
+	}
+}
+
+func (e *estimator[T]) init() {
+	if e.conf.Hasher == nil {
+		e.err = approxity.ErrNoHasher
+		return
+	}
+	if e.conf.InitialLgN == 0 {
+		e.conf.InitialLgN = defaultLgN
+	}
+	e.n = e.conf.InitialLgN
+}
