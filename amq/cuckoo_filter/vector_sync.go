@@ -6,6 +6,7 @@ import (
 	"math"
 	"unsafe"
 
+	"github.com/koykov/approxity"
 	"github.com/koykov/openrt"
 )
 
@@ -113,10 +114,10 @@ func (vec *syncvec) readFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[16:24])
 
 	if sign != syncvecDumpSignature {
-		return n, ErrInvalidSignature
+		return n, approxity.ErrInvalidSignature
 	}
 	if ver != math.Float64bits(syncvecDumpVersion) {
-		return n, ErrVersionMismatch
+		return n, approxity.ErrVersionMismatch
 	}
 	vec.s = s
 

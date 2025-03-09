@@ -3,8 +3,10 @@ package approxity
 import "errors"
 
 var (
-	ErrInvalidConfig = errors.New("invalid or empty config")
-	ErrNoHasher      = errors.New("no hasher provided")
-	ErrUnsupportedOp = errors.New("unsupported operation")
-	ErrEncoding      = errors.New("item encoding error")
+	ErrInvalidConfig    = errors.New("invalid or empty config")
+	ErrNoHasher         = errors.New("no hasher provided")
+	ErrUnsupportedOp    = errors.New("unsupported operation")
+	ErrEncoding         = errors.New("item encoding error")
+	ErrInvalidSignature = errors.New("invalid signature")
+	ErrVersionMismatch  = errors.New("version mismatch")
 )

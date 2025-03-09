@@ -5,7 +5,8 @@ import (
 	"io"
 	"math"
 	"sync/atomic"
-	"unsafe"
+
+	"github.com/koykov/approxity"
 )
 
 const (
@@ -101,14 +102,16 @@ func (vec *cnvec) writeTo(w io.Writer) (n int64, err error) {
 		return int64(m), err
 	}
 
-	var h struct {
-		p    uintptr
-		l, c int
+	for i := 0; i < len(vec.buf); i++ {
+		v := atomic.LoadUint32(&vec.buf[i])
+		var b [4]byte
+		binary.LittleEndian.PutUint32(b[:], v)
+		m, err = w.Write(b[:])
+		n += int64(m)
+		if err != nil {
+			return n, err
+		}
 	}
-	h.p = uintptr(unsafe.Pointer(&vec.buf[0]))
-	h.l, h.c = len(vec.buf)*4, cap(vec.buf)*4
-	m, err = w.Write(*(*[]byte)(unsafe.Pointer(&h)))
-	n += int64(m)
 	return n, err
 }
 
@@ -127,25 +130,24 @@ func (vec *cnvec) readFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[16:24])
 
 	if sign != cnvecDumpSignature {
-		return n, ErrInvalidSignature
+		return n, approxity.ErrInvalidSignature
 	}
 	if ver != math.Float64bits(cnvecDumpVersion) {
-		return n, ErrVersionMismatch
+		return n, approxity.ErrVersionMismatch
 	}
 	vec.s = s
 
-	var h struct {
-		p    uintptr
-		l, c int
-	}
-	h.p = uintptr(unsafe.Pointer(&vec.buf[0]))
-	h.l, h.c = len(vec.buf)*4, cap(vec.buf)*4
-	payloadBuf := *(*[]byte)(unsafe.Pointer(&h))
-
-	m, err = r.Read(payloadBuf)
-	n += int64(m)
-	if err == io.EOF {
-		err = nil
+	for i := 0; i < len(vec.buf); i++ {
+		var b [4]byte
+		m, err = r.Read(b[:])
+		n += int64(m)
+		if err != nil {
+			if err == io.EOF {
+				err = io.ErrUnexpectedEOF
+			}
+			return n, err
+		}
+		atomic.StoreUint32(&vec.buf[i], binary.LittleEndian.Uint32(b[:]))
 	}
 	return
 }
