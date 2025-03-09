@@ -47,21 +47,30 @@ func (e *estimator[T]) HAdd(hkey uint64) error {
 }
 
 func (e *estimator[T]) hadd(hkey uint64) error {
-	k := (hkey << 58) >> 58
-	r := uint64(bits.LeadingZeros64(hkey>>6) - 6)
-
-	if r > e.n {
+	const d = 6
+	k, z := e.klz(hkey, d)
+	if z > e.n {
 		e.sketch[0] |= 1 << k
 	}
-	if r > e.n+1 {
+	if z > e.n+1 {
 		e.sketch[1] |= 1 << k
 	}
-	if bits.OnesCount64(e.sketch[0]) >= 32 {
+	if bits.OnesCount64(e.sketch[0]) > 31 {
 		e.sketch[0] = e.sketch[1]
 		e.sketch[1] = 0
 		e.n++
 	}
 	return nil
+}
+
+func (e *estimator[T]) klz(hkey uint64, d uint64) (k, z uint64) {
+	m := 64 - d
+	k = (hkey << 58) >> 58
+	hkey >>= d
+	for z = 0; hkey&0x1 == 1 && z <= m; z++ {
+		hkey >>= 1
+	}
+	return
 }
 
 func (e *estimator[T]) hash2(hkey uint64) uint64 {
@@ -98,6 +107,9 @@ func (e *estimator[T]) Reset() {
 	if e.once.Do(e.init); e.err != nil {
 		return
 	}
+	e.n = e.conf.InitialLgN
+	e.sketch[0] = 0
+	e.sketch[1] = 0
 }
 
 func (e *estimator[T]) init() {
