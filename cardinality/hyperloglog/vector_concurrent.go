@@ -1,16 +1,24 @@
 package hyperloglog
 
 import (
+	"encoding/binary"
 	"io"
 	"math"
 	"sync/atomic"
 
+	"github.com/koykov/approxity"
 	"github.com/koykov/approxity/cardinality"
+)
+
+const (
+	cnvecDumpSignature = 0xbeded56b5a43b800
+	cnvecDumpVersion   = 1.0
 )
 
 type cnvec struct {
 	a, m float64
 	lim  uint64
+	s    uint64
 	buf  []uint32
 }
 
@@ -23,6 +31,7 @@ func (vec *cnvec) add(idx uint64, val uint8) error {
 		}
 		n := o | uint32(val)<<(off*8)
 		if atomic.CompareAndSwapUint32(&vec.buf[pos], o, n) {
+			atomic.AddUint64(&vec.s, 1)
 			return nil
 		}
 	}
@@ -45,6 +54,10 @@ func (vec *cnvec) capacity() uint64 {
 	return uint64(len(vec.buf))
 }
 
+func (vec *cnvec) size() uint64 {
+	return atomic.LoadUint64(&vec.s)
+}
+
 func (vec *cnvec) reset() {
 	_ = vec.buf[len(vec.buf)-1]
 	for i := 0; i < len(vec.buf); i++ {
@@ -53,11 +66,71 @@ func (vec *cnvec) reset() {
 }
 
 func (vec *cnvec) writeTo(w io.Writer) (n int64, err error) {
-	return 0, nil
+	var (
+		buf [40]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], cnvecDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(cnvecDumpVersion))
+	binary.LittleEndian.PutUint64(buf[16:24], math.Float64bits(vec.a))
+	binary.LittleEndian.PutUint64(buf[24:32], math.Float64bits(vec.m))
+	binary.LittleEndian.PutUint64(buf[32:40], atomic.LoadUint64(&vec.s))
+	m, err = w.Write(buf[:])
+	n += int64(m)
+	if err != nil {
+		return int64(m), err
+	}
+
+	for i := 0; i < len(vec.buf); i++ {
+		v := atomic.LoadUint32(&vec.buf[i])
+		var b [4]byte
+		binary.LittleEndian.PutUint32(b[:], v)
+		m, err = w.Write(b[:])
+		n += int64(m)
+		if err != nil {
+			return n, err
+		}
+	}
+	return n, err
 }
 
 func (vec *cnvec) readFrom(r io.Reader) (n int64, err error) {
-	return 0, nil
+	var (
+		buf [40]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+
+	sign, ver, a, m_, s := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
+		binary.LittleEndian.Uint64(buf[16:24]), binary.LittleEndian.Uint64(buf[24:32]),
+		binary.LittleEndian.Uint64(buf[32:40])
+
+	if sign != cnvecDumpSignature {
+		return n, approxity.ErrInvalidSignature
+	}
+	if ver != math.Float64bits(cnvecDumpVersion) {
+		return n, approxity.ErrVersionMismatch
+	}
+	vec.a, vec.m = math.Float64frombits(a), math.Float64frombits(m_)
+	atomic.StoreUint64(&vec.s, s)
+
+	for i := 0; i < len(vec.buf); i++ {
+		var b [4]byte
+		m, err = r.Read(b[:])
+		n += int64(m)
+		if err != nil {
+			if err == io.EOF {
+				err = io.ErrUnexpectedEOF
+			}
+			return n, err
+		}
+		atomic.StoreUint32(&vec.buf[i], binary.LittleEndian.Uint32(b[:]))
+	}
+	return
 }
 
 func newCnvec(a, m float64, lim uint64) *cnvec {

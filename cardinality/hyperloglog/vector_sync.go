@@ -1,14 +1,22 @@
 package hyperloglog
 
 import (
+	"encoding/binary"
 	"io"
 	"math"
 
+	"github.com/koykov/approxity"
 	"github.com/koykov/openrt"
+)
+
+const (
+	syncvecDumpSignature = 0x4097ca25e91f7400
+	syncvecDumpVersion   = 1.0
 )
 
 type syncvec struct {
 	a, m float64
+	s    uint64
 	buf  []uint8
 }
 
@@ -16,6 +24,7 @@ func (vec *syncvec) add(idx uint64, val uint8) error {
 	o := vec.buf[idx]
 	if val > o {
 		vec.buf[idx] = val
+		vec.s++
 	}
 	return nil
 }
@@ -42,16 +51,65 @@ func (vec *syncvec) capacity() uint64 {
 	return uint64(len(vec.buf))
 }
 
+func (vec *syncvec) size() uint64 {
+	return vec.s
+}
+
 func (vec *syncvec) reset() {
 	openrt.Memclr(vec.buf)
 }
 
 func (vec *syncvec) writeTo(w io.Writer) (n int64, err error) {
-	return 0, nil
+	var (
+		buf [40]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], syncvecDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(syncvecDumpVersion))
+	binary.LittleEndian.PutUint64(buf[16:24], math.Float64bits(vec.a))
+	binary.LittleEndian.PutUint64(buf[24:32], math.Float64bits(vec.m))
+	binary.LittleEndian.PutUint64(buf[32:40], vec.s)
+	m, err = w.Write(buf[:])
+	n += int64(m)
+	if err != nil {
+		return int64(m), err
+	}
+
+	m, err = w.Write(vec.buf)
+	n += int64(m)
+	return
 }
 
 func (vec *syncvec) readFrom(r io.Reader) (n int64, err error) {
-	return 0, nil
+	var (
+		buf [40]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+
+	sign, ver, a, m_, s := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
+		binary.LittleEndian.Uint64(buf[16:24]), binary.LittleEndian.Uint64(buf[24:32]),
+		binary.LittleEndian.Uint64(buf[32:40])
+
+	if sign != syncvecDumpSignature {
+		return n, approxity.ErrInvalidSignature
+	}
+	if ver != math.Float64bits(syncvecDumpVersion) {
+		return n, approxity.ErrVersionMismatch
+	}
+	vec.a, vec.m, vec.s = math.Float64frombits(a), math.Float64frombits(m_), s
+
+	m, err = r.Read(vec.buf)
+	n += int64(m)
+	if err == io.EOF {
+		err = nil
+	}
+
+	return
 }
 
 func newSyncvec(a, m float64) *syncvec {
