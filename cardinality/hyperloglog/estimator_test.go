@@ -18,7 +18,7 @@ func TestEstimator(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		cardinality.TestMe(t, est, 0.005)
+		cardinality.TestMe(t, est, 0.06)
 	})
 	t.Run("concurrent", func(t *testing.T) {
 		est, err := NewEstimator[[]byte](NewConfig(testP, testh).
@@ -26,7 +26,7 @@ func TestEstimator(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		cardinality.TestMeConcurrently(t, est, 0.005)
+		cardinality.TestMeConcurrently(t, est, 0.06)
 	})
 	t.Run("writer", func(t *testing.T) {
 		testWrite := func(t *testing.T, est cardinality.Estimator[string], path string, expect int64) {

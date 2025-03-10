@@ -3,6 +3,7 @@ package approxity
 import (
 	"bufio"
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 )
@@ -53,7 +54,7 @@ func init() {
 			return nil
 		})
 	}
-	// Try to compose TestingDataset based on system's dictionaries.
+	// Try to compose dataset based on system's dictionaries.
 	sysDS := TestingDataset[[]byte]{Name: "system/dict"}
 	if words, err := fread(nil, "/usr/share/dict/words"); err == nil && len(words) > 0 {
 		sysDS.All = words
@@ -65,6 +66,30 @@ func init() {
 			}
 		}
 		datasets = append(datasets, sysDS)
+	}
+	// Try to compose dataset based on remote English vocabulary.
+	if resp, err := http.Get("https://raw.githubusercontent.com/koykov/dataset/refs/heads/master/vocabulary/freelang/English.txt"); err == nil && resp.StatusCode == http.StatusOK {
+		defer func() { _ = resp.Body.Close() }()
+		var pos, neg [][]byte
+		scr := bufio.NewScanner(resp.Body)
+		for i := 0; scr.Scan(); i++ {
+			if b := scr.Bytes(); len(b) > 0 {
+				if i%2 == 0 {
+					pos = append(pos, append([]byte(nil), b...))
+				} else {
+					neg = append(neg, append([]byte(nil), b...))
+				}
+			}
+		}
+		if scr.Err() == nil {
+			vocDS := TestingDataset[[]byte]{
+				Name:      "english vocabulary",
+				Positives: pos,
+				Negatives: neg,
+				All:       append(pos, neg...),
+			}
+			datasets = append(datasets, vocDS)
+		}
 	}
 }
 

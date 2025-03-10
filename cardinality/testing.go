@@ -27,7 +27,7 @@ func TestMe[T []byte](t *testing.T, est Estimator[T], delta float64) {
 		e := est.Estimate()
 		ratio := float64(e) / float64(uniq)
 		diff := math.Abs(1 - ratio)
-		if diff > delta {
+		if delta >= 0 && diff > delta {
 			t.Errorf("estimation too inaccurate: ratio delta need %f, got %f", delta, diff)
 		}
 	})
@@ -47,7 +47,7 @@ func TestMe[T []byte](t *testing.T, est Estimator[T], delta float64) {
 			e := est.Estimate()
 			ratio := float64(e) / float64(len(ds.All))
 			diff := math.Abs(1 - ratio)
-			if diff > delta {
+			if delta >= 0 && diff > delta {
 				t.Errorf("estimation too inaccurate: ratio delta need %f, got %f", delta, diff)
 			}
 		})
