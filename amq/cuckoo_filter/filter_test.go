@@ -8,7 +8,7 @@ import (
 	"github.com/koykov/hash/xxhash"
 )
 
-const testsz = 1e7
+const testsz = 1e8
 
 var testh = xxhash.Hasher64[[]byte]{}
 

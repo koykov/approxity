@@ -34,7 +34,7 @@ func TestMe[T []byte](t *testing.T, f Filter[T]) {
 				}
 			}
 			if falseNegative > 0 {
-				t.Errorf("%d of %d positives (%d total) gives false Negatives value", falseNegative, len(ds.Positives), len(ds.All))
+				t.Errorf("%d of %d positives (%d total) gives false negative value", falseNegative, len(ds.Positives), len(ds.All))
 			}
 		})
 	})

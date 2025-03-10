@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	testSz  = 1e7
+	testSz  = 1e8
 	testFPP = .01
 )
 
