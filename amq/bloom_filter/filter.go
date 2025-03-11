@@ -135,7 +135,12 @@ func (f *filter[T]) ReadFrom(r io.Reader) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	expect := f.vec.Capacity() / 8 // bitvector returns capacity in bits, so recalculate to bytes
+	var expect uint64
+	if f.conf.CBF {
+		expect = f.vec.Capacity() * 2
+	} else {
+		expect = f.vec.Capacity() / 8 // bitvector returns capacity in bits, so recalculate to bytes
+	}
 	n, err := f.vec.ReadFrom(r)
 	if err != nil {
 		return n, err

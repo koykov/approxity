@@ -1,9 +1,17 @@
 package bloom
 
 import (
+	"encoding/binary"
 	"io"
 	"math"
 	"sync/atomic"
+
+	"github.com/koykov/approxity"
+)
+
+const (
+	ccnvectorDumpSignature = 0x5f0f6bdc99b85fea
+	ccnvectorDumpVersion   = 1.0
 )
 
 // Concurrent counting vector implementation.
@@ -78,18 +86,91 @@ func (vec *ccnvector) Reset() {
 }
 
 func (vec *ccnvector) WriteTo(w io.Writer) (n int64, err error) {
-	// todo implement me
-	return 0, nil
+	var (
+		buf [40]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], ccnvectorDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(ccnvectorDumpVersion))
+	binary.LittleEndian.PutUint64(buf[16:24], atomic.LoadUint64(&vec.s))
+	binary.LittleEndian.PutUint64(buf[24:32], vec.lim)
+	if m, err = w.Write(buf[:]); err != nil {
+		return int64(m), err
+	}
+	n += int64(m)
+
+	var off int
+	const blocksz = 4096
+	var blk [blocksz]byte
+	for i := 0; i < len(vec.buf); i++ {
+		v := atomic.LoadUint32(&vec.buf[i])
+		binary.LittleEndian.PutUint32(blk[off:], v)
+		if off += 4; off == blocksz {
+			m, err = w.Write(blk[:off])
+			n += int64(m)
+			if err != nil {
+				return
+			}
+			if m < blocksz {
+				err = io.ErrShortWrite
+				return
+			}
+			off = 0
+		}
+	}
+	if off > 0 {
+		m, err = w.Write(blk[:off])
+		n += int64(m)
+	}
+	return
 }
 
 func (vec *ccnvector) ReadFrom(r io.Reader) (n int64, err error) {
-	// todo implement me
-	return 0, nil
+	var (
+		buf [40]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+
+	sign, ver, s, lim := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
+		binary.LittleEndian.Uint64(buf[16:24]), binary.LittleEndian.Uint64(buf[24:32])
+
+	if sign != ccnvectorDumpSignature {
+		return n, approxity.ErrInvalidSignature
+	}
+	if ver != math.Float64bits(ccnvectorDumpVersion) {
+		return n, approxity.ErrVersionMismatch
+	}
+	vec.s, vec.lim = s, lim
+	vec.buf = vec.buf[:0]
+
+	const blocksz = 4096
+	var blk [blocksz]byte
+	for {
+		m, err = r.Read(blk[:])
+		n += int64(m)
+		if err != nil && err != io.EOF {
+			return n, err
+		}
+		for i := 0; i < m; i += 4 {
+			v := binary.LittleEndian.Uint32(blk[i:])
+			vec.buf = append(vec.buf, v) // todo may be race here
+		}
+		if err == io.EOF {
+			err = nil
+			break
+		}
+	}
+	return
 }
 
 func newCcnvector(size, lim uint64) *ccnvector {
 	return &ccnvector{
-		buf: make([]uint32, size),
+		buf: make([]uint32, size/2+1),
 		lim: lim + 1,
 	}
 }
