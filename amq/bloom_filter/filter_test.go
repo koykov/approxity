@@ -176,3 +176,22 @@ func BenchmarkFilter(b *testing.B) {
 		amq.BenchMeConcurrently(b, f)
 	})
 }
+
+func BenchmarkCountingFilter(b *testing.B) {
+	b.Run("sync", func(b *testing.B) {
+		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).WithCBF())
+		if err != nil {
+			b.Fatal(err)
+		}
+		amq.BenchMe(b, f)
+	})
+	b.Run("concurrent", func(b *testing.B) {
+		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).
+			WithConcurrency().WithWriteAttemptsLimit(5).
+			WithCBF())
+		if err != nil {
+			b.Fatal(err)
+		}
+		amq.BenchMeConcurrently(b, f)
+	})
+}
