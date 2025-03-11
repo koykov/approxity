@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 
 	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/cardinality"
 )
 
 const (
@@ -35,7 +34,7 @@ func (vec *cnvec) add(idx uint64, val uint8) error {
 			return nil
 		}
 	}
-	return cardinality.ErrWriteAttemptsLimitExceeded
+	return approxity.ErrWriteLimitExceed
 }
 
 func (vec *cnvec) estimate() (raw, nz float64) {
