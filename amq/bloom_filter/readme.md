@@ -1,4 +1,4 @@
-# Bloom filter
+# Bloom filter / Counting Bloom Version
 
 Bloom filter is a good old implementation of AMQ, presented at 1970s. The filter is a bit array with length `m` and `k`
 hash functions. It is extremely space efficient and is typically used to add elements to a set and test if an element is
@@ -43,6 +43,19 @@ func func main() {
     f, _ := NewFilter(config)
 	...
 }
+```
+
+## Counting Bloom Filter
+
+CBF allows to delete elements from the filter, but eats a bit more memory. Besides this is equal to default Bloom filter.
+CBF enables by setting CBF param of [Config](config.go) to true or calling `WithCBF()` method of [Config](config.go):
+```go
+conf := Config{
+	...
+    CBF: true,
+}
+// or
+conf.WithCBF()
 ```
 
 ### Optimal params calculation

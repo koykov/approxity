@@ -14,6 +14,8 @@ type Config struct {
 	// False positive probability value.
 	// If this param omit, defaultFPP (0.01) will use instead.
 	FPP float64
+	// Enable CBF (Counting Bloom Filter) that allows items deleting. Item counter size is 16 bits.
+	CBF bool
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
 	Hasher approxity.Hasher
@@ -44,6 +46,16 @@ func (c *Config) WithConcurrency() *Config {
 
 func (c *Config) WithItemsNumber(items uint64) *Config {
 	c.ItemsNumber = items
+	return c
+}
+
+func (c *Config) WithFPP(fpp float64) *Config {
+	c.FPP = fpp
+	return c
+}
+
+func (c *Config) WithCBF() *Config {
+	c.CBF = true
 	return c
 }
 

@@ -21,7 +21,7 @@ func TestOptimal(t *testing.T) {
 		}
 		for _, st := range stages {
 			t.Run(st.key, func(t *testing.T) {
-				n := optimalM(st.m, st.fpp)
+				n := optimalM(st.m, st.fpp, false)
 				if n != st.n {
 					t.Errorf("optimalM(%d, %f) = %d, want %d", st.m, st.fpp, n, st.n)
 				}

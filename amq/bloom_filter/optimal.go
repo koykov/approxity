@@ -3,7 +3,7 @@ package bloom
 import "math"
 
 // Calculate optimal filter size by given number of items (n) and false positive probability (fpp).
-func optimalM(n uint64, fpp float64) uint64 {
+func optimalM(n uint64, fpp float64, cbf bool) uint64 {
 	return uint64(math.Ceil(float64(-int64(n)) * math.Log(fpp) / (math.Pow(math.Log(2), 2))))
 }
 

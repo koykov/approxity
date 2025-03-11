@@ -61,14 +61,42 @@ func (f *filter[T]) HSet(hkey uint64) error {
 
 // Unset removes key from the filter.
 // Caution! Bloom filter doesn't support this operation!
-func (f *filter[T]) Unset(_ T) error {
-	return f.mw().Unset(approxity.ErrUnsupportedOp)
+func (f *filter[T]) Unset(key T) error {
+	if !f.conf.CBF {
+		return f.mw().Unset(approxity.ErrUnsupportedOp)
+	}
+	if f.once.Do(f.init); f.err != nil {
+		return f.err
+	}
+	for i := uint64(0); i < f.k; i++ {
+		h, err := f.h(key, i)
+		if err != nil {
+			return f.mw().Unset(err)
+		}
+		if !f.vec.Unset(h % f.m) {
+			return f.mw().Unset(approxity.ErrWriteLimitExceed)
+		}
+	}
+	return f.mw().Unset(nil)
 }
 
 // HUnset removes predefined hash key from the filter.
 // Caution! Bloom filter doesn't support this operation!
-func (f *filter[T]) HUnset(_ uint64) error {
-	return f.mw().Unset(approxity.ErrUnsupportedOp)
+func (f *filter[T]) HUnset(hkey uint64) error {
+	if !f.conf.CBF {
+		return f.mw().Unset(approxity.ErrUnsupportedOp)
+	}
+	if f.once.Do(f.init); f.err != nil {
+		return f.err
+	}
+	return f.hunset(hkey)
+}
+
+func (f *filter[T]) hunset(hkey uint64) error {
+	if !f.vec.Unset(hkey % f.m) {
+		return f.mw().Unset(approxity.ErrWriteLimitExceed)
+	}
+	return f.mw().Unset(nil)
 }
 
 // Contains checks if key is in the filter.
@@ -159,12 +187,20 @@ func (f *filter[T]) init() {
 		return
 	}
 
-	f.m = optimalM(c.ItemsNumber, c.FPP)
+	f.m = optimalM(c.ItemsNumber, c.FPP, c.CBF)
 	f.k = optimalK(c.ItemsNumber, f.m)
-	if c.Concurrent != nil {
-		f.vec, f.err = bitvector.NewConcurrentVector(f.m, c.Concurrent.WriteAttemptsLimit)
+	if c.CBF {
+		if c.Concurrent != nil {
+			f.vec = newCcnvector(f.m, c.Concurrent.WriteAttemptsLimit)
+		} else {
+			f.vec = newCvector(f.m)
+		}
 	} else {
-		f.vec, f.err = bitvector.NewVector(f.m)
+		if c.Concurrent != nil {
+			f.vec, f.err = bitvector.NewConcurrentVector(f.m, c.Concurrent.WriteAttemptsLimit)
+		} else {
+			f.vec, f.err = bitvector.NewVector(f.m)
+		}
 	}
 	f.mw().Capacity(f.m)
 }
