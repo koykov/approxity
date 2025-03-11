@@ -38,6 +38,21 @@ func NewFilter[T approxity.Hashable](config *Config) (amq.Filter[T], error) {
 	return f, nil
 }
 
+// NewCountingFilter creates new counting filter.
+func NewCountingFilter[T approxity.Hashable](config *Config) (amq.Filter[T], error) {
+	if config == nil {
+		return nil, approxity.ErrInvalidConfig
+	}
+	config.CBF = true
+	f := &filter[T]{
+		conf: config.copy(),
+	}
+	if f.once.Do(f.init); f.err != nil {
+		return nil, f.err
+	}
+	return f, nil
+}
+
 // Set adds new key to the filter.
 func (f *filter[T]) Set(key T) error {
 	if f.once.Do(f.init); f.err != nil {

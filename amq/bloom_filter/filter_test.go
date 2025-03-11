@@ -88,17 +88,15 @@ func TestFilter(t *testing.T) {
 
 func TestCountingFilter(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
-		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).
-			WithCBF())
+		f, err := NewCountingFilter[[]byte](NewConfig(testSz, testFPP, testh))
 		if err != nil {
 			t.Fatal(err)
 		}
 		amq.TestMe(t, f)
 	})
 	t.Run("concurrent", func(t *testing.T) {
-		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).
-			WithConcurrency().WithWriteAttemptsLimit(5).
-			WithCBF())
+		f, err := NewCountingFilter[[]byte](NewConfig(testSz, testFPP, testh).
+			WithConcurrency().WithWriteAttemptsLimit(5))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -122,11 +120,11 @@ func TestCountingFilter(t *testing.T) {
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
-			f, _ := NewFilter[string](NewConfig(10, 0.01, testh).WithCBF())
+			f, _ := NewCountingFilter[string](NewConfig(10, 0.01, testh))
 			testWrite(t, f, "testdata/counting_filter.bin", 228)
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, _ := NewFilter[string](NewConfig(10, 0.01, testh).WithConcurrency().WithCBF())
+			f, _ := NewCountingFilter[string](NewConfig(10, 0.01, testh).WithConcurrency())
 			testWrite(t, f, "testdata/concurrent_counting_filter.bin", 236)
 		})
 	})
@@ -149,11 +147,11 @@ func TestCountingFilter(t *testing.T) {
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
-			f, _ := NewFilter[string](NewConfig(10, 0.01, testh).WithCBF())
+			f, _ := NewCountingFilter[string](NewConfig(10, 0.01, testh))
 			testRead(t, f, "testdata/counting_filter.bin", 228)
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, _ := NewFilter[string](NewConfig(10, 0.01, testh).WithConcurrency().WithCBF())
+			f, _ := NewCountingFilter[string](NewConfig(10, 0.01, testh).WithConcurrency())
 			testRead(t, f, "testdata/concurrent_counting_filter.bin", 236)
 		})
 	})
@@ -179,16 +177,15 @@ func BenchmarkFilter(b *testing.B) {
 
 func BenchmarkCountingFilter(b *testing.B) {
 	b.Run("sync", func(b *testing.B) {
-		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).WithCBF())
+		f, err := NewCountingFilter[[]byte](NewConfig(testSz, testFPP, testh))
 		if err != nil {
 			b.Fatal(err)
 		}
 		amq.BenchMe(b, f)
 	})
 	b.Run("concurrent", func(b *testing.B) {
-		f, err := NewFilter[[]byte](NewConfig(testSz, testFPP, testh).
-			WithConcurrency().WithWriteAttemptsLimit(5).
-			WithCBF())
+		f, err := NewCountingFilter[[]byte](NewConfig(testSz, testFPP, testh).
+			WithConcurrency().WithWriteAttemptsLimit(5))
 		if err != nil {
 			b.Fatal(err)
 		}
