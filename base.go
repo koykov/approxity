@@ -70,13 +70,6 @@ func (b Base[T]) hash(hasher Hasher, data T, salt uint64, saltext bool) (_ uint6
 				buf = utf8.AppendRune(buf, x[i])
 			}
 		}
-	// bool
-	case bool:
-		if x {
-			buf = append(buf, "true"...)
-		} else {
-			buf = append(buf, "false"...)
-		}
 	default:
 		return 0, ErrEncoding
 	}

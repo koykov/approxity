@@ -1,6 +1,6 @@
 module github.com/koykov/approxity
 
-go 1.18
+go 1.22
 
 require (
 	github.com/koykov/bitvector v0.0.0-20250301134439-2f6280a3bd52
