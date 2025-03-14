@@ -247,6 +247,9 @@ func (f *filter[T]) Size() uint64 {
 }
 
 func (f *filter[T]) Reset() {
+	if f.len == 0 {
+		return
+	}
 	f.len, f.cap = 0, 0
 	f.segc, f.segcl = 0, 0
 	f.segl, f.seglmask = 0, 0

@@ -10,10 +10,15 @@ import (
 var p sync.Pool
 
 func AcquireWithKeys[T approxity.Hashable](config *Config, keys []T) (_ amq.Filter[T], err error) {
+	if keys = approxity.Deduplicate(keys); len(keys) == 0 {
+		return nil, ErrEmptyKeyset
+	}
 	var f amq.Filter[T]
 	if v := p.Get(); v != nil {
 		ff := v.(*filter[T])
 		ff.conf = config.copy()
+		ff.len = uint64(len(keys))
+		ff.once.Do(ff.init)
 		f = ff
 	} else {
 		f, err = NewFilterWithKeys(config, keys)
@@ -22,10 +27,14 @@ func AcquireWithKeys[T approxity.Hashable](config *Config, keys []T) (_ amq.Filt
 }
 
 func AcquireWithHKeys(config *Config, hkeys []uint64) (_ amq.Filter[uint64], err error) {
+	if hkeys = approxity.Deduplicate(hkeys); len(hkeys) == 0 {
+		return nil, ErrEmptyKeyset
+	}
 	var f amq.Filter[uint64]
 	if v := p.Get(); v != nil {
 		ff := v.(*filter[uint64])
 		ff.conf = config.copy()
+		ff.len = uint64(len(hkeys))
 		f = ff
 	} else {
 		f, err = NewFilterWithHKeys(config, hkeys)

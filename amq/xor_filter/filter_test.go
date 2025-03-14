@@ -68,16 +68,4 @@ func BenchmarkFilter(b *testing.B) {
 			})
 		})
 	})
-	b.Run("pool", func(b *testing.B) {
-		approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
-			b.Run(ds.Name, func(b *testing.B) {
-				b.ReportAllocs()
-				b.ResetTimer()
-				for j := 0; j < b.N; j++ {
-					f, _ := AcquireWithKeys[[]byte](&Config{Hasher: testh}, ds.Positives)
-					Release(f)
-				}
-			})
-		})
-	})
 }
