@@ -1,7 +1,9 @@
 package xor
 
 import (
+	"encoding/binary"
 	"io"
+	"math"
 	"math/bits"
 	"sync"
 	"unsafe"
@@ -9,6 +11,11 @@ import (
 	"github.com/koykov/approxity"
 	"github.com/koykov/approxity/amq"
 	"github.com/koykov/openrt"
+)
+
+const (
+	dumpSignature = 0x3172920594a19200
+	dumpVersion   = 1.0
 )
 
 // XorBinaryFuse8 implementation.
@@ -80,6 +87,19 @@ func NewFilterWithHKeys(config *Config, hkeys []uint64) (amq.Filter[uint64], err
 		return nil, err
 	}
 	return f, nil
+}
+
+func NewFilterFromReader[T approxity.Hashable](config *Config, r io.Reader) (amq.Filter[T], int64, error) {
+	if config == nil {
+		return nil, 0, approxity.ErrInvalidConfig
+	}
+	f := &filter[T]{
+		conf: config.copy(),
+	}
+	f.once.Do(func() { /* dummy */ })
+	n, err := f.ReadFrom(r)
+	f.err = err
+	return f, n, err
 }
 
 func (f *filter[T]) hbatch(hkeys []uint64) (err error) {
@@ -271,7 +291,24 @@ func (f *filter[T]) WriteTo(w io.Writer) (n int64, err error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	// todo implement me
+	var (
+		buf [48]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], dumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(dumpVersion))
+	binary.LittleEndian.PutUint64(buf[16:24], f.segl)
+	binary.LittleEndian.PutUint64(buf[24:32], f.segcl)
+	binary.LittleEndian.PutUint64(buf[32:40], f.seglmask)
+	binary.LittleEndian.PutUint64(buf[40:48], f.cap)
+	m, err = w.Write(buf[:])
+	n += int64(m)
+	if err != nil {
+		return int64(m), err
+	}
+
+	m, err = w.Write(f.vec)
+	n += int64(m)
 	return
 }
 
@@ -279,7 +316,40 @@ func (f *filter[T]) ReadFrom(r io.Reader) (n int64, err error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	// todo implement me
+	var (
+		buf [48]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return n, err
+	}
+	if m != 48 {
+		return n, io.ErrUnexpectedEOF
+	}
+
+	sign, ver, segl, segcl, seglmask, cap_ := binary.LittleEndian.Uint64(buf[0:8]), binary.LittleEndian.Uint64(buf[8:16]),
+		binary.LittleEndian.Uint64(buf[16:24]), binary.LittleEndian.Uint64(buf[24:32]), binary.LittleEndian.Uint64(buf[32:40]),
+		binary.LittleEndian.Uint64(buf[40:48])
+
+	if sign != dumpSignature {
+		return n, approxity.ErrInvalidSignature
+	}
+	if ver != math.Float64bits(dumpVersion) {
+		return n, approxity.ErrVersionMismatch
+	}
+	f.segl, f.segcl, f.seglmask, f.cap = segl, segcl, seglmask, cap_
+
+	f.vec = growu8(f.vec, f.cap)
+	m, err = r.Read(f.vec)
+	n += int64(m)
+	if err == io.EOF {
+		err = nil
+	}
+	if uint64(m) != f.cap {
+		err = io.ErrUnexpectedEOF
+	}
 	return
 }
 

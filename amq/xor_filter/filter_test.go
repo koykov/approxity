@@ -2,10 +2,12 @@ package xor
 
 import (
 	"math"
+	"os"
 	"sync/atomic"
 	"testing"
 
 	"github.com/koykov/approxity"
+	"github.com/koykov/approxity/amq"
 	"github.com/koykov/hash/xxhash"
 )
 
@@ -37,6 +39,52 @@ func TestFilter(t *testing.T) {
 				t.Errorf("%d of %d positives (%d total) gives false negative value", falseNegative, len(ds.Positives), len(ds.All))
 			}
 		})
+	})
+	t.Run("writer", func(t *testing.T) {
+		testWrite := func(t *testing.T, f amq.Filter[string], path string, expect int64) {
+			_ = f.Set("foobar")
+			_ = f.Set("qwerty")
+			fh, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = fh.Close() }()
+			n, err := f.WriteTo(fh)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != expect {
+				t.Fatalf("expected %d bytes, got %d", expect, n)
+			}
+		}
+		f, _ := NewFilterWithKeys[string](NewConfig(testh), []string{
+			"foobar",
+			"qwerty",
+			"marquis",
+			"warren",
+		})
+		testWrite(t, f, "testdata/filter.bin", 64)
+	})
+	t.Run("reader", func(t *testing.T) {
+		testRead := func(t *testing.T, path string, expect int64) {
+			fh, err := os.OpenFile(path, os.O_RDONLY, 0644)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = fh.Close() }()
+
+			f, n, _ := NewFilterFromReader[string](NewConfig(testh), fh)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != expect {
+				t.Fatalf("expected %d bytes, got %d", expect, n)
+			}
+			if !f.Contains("foobar") || !f.Contains("qwerty") {
+				t.Fatal("filter does not contain expected values")
+			}
+		}
+		testRead(t, "testdata/filter.bin", 64)
 	})
 }
 
