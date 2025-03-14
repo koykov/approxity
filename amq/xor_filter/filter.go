@@ -247,7 +247,7 @@ func (f *filter[T]) Size() uint64 {
 }
 
 func (f *filter[T]) Reset() {
-	if f.len == 0 {
+	if f.once.Do(f.init); f.err != nil || f.len == 0 {
 		return
 	}
 	f.len, f.cap = 0, 0
