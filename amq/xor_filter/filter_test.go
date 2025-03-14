@@ -9,10 +9,12 @@ import (
 	"github.com/koykov/hash/xxhash"
 )
 
+var testh = xxhash.Hasher64[[]byte]{}
+
 func TestFilter(t *testing.T) {
 	approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
-			f, err := NewFilterWithKeys[[]byte](&Config{Hasher: xxhash.Hasher64[[]byte]{}}, ds.Positives)
+			f, err := NewFilterWithKeys[[]byte](&Config{Hasher: testh}, ds.Positives)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -42,7 +44,7 @@ func BenchmarkFilter(b *testing.B) {
 	b.Run("sync", func(b *testing.B) {
 		approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
 			b.Run(ds.Name, func(b *testing.B) {
-				f, _ := NewFilterWithKeys[[]byte](&Config{Hasher: xxhash.Hasher64[[]byte]{}}, ds.Positives)
+				f, _ := NewFilterWithKeys[[]byte](&Config{Hasher: testh}, ds.Positives)
 				b.ReportAllocs()
 				b.ResetTimer()
 				for i := 0; i < b.N; i++ {
@@ -54,7 +56,7 @@ func BenchmarkFilter(b *testing.B) {
 	b.Run("concurrent", func(b *testing.B) {
 		approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
 			b.Run(ds.Name, func(b *testing.B) {
-				f, _ := NewFilterWithKeys[[]byte](&Config{Hasher: xxhash.Hasher64[[]byte]{}}, ds.Positives)
+				f, _ := NewFilterWithKeys[[]byte](&Config{Hasher: testh}, ds.Positives)
 				b.ReportAllocs()
 				b.RunParallel(func(pb *testing.PB) {
 					var i uint64 = math.MaxUint64
@@ -66,16 +68,16 @@ func BenchmarkFilter(b *testing.B) {
 			})
 		})
 	})
-	// b.Run("pool", func(b *testing.B) {
-	// 	approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
-	// 		b.Run(ds.Name, func(b *testing.B) {
-	// 			b.ReportAllocs()
-	// 			b.ResetTimer()
-	// 			for j := 0; j < b.N; j++ {
-	// 				f, _ := AcquireWithKeys[[]byte](&Config{Hasher: xxhash.Hasher64[[]byte]{}}, ds.Positives)
-	// 				Release(f)
-	// 			}
-	// 		})
-	// 	})
-	// })
+	b.Run("pool", func(b *testing.B) {
+		approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+			b.Run(ds.Name, func(b *testing.B) {
+				b.ReportAllocs()
+				b.ResetTimer()
+				for j := 0; j < b.N; j++ {
+					f, _ := AcquireWithKeys[[]byte](&Config{Hasher: testh}, ds.Positives)
+					Release(f)
+				}
+			})
+		})
+	})
 }

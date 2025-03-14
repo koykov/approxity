@@ -247,11 +247,6 @@ func (f *filter[T]) Size() uint64 {
 }
 
 func (f *filter[T]) Reset() {
-	if f.once.Do(f.init); f.err != nil {
-		return
-	}
-
-	f.once = sync.Once{}
 	f.len, f.cap = 0, 0
 	f.segc, f.segcl = 0, 0
 	f.segl, f.seglmask = 0, 0
@@ -266,6 +261,7 @@ func (f *filter[T]) Reset() {
 	openrt.MemclrUnsafe(unsafe.Pointer(&f.h012[0]), len(f.h012)*4)
 
 	f.err = nil
+	f.once = sync.Once{}
 }
 
 func (f *filter[T]) WriteTo(w io.Writer) (n int64, err error) {
