@@ -6,7 +6,10 @@ import (
 )
 
 type Config struct {
-	Hasher        approxity.Hasher
+	// Hasher to calculate hash sum of the items.
+	// Mandatory param.
+	Hasher approxity.Hasher
+	// Metrics writer handler.
 	MetricsWriter amq.MetricsWriter
 }
 
