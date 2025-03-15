@@ -201,19 +201,19 @@ func (f *filter[T]) hbatch(hkeys []uint64) (err error) {
 }
 
 func (f *filter[T]) Set(_ T) error {
-	return ErrUnsupportedSet
+	return f.conf.MetricsWriter.Set(ErrUnsupportedSet)
 }
 
 func (f *filter[T]) HSet(_ uint64) error {
-	return ErrUnsupportedSet
+	return f.conf.MetricsWriter.Set(ErrUnsupportedSet)
 }
 
 func (f *filter[T]) Unset(_ T) error {
-	return ErrUnsupportedUnset
+	return f.conf.MetricsWriter.Unset(ErrUnsupportedUnset)
 }
 
 func (f *filter[T]) HUnset(_ uint64) error {
-	return ErrUnsupportedUnset
+	return f.conf.MetricsWriter.Unset(ErrUnsupportedUnset)
 }
 
 func (f *filter[T]) Contains(key T) bool {
@@ -238,7 +238,7 @@ func (f *filter[T]) hcontains(hkey uint64) bool {
 	f_ := uint8(hkey ^ (hkey >> 32))
 	h0, h1, h2 := f.hash3(hkey)
 	f_ ^= f.vec[h0] ^ f.vec[h1] ^ f.vec[h2]
-	return f_ == 0
+	return f.conf.MetricsWriter.Contains(f_ == 0)
 }
 
 func (f *filter[T]) hash3(hkey uint64) (uint32, uint32, uint32) {
@@ -285,6 +285,8 @@ func (f *filter[T]) Reset() {
 
 	f.err = nil
 	f.once = sync.Once{}
+
+	f.conf.MetricsWriter.Reset()
 }
 
 func (f *filter[T]) WriteTo(w io.Writer) (n int64, err error) {
@@ -354,6 +356,14 @@ func (f *filter[T]) ReadFrom(r io.Reader) (n int64, err error) {
 }
 
 func (f *filter[T]) init() {
+	if f.conf.Hasher == nil {
+		f.err = approxity.ErrNoHasher
+		return
+	}
+	if f.conf.MetricsWriter == nil {
+		f.conf.MetricsWriter = amq.DummyMetricsWriter{}
+	}
+
 	const (
 		arity         = 3
 		seglThreshold = uint64(1 << 18)
@@ -379,4 +389,5 @@ func (f *filter[T]) init() {
 	f.segcl = f.segc * f.segl
 	f.cap = (f.segc + arity - 1) * f.segl
 	f.vec = growu8(f.vec, f.cap)
+	f.conf.MetricsWriter.Capacity(f.cap)
 }
