@@ -70,6 +70,10 @@ func (vec *cvector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 2
 }
 
+func (vec *cvector) OnesCount() uint64 {
+	return 0 // useless for Bloom
+}
+
 func (vec *cvector) Reset() {
 	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*4)
 	vec.s = 0

@@ -78,6 +78,10 @@ func (vec *ccnvector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 2
 }
 
+func (vec *ccnvector) OnesCount() uint64 {
+	return 0 // useless for Bloom
+}
+
 func (vec *ccnvector) Reset() {
 	atomic.StoreUint64(&vec.s, 0)
 	for i := 0; i < len(vec.buf); i++ {
