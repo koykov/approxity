@@ -48,12 +48,12 @@ func TestEstimator(t *testing.T) {
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
-			f, _ := NewEstimator[string](NewConfig(18, testh))
-			testWrite(t, f, "testdata/estimator.bin", 256)
+			f, _ := NewEstimator[string](NewConfig(1000, testh))
+			testWrite(t, f, "testdata/estimator.bin", 12470)
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, _ := NewEstimator[string](NewConfig(18, testh).WithConcurrency())
-			testWrite(t, f, "testdata/concurrent_estimator.bin", 264)
+			f, _ := NewEstimator[string](NewConfig(1000, testh).WithConcurrency())
+			testWrite(t, f, "testdata/concurrent_estimator.bin", 12480)
 		})
 	})
 	t.Run("reader", func(t *testing.T) {
@@ -75,12 +75,12 @@ func TestEstimator(t *testing.T) {
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
-			f, _ := NewEstimator[string](NewConfig(18, testh))
-			testRead(t, f, "testdata/estimator.bin", 256, 2)
+			f, _ := NewEstimator[string](NewConfig(1000, testh))
+			testRead(t, f, "testdata/estimator.bin", 12470, 2)
 		})
 		t.Run("concurrent", func(t *testing.T) {
-			f, _ := NewEstimator[string](NewConfig(18, testh).WithConcurrency())
-			testRead(t, f, "testdata/concurrent_estimator.bin", 264, 2)
+			f, _ := NewEstimator[string](NewConfig(1000, testh).WithConcurrency())
+			testRead(t, f, "testdata/concurrent_estimator.bin", 12480, 2)
 		})
 	})
 }
