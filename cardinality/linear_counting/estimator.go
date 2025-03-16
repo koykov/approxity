@@ -2,6 +2,7 @@ package linear
 
 import (
 	"io"
+	"math"
 	"sync"
 
 	"github.com/koykov/approxity"
@@ -59,7 +60,8 @@ func (e *estimator[T]) Estimate() uint64 {
 	if e.once.Do(e.init); e.err != nil {
 		return 0
 	}
-	return e.vec.OnesCount()
+	m, n := float64(e.m), float64(e.vec.OnesCount())
+	return uint64(math.Floor(math.Abs(-m * math.Log(1-n/m))))
 }
 
 func (e *estimator[T]) WriteTo(w io.Writer) (n int64, err error) {
