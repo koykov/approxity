@@ -30,18 +30,18 @@ func NewEstimator[T approxity.Hashable](conf *Config) (cardinality.Estimator[T],
 
 func (e *estimator[T]) Add(key T) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return err
+		return e.mw().Add(err)
 	}
 	return e.hadd(hkey)
 }
 
 func (e *estimator[T]) HAdd(hkey uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	return e.hadd(hkey)
 }
@@ -60,7 +60,7 @@ func (e *estimator[T]) hadd(hkey uint64) error {
 		e.sketch[1] = 0
 		e.n++
 	}
-	return nil
+	return e.mw().Add(nil)
 }
 
 func (e *estimator[T]) klz(hkey uint64, d uint64) (k, z uint64) {
@@ -117,8 +117,15 @@ func (e *estimator[T]) init() {
 		e.err = approxity.ErrNoHasher
 		return
 	}
+	if e.conf.MetricsWriter == nil {
+		e.conf.MetricsWriter = cardinality.DummyMetricsWriter{}
+	}
 	if e.conf.InitialLgN == 0 {
 		e.conf.InitialLgN = defaultLgN
 	}
 	e.n = e.conf.InitialLgN
+}
+
+func (e *estimator[T]) mw() cardinality.MetricsWriter {
+	return e.conf.MetricsWriter
 }
