@@ -36,18 +36,18 @@ func NewEstimator[T approxity.Hashable](config *Config) (cardinality.Estimator[T
 
 func (e *estimator[T]) Add(key T) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return err
+		return e.mw().Add(err)
 	}
 	return e.hadd(hkey)
 }
 
 func (e *estimator[T]) HAdd(hkey uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	return e.hadd(hkey)
 }
@@ -62,7 +62,7 @@ func (e *estimator[T]) hadd(hkey uint64) error {
 			r = lz
 		}
 	}
-	return e.vec.add(idx, uint8(r))
+	return e.mw().Add(e.vec.add(idx, uint8(r)))
 }
 
 func (e *estimator[T]) Estimate() uint64 {
@@ -80,9 +80,9 @@ func (e *estimator[T]) Estimate() uint64 {
 		h = e.linearEstimation(nz)
 	}
 	if h <= threshold[e.conf.Precision-4] {
-		return uint64(h)
+		return e.mw().Estimate(uint64(h))
 	}
-	return uint64(est)
+	return e.mw().Estimate(uint64(est))
 }
 
 func (e *estimator[T]) linearEstimation(z float64) float64 {
@@ -121,6 +121,9 @@ func (e *estimator[T]) init() {
 		e.err = approxity.ErrNoHasher
 		return
 	}
+	if e.conf.MetricsWriter == nil {
+		e.conf.MetricsWriter = cardinality.DummyMetricsWriter{}
+	}
 
 	m := uint64(1) << e.conf.Precision
 	e.m = float64(m)
@@ -142,4 +145,8 @@ func (e *estimator[T]) init() {
 	} else {
 		e.vec = newSyncvec(e.a, e.m)
 	}
+}
+
+func (e *estimator[T]) mw() cardinality.MetricsWriter {
+	return e.conf.MetricsWriter
 }
