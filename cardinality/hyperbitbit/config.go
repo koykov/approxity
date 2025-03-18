@@ -5,19 +5,29 @@ import (
 	"github.com/koykov/approxity/cardinality"
 )
 
-const defaultLgN = 5
+const defaultN = 1e6
 
 type Config struct {
-	InitialLgN    uint64
-	Hasher        approxity.Hasher
+	// High limit of desired uniques.
+	// Mandatory param.
+	ItemsNumber uint64
+	// Hasher to calculate hash sum of the items.
+	// Mandatory param.
+	Hasher approxity.Hasher
+	// Metrics writer handler.
 	MetricsWriter cardinality.MetricsWriter
 }
 
-func NewConfig(initLgN uint64, hasher approxity.Hasher) *Config {
+func NewConfig(itemNumber uint64, hasher approxity.Hasher) *Config {
 	return &Config{
-		InitialLgN: initLgN,
-		Hasher:     hasher,
+		ItemsNumber: itemNumber,
+		Hasher:      hasher,
 	}
+}
+
+func (c *Config) WithMetricsWriter(mw cardinality.MetricsWriter) *Config {
+	c.MetricsWriter = mw
+	return c
 }
 
 func (c *Config) copy() *Config {

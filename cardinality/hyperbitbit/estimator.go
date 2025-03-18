@@ -107,7 +107,7 @@ func (e *estimator[T]) Reset() {
 	if e.once.Do(e.init); e.err != nil {
 		return
 	}
-	e.n = e.conf.InitialLgN
+	e.n = e.conf.ItemsNumber
 	e.sketch[0] = 0
 	e.sketch[1] = 0
 }
@@ -120,10 +120,10 @@ func (e *estimator[T]) init() {
 	if e.conf.MetricsWriter == nil {
 		e.conf.MetricsWriter = cardinality.DummyMetricsWriter{}
 	}
-	if e.conf.InitialLgN == 0 {
-		e.conf.InitialLgN = defaultLgN
+	if e.conf.ItemsNumber == 0 {
+		e.conf.ItemsNumber = defaultN
 	}
-	e.n = e.conf.InitialLgN
+	e.n = uint64(math.Log(float64(e.conf.ItemsNumber)))
 }
 
 func (e *estimator[T]) mw() cardinality.MetricsWriter {

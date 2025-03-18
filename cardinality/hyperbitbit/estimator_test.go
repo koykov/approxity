@@ -7,13 +7,13 @@ import (
 	"github.com/koykov/hash/xxhash"
 )
 
-const testLgN = 5
+const testN = 1e6
 
 var testh = xxhash.Hasher64[[]byte]{}
 
 func TestEstimator(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
-		est, err := NewEstimator[[]byte](NewConfig(testLgN, testh))
+		est, err := NewEstimator[[]byte](NewConfig(testN, testh))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -23,7 +23,7 @@ func TestEstimator(t *testing.T) {
 
 func BenchmarkEstimator(b *testing.B) {
 	b.Run("sync", func(b *testing.B) {
-		est, err := NewEstimator[[]byte](NewConfig(testLgN, testh))
+		est, err := NewEstimator[[]byte](NewConfig(testN, testh))
 		if err != nil {
 			b.Fatal(err)
 		}
