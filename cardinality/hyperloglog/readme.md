@@ -4,20 +4,44 @@ HyperLogLog is a probabilistic data structure used to estimate the number of uni
 dataset with minimal memory usage. It is particularly useful for scenarios where exact counting is impractical due to
 memory constraints.
 
-HyperLogLog is an algorithm for the count-distinct problem, approximating the number of distinct elements in a multiset.
-See [full description](https://en.wikipedia.org/wiki/HyperLogLog) for more details.
-
 ## How It Works
 
-* Hashing: Each element is hashed into a binary string.
-* Bucketing: The hash is divided into buckets, and the number of leading zeros in the binary string is counted.
-* Averaging: The harmonic mean of the counts across buckets is used to estimate the cardinality.
+* **Hashing**: Each element `x` is hashed into a binary string using a hash function $h(x)$. The hash function should produce
+uniformly distributed outputs.
+* **Bucketing**: The hash is divided into two parts:
+  * The first $p$ bits determine the bucket index $j$ (where $m = 2^P$ is the number of buckets).
+  * The remaining bits are used to count the number of leading zeros $ρ(w)$ in the binary representation.
+* **Estimating Cardinality**: For each bucket $j$, the maximum number of leading zeros $M_j$ is tracked. The cardinality $E$
+is estimated using the harmonic mean of $M_j$:
+
+$$E = α_m ⋅ m^2⋅\left( \sum_{j=1}^m 2^{-M_j} \right)^{-1}$$
+
+Where:
+*
+  * $α_m$ is a correction factor for small and large ranges, e.g.: $α_{16} ≈ 0.673$
+  * $m$ is the number of buckets.
+
+
+* **Bias correction**
+
+For small cardinalities, a bias correction is applied to improve accuracy:
+
+$$
+E'=\left\{
+\begin{array}{ll}
+m⋅log({m \over V}) &\text{if }E \leq {5 \over 2}m \\
+E &\text{otherwise},
+\end{array}
+\right.
+$$
+
+where $V$ is the number of buckets with $M_j = 0$.
 
 ## Usage
 
-* Initialization: Create a HyperLogLog structure with a specified number of buckets (e.g., 2^14 buckets for ~1.5% error rate).
-* Adding Elements: Insert elements into the HyperLogLog structure.
-* Estimating Cardinality: Retrieve the estimated number of unique elements.
+* **Initialization**: Create a HyperLogLog structure with a specified number of buckets (e.g., $2^{14}$ buckets for ~1.5% error rate).
+* **Adding Elements**: Insert elements into the HyperLogLog structure.
+* **Estimating Cardinality**: Retrieve the estimated number of unique elements.
 
 The minimal working example:
 ```go
