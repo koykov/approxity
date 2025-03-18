@@ -35,33 +35,33 @@ func NewEstimator[T approxity.Hashable](config *Config) (cardinality.Estimator[T
 
 func (e *estimator[T]) Add(key T) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return err
+		return e.mw().Add(err)
 	}
 	return e.hadd(hkey)
 }
 
 func (e *estimator[T]) HAdd(hkey uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	return e.hadd(hkey)
 }
 
 func (e *estimator[T]) hadd(hkey uint64) error {
 	e.vec.Set(hkey % e.m)
-	return nil
+	return e.mw().Add(nil)
 }
 
 func (e *estimator[T]) Estimate() uint64 {
 	if e.once.Do(e.init); e.err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
 	m, n := float64(e.m), float64(e.vec.OnesCount())
-	return uint64(math.Floor(math.Abs(-m * math.Log(1-n/m))))
+	return e.mw().Estimate(uint64(math.Floor(math.Abs(-m * math.Log(1-n/m)))))
 }
 
 func (e *estimator[T]) WriteTo(w io.Writer) (n int64, err error) {
@@ -92,6 +92,9 @@ func (e *estimator[T]) init() {
 		e.err = approxity.ErrNoHasher
 		return
 	}
+	if e.conf.MetricsWriter == nil {
+		e.conf.MetricsWriter = cardinality.DummyMetricsWriter{}
+	}
 	if e.conf.CollisionProbability == 0 {
 		e.conf.CollisionProbability = defaultCP
 	}
@@ -104,4 +107,8 @@ func (e *estimator[T]) init() {
 	} else {
 		e.vec, e.err = bitvector.NewVector(e.m)
 	}
+}
+
+func (e *estimator[T]) mw() cardinality.MetricsWriter {
+	return e.conf.MetricsWriter
 }

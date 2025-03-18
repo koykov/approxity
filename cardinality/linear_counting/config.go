@@ -2,7 +2,7 @@ package linear
 
 import (
 	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
+	"github.com/koykov/approxity/cardinality"
 )
 
 const defaultCP = .01
@@ -20,7 +20,7 @@ type Config struct {
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
-	MetricsWriter amq.MetricsWriter
+	MetricsWriter cardinality.MetricsWriter
 }
 
 // ConcurrentConfig configures concurrent section of config.
@@ -54,7 +54,7 @@ func (c *Config) WithWriteAttemptsLimit(limit uint64) *Config {
 	return c
 }
 
-func (c *Config) WithMetricsWriter(mw amq.MetricsWriter) *Config {
+func (c *Config) WithMetricsWriter(mw cardinality.MetricsWriter) *Config {
 	c.MetricsWriter = mw
 	return c
 }
