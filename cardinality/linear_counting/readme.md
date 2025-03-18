@@ -14,11 +14,6 @@ $$ N = |-m * ln(1 - {n \over m})| $$
 
 where `n` is the number of bits set to `1`.
 
-## Key Features
-* Memory Efficiency: Uses a bit array to track uniqueness.
-* Scalability: Suitable for large datasets.
-* Tunable Accuracy: Accuracy depends on the size of the bit array m.
-
 ## Usage
 
 The minimal working example:
@@ -58,3 +53,8 @@ func func main() {
 	...
 }
 ```
+
+## Key Features
+* Memory Efficiency: Uses a bit array to track uniqueness.
+* Scalability: Suitable for large datasets.
+* Tunable Accuracy: Accuracy depends on the size of the bit array `m`.
