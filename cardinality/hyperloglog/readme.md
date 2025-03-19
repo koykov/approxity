@@ -14,7 +14,7 @@ uniformly distributed outputs.
 * **Estimating Cardinality**: For each bucket $j$, the maximum number of leading zeros $M_j$ is tracked. The cardinality $E$
 is estimated using the harmonic mean of $M_j$:
 
-$$E = α_m ⋅ m^2⋅\left( \sum_{j=1}^m 2^{-M_j} \right)^{-1}$$
+$$E=α_m⋅m^2⋅\left( \sum_{j=1}^m 2^{-M_j} \right)^{-1}$$
 
 Where:
 *
