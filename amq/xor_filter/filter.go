@@ -96,7 +96,7 @@ func NewFilterFromReader[T approxity.Hashable](config *Config, r io.Reader) (amq
 	f := &filter[T]{
 		conf: config.copy(),
 	}
-	f.once.Do(func() { /* dummy */ })
+	f.once.Do(f.tinyinit)
 	n, err := f.ReadFrom(r)
 	f.err = err
 	return f, n, err
@@ -355,7 +355,7 @@ func (f *filter[T]) ReadFrom(r io.Reader) (n int64, err error) {
 	return
 }
 
-func (f *filter[T]) init() {
+func (f *filter[T]) tinyinit() {
 	if f.conf.Hasher == nil {
 		f.err = approxity.ErrNoHasher
 		return
@@ -363,6 +363,10 @@ func (f *filter[T]) init() {
 	if f.conf.MetricsWriter == nil {
 		f.conf.MetricsWriter = amq.DummyMetricsWriter{}
 	}
+}
+
+func (f *filter[T]) init() {
+	f.tinyinit()
 
 	const (
 		arity         = 3
