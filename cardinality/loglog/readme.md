@@ -1,6 +1,39 @@
 # LogLog
 
-Simplified version of [HyperLogLog](../hyperloglog).
+LogLog is a probabilistic data structure used to estimate the number of unique elements (cardinality) in a large dataset
+with minimal memory usage. It is the predecessor to [HyperLogLog](../hyperloglog) and provides a simpler but less accurate
+approach to cardinality estimation.
+
+## How It Works
+
+* **Hashing**: Each element $x$ is hashed into a binary string using a hash function $h(x)$. The hash function should
+produce uniformly distributed outputs.
+
+* **Bucketing**: The hash is divided into two parts:
+  * The first $p$ bits determine the bucket index $j$ (where $m = 2^p$ is the number of buckets).
+  * The remaining bits are used to count the number of leading zeros $ρ(w)$ in the binary representation.
+
+* **Tracking Maximum Leading Zeros**: For each bucket $j$, the maximum number of leading zeros $M_j$ is tracked. The
+cardinality $E$ is estimated using the geometric mean of $M_j$:
+
+$$E=α_m⋅m⋅2^{{1 \over m} \sum_{j=1}^m {M_j} }$$
+
+Where:
+  * $α_m$ is a correction factor for small and large ranges (e.g., $α_{16}≈0.773$).
+  * $m$ is the number of buckets.
+
+* **Bias Correction**: For small cardinalities, a bias correction is applied to improve accuracy:
+
+$$
+E'=\left\{
+\begin{array}{ll}
+m⋅log({m \over V}) &\text{if }E \leq {5 \over 2}m \\
+E &\text{otherwise},
+\end{array}
+\right.
+$$
+
+where $V$ is the number of buckets with $M_j=0$.
 
 ## Usage
 
@@ -39,3 +72,9 @@ func func main() {
 	...
 }
 ```
+
+## Key Features
+
+* **Memory Efficiency**: Uses only a few kilobytes of memory, even for billions of elements.
+* **Moderate Accuracy**: Provides an estimate with a typical error rate of about 2-3%.
+* **Scalability**: Efficiently handles large datasets.
