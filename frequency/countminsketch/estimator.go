@@ -3,9 +3,11 @@ package countminsketch
 import (
 	"io"
 	"sync"
+	"unsafe"
 
 	"github.com/koykov/approxity"
 	"github.com/koykov/approxity/frequency"
+	"github.com/koykov/openrt"
 )
 
 type estimator[T approxity.Hashable] struct {
@@ -87,6 +89,7 @@ func (e *estimator[T]) Reset() {
 	if e.once.Do(e.init); e.err != nil {
 		return
 	}
+	openrt.MemclrUnsafe(unsafe.Pointer(&e.vec[0]), int(e.w*e.d*8))
 }
 
 func (e *estimator[T]) ReadFrom(r io.Reader) (n int64, err error) {
