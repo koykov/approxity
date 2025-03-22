@@ -60,7 +60,7 @@ func (e *estimator[T]) Estimate() uint64 {
 	if e.once.Do(e.init); e.err != nil {
 		return e.mw().Estimate(0)
 	}
-	m, n := float64(e.m), float64(e.vec.OnesCount())
+	m, n := float64(e.m), float64(e.vec.Popcnt())
 	return e.mw().Estimate(uint64(math.Floor(math.Abs(-m * math.Log(1-n/m)))))
 }
 
