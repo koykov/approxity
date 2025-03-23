@@ -52,7 +52,7 @@ func (e *estimator[T]) HAdd(hkey uint64) error {
 func (e *estimator[T]) hadd(hkey uint64) error {
 	lo, hi := uint32(hkey>>32), uint32(hkey)
 	for i := uint64(0); i < e.d; i++ {
-		e.vec[uint64(lo+hi*uint32(i))%e.w]++
+		e.vec[i*e.w+uint64(lo+hi*uint32(i))%e.w]++
 	}
 	return nil
 }
@@ -78,7 +78,7 @@ func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
 func (e *estimator[T]) hestimate(hkey uint64) (r uint64) {
 	lo, hi := uint32(hkey>>32), uint32(hkey)
 	for i := uint64(0); i < e.d; i++ {
-		if ce := e.vec[uint64(lo+hi*uint32(i))%e.w]; r == 0 || r > ce {
+		if ce := e.vec[i*e.w+uint64(lo+hi*uint32(i))%e.w]; r == 0 || r > ce {
 			r = ce
 		}
 	}
