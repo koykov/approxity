@@ -22,7 +22,7 @@ type Config struct {
 	// Mandatory param.
 	Hasher approxity.Hasher
 	// How many bits may counter have.
-	// Possible values: [8, 16, 32, 64].
+	// Possible values: [32, 64]. Lesser values (8 and 16) isn't possible due to atomic restrictions on concurrent mode.
 	// If this param omit, defaultCounterBits (64) will use instead.
 	CounterBits uint
 	// Setting up this section enables concurrent read/write operations.
