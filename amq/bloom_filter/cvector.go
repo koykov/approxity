@@ -70,7 +70,7 @@ func (vec *cvector) Capacity() uint64 {
 	return uint64(len(vec.buf)) * 2
 }
 
-func (vec *cvector) OnesCount() uint64 {
+func (vec *cvector) Popcnt() uint64 {
 	return 0 // useless for Bloom
 }
 
