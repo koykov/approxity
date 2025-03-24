@@ -72,20 +72,18 @@ func (e *estimator[T]) Reset() {
 	e.vec.reset()
 }
 
-func (e *estimator[T]) ReadFrom(r io.Reader) (n int64, err error) {
+func (e *estimator[T]) ReadFrom(r io.Reader) (int64, error) {
 	if e.once.Do(e.init); e.err != nil {
-		err = e.err
-		return
+		return 0, e.err
 	}
-	return
+	return e.vec.readFrom(r)
 }
 
-func (e *estimator[T]) WriteTo(w io.Writer) (n int64, err error) {
+func (e *estimator[T]) WriteTo(w io.Writer) (int64, error) {
 	if e.once.Do(e.init); e.err != nil {
-		err = e.err
-		return
+		return 0, e.err
 	}
-	return
+	return e.vec.writeTo(w)
 }
 
 func (e *estimator[T]) init() {

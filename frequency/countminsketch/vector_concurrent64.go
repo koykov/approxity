@@ -1,10 +1,16 @@
 package countminsketch
 
 import (
+	"encoding/binary"
 	"io"
 	"sync/atomic"
 
 	"github.com/koykov/approxity"
+)
+
+const (
+	dumpSignatureConcurrent64 = 0xABF100F41194C630
+	dumpVersionConcurrent64   = 1.0
 )
 
 // 64-bit version of concurrent vector implementation.
@@ -19,12 +25,16 @@ func (vec *cnvector64) add(hkey, delta uint64) error {
 	lo, hi := uint32(hkey>>32), uint32(hkey)
 	for i := uint64(0); i < vec.d; i++ {
 		pos := i*vec.w + uint64(lo+hi*uint32(i))%vec.w
-		for j := uint64(0); j < vec.lim+1; j++ {
+		var j uint64
+		for j = 0; j < vec.lim+1; j++ {
 			o := atomic.LoadUint64(&vec.buf[pos])
 			n := o + delta
 			if atomic.CompareAndSwapUint64(&vec.buf[pos], o, n) {
-				return nil
+				break
 			}
+		}
+		if j == vec.lim+1 {
+			return approxity.ErrWriteLimitExceed
 		}
 	}
 	return approxity.ErrWriteLimitExceed
@@ -46,13 +56,60 @@ func (vec *cnvector64) reset() {
 	}
 }
 
-func (vec *cnvector64) readFrom(io.Reader) (n int64, err error) {
-	// todo implement me
+func (vec *cnvector64) readFrom(r io.Reader) (n int64, err error) {
+	var (
+		buf [16]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return
+	}
+
+	if binary.LittleEndian.Uint64(buf[0:8]) != dumpSignatureConcurrent64 {
+		err = approxity.ErrInvalidSignature
+		return
+	}
+	if binary.LittleEndian.Uint64(buf[8:16]) != dumpVersionConcurrent64 {
+		err = approxity.ErrVersionMismatch
+		return
+	}
+
+	for i := 0; i < len(vec.buf); i++ {
+		m, err = r.Read(buf[:8])
+		n += int64(m)
+		if err != nil {
+			return
+		}
+		v := binary.LittleEndian.Uint64(buf[:8])
+		atomic.StoreUint64(&vec.buf[i], v)
+	}
 	return
 }
 
-func (vec *cnvector64) writeTo(io.Writer) (n int64, err error) {
-	// todo implement me
+func (vec *cnvector64) writeTo(w io.Writer) (n int64, err error) {
+	var (
+		buf [16]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], dumpSignatureConcurrent64)
+	binary.LittleEndian.PutUint64(buf[8:16], dumpVersionConcurrent64)
+	m, err = w.Write(buf[:])
+	n += int64(m)
+	if err != nil {
+		return
+	}
+
+	for i := 0; i < len(vec.buf); i++ {
+		v := atomic.LoadUint64(&vec.buf[i])
+		binary.LittleEndian.PutUint64(buf[0:8], v)
+		m, err = w.Write(buf[:8])
+		n += int64(m)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 

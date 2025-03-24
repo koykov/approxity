@@ -4,10 +4,17 @@ package countminsketch
 // to use atomics (in concurrent vector) together with generics.
 
 import (
+	"encoding/binary"
 	"io"
 	"unsafe"
 
+	"github.com/koykov/approxity"
 	"github.com/koykov/openrt"
+)
+
+const (
+	dumpSignature32 = 0x86BB26BA91E98EAD
+	dumpVersion32   = 1.0
 )
 
 // 32-bit version of sync vector implementation.
@@ -38,13 +45,58 @@ func (vec *syncvec32) reset() {
 	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), int(vec.w*vec.d*4))
 }
 
-func (vec *syncvec32) readFrom(io.Reader) (n int64, err error) {
-	// todo implement me
+func (vec *syncvec32) readFrom(r io.Reader) (n int64, err error) {
+	var (
+		buf [16]byte
+		m   int
+	)
+	m, err = r.Read(buf[:])
+	n += int64(m)
+	if err != nil {
+		return
+	}
+
+	if binary.LittleEndian.Uint64(buf[0:8]) != dumpSignature32 {
+		err = approxity.ErrInvalidSignature
+		return
+	}
+	if binary.LittleEndian.Uint64(buf[8:16]) != dumpVersion32 {
+		err = approxity.ErrVersionMismatch
+		return
+	}
+
+	h := vecbufh{
+		p: uintptr(unsafe.Pointer(&vec.buf[0])),
+		l: len(vec.buf) * 4,
+		c: len(vec.buf) * 4,
+	}
+	bufv := *(*[]byte)(unsafe.Pointer(&h))
+	m, err = r.Read(bufv)
+	n += int64(m)
 	return
 }
 
-func (vec *syncvec32) writeTo(io.Writer) (n int64, err error) {
-	// todo implement me
+func (vec *syncvec32) writeTo(w io.Writer) (n int64, err error) {
+	var (
+		buf [16]byte
+		m   int
+	)
+	binary.LittleEndian.PutUint64(buf[0:8], dumpSignature32)
+	binary.LittleEndian.PutUint64(buf[8:16], dumpVersion32)
+	m, err = w.Write(buf[:])
+	n += int64(m)
+	if err != nil {
+		return
+	}
+
+	h := vecbufh{
+		p: uintptr(unsafe.Pointer(&vec.buf[0])),
+		l: len(vec.buf) * 4,
+		c: len(vec.buf) * 4,
+	}
+	bufv := *(*[]byte)(unsafe.Pointer(&h))
+	m, err = w.Write(bufv)
+	n += int64(m)
 	return
 }
 

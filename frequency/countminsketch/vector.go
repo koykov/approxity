@@ -17,3 +17,8 @@ type basevec struct {
 func vecpos(lo, hi uint32, w, i uint64) uint64 {
 	return i*w + uint64(lo+hi*uint32(i))%w
 }
+
+type vecbufh struct {
+	p    uintptr
+	l, c int
+}
