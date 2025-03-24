@@ -12,8 +12,8 @@ import (
 
 // 32-bit version of sync vector implementation.
 type syncvec32 struct {
-	d, w uint64
-	buf  []uint32
+	basevec
+	buf []uint32
 }
 
 func (vec *syncvec32) add(hkey, delta uint64) error {
@@ -50,16 +50,15 @@ func (vec *syncvec32) writeTo(io.Writer) (n int64, err error) {
 
 func newVector32(d, w uint64) *syncvec32 {
 	return &syncvec32{
-		d:   d,
-		w:   w,
-		buf: make([]uint32, d*w),
+		basevec: basevec{d: d, w: w},
+		buf:     make([]uint32, d*w),
 	}
 }
 
 // 64-bit version if sync vector implementation.
 type syncvec64 struct {
-	d, w uint64
-	buf  []uint64
+	basevec
+	buf []uint64
 }
 
 func (vec *syncvec64) add(hkey, delta uint64) error {
@@ -96,8 +95,7 @@ func (vec *syncvec64) writeTo(io.Writer) (n int64, err error) {
 
 func newVector64(d, w uint64) *syncvec64 {
 	return &syncvec64{
-		d:   d,
-		w:   w,
-		buf: make([]uint64, d*w),
+		basevec: basevec{d: d, w: w},
+		buf:     make([]uint64, d*w),
 	}
 }

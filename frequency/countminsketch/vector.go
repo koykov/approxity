@@ -10,6 +10,10 @@ type vector interface {
 	writeTo(w io.Writer) (int64, error)
 }
 
+type basevec struct {
+	w, d uint64
+}
+
 func vecpos(lo, hi uint32, w, i uint64) uint64 {
 	return i*w + uint64(lo+hi*uint32(i))%w
 }

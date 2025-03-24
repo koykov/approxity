@@ -12,9 +12,10 @@ import (
 
 // 32-bit version of concurrent vector implementation.
 type cnvector32 struct {
-	d, w, lim uint64
-	bits      uint64
-	buf       []uint32
+	basevec
+	lim  uint64
+	bits uint64
+	buf  []uint32
 }
 
 func (vec *cnvector32) add(hkey, delta uint64) error {
@@ -60,18 +61,18 @@ func (vec *cnvector32) writeTo(io.Writer) (n int64, err error) {
 
 func newConcurrentVector32(d, w, lim uint64) *cnvector32 {
 	return &cnvector32{
-		d:   d,
-		w:   w,
-		lim: lim,
-		buf: make([]uint32, d*w),
+		basevec: basevec{d: d, w: w},
+		lim:     lim,
+		buf:     make([]uint32, d*w),
 	}
 }
 
 // 64-bit version of concurrent vector implementation.
 type cnvector64 struct {
-	d, w, lim uint64
-	bits      uint64
-	buf       []uint64
+	basevec
+	lim  uint64
+	bits uint64
+	buf  []uint64
 }
 
 func (vec *cnvector64) add(hkey, delta uint64) error {
@@ -117,9 +118,8 @@ func (vec *cnvector64) writeTo(io.Writer) (n int64, err error) {
 
 func newConcurrentVector64(d, w, lim uint64) *cnvector64 {
 	return &cnvector64{
-		d:   d,
-		w:   w,
-		lim: lim,
-		buf: make([]uint64, d*w),
+		basevec: basevec{d: d, w: w},
+		lim:     lim,
+		buf:     make([]uint64, d*w),
 	}
 }
