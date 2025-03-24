@@ -104,19 +104,16 @@ func (e *estimator[T]) init() {
 	if e.conf.MetricsWriter == nil {
 		e.conf.MetricsWriter = frequency.DummyMetricsWriter{}
 	}
-	if e.conf.CounterBits != 32 && e.conf.CounterBits != 64 {
-		e.conf.CounterBits = defaultCounterBits
-	}
 
 	e.w, e.d = optimalWD(e.conf.Confidence, e.conf.Epsilon)
 	if e.conf.Concurrent != nil {
-		if e.conf.CounterBits == 32 {
+		if e.conf.Compact {
 			e.vec = newConcurrentVector32(e.d, e.w, e.conf.Concurrent.WriteAttemptsLimit)
 		} else {
 			e.vec = newConcurrentVector64(e.d, e.w, e.conf.Concurrent.WriteAttemptsLimit)
 		}
 	} else {
-		if e.conf.CounterBits == 32 {
+		if e.conf.Compact {
 			e.vec = newVector32(e.d, e.w)
 		} else {
 			e.vec = newVector64(e.d, e.w)

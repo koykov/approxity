@@ -5,8 +5,6 @@ import (
 	"github.com/koykov/approxity/frequency"
 )
 
-const defaultCounterBits = 64
-
 type Config struct {
 	// Confidence represent a possibility that potential error will be in range of acceptable error rate (see Epsilon).
 	// E.g.: Confidence 0.99 guarantees 99% of estimations will be in range represent by Epsilon.
@@ -21,10 +19,9 @@ type Config struct {
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
 	Hasher approxity.Hasher
-	// How many bits may counter have.
-	// Possible values: [32, 64]. Lesser values (8 and 16) isn't possible due to atomic restrictions on concurrent mode.
-	// If this param omit, defaultCounterBits (64) will use instead.
-	CounterBits uint
+	// Enable compact mode.
+	// By default, uses 64 bit per counter. This param allows to use 32 bit per counter.
+	Compact bool
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
@@ -58,8 +55,8 @@ func (c *Config) WithWriteAttemptsLimit(limit uint64) *Config {
 	return c
 }
 
-func (c *Config) WithCounterBits(bits uint) *Config {
-	c.CounterBits = bits
+func (c *Config) WithCompact() *Config {
+	c.Compact = true
 	return c
 }
 
