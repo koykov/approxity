@@ -22,4 +22,12 @@ func TestEstimator(t *testing.T) {
 		}
 		frequency.TestMe(t, est)
 	})
+	t.Run("concurrent", func(t *testing.T) {
+		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh).
+			WithConcurrency())
+		if err != nil {
+			t.Fatal(err)
+		}
+		frequency.TestMeConcurrently(t, est)
+	})
 }

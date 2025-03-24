@@ -1,8 +1,11 @@
 package frequency
 
 import (
+	"context"
 	"math"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/koykov/approxity"
 )
@@ -46,6 +49,46 @@ func TestMe[T []byte](t *testing.T, est Estimator[T]) {
 			if diffc > 0 {
 				t.Logf("avg diff: %f", diffv/diffc)
 			}
+		})
+	})
+}
+
+func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T]) {
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+		t.Run(ds.Name, func(t *testing.T) {
+			est.Reset()
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			var wg sync.WaitGroup
+			wg.Add(2)
+
+			go func() {
+				defer wg.Done()
+				for i := 0; ; i++ {
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						_ = est.Add(ds.All[i%len(ds.All)])
+					}
+				}
+			}()
+
+			go func() {
+				defer wg.Done()
+				tick := time.NewTicker(time.Millisecond * 5)
+				defer tick.Stop()
+				for i := 0; ; i++ {
+					select {
+					case <-ctx.Done():
+						return
+					case <-tick.C:
+						est.Estimate(ds.All[i%len(ds.All)])
+					}
+				}
+			}()
+
+			wg.Wait()
 		})
 	})
 }
