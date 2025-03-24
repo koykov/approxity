@@ -3,11 +3,9 @@ package countminsketch
 import (
 	"io"
 	"sync"
-	"unsafe"
 
 	"github.com/koykov/approxity"
 	"github.com/koykov/approxity/frequency"
-	"github.com/koykov/openrt"
 )
 
 type estimator[T approxity.Hashable] struct {
@@ -15,7 +13,7 @@ type estimator[T approxity.Hashable] struct {
 	conf *Config
 	once sync.Once
 	w, d uint64
-	vec  []uint64
+	vec  vector
 
 	err error
 }
@@ -39,22 +37,14 @@ func (e *estimator[T]) Add(key T) error {
 	if err != nil {
 		return err
 	}
-	return e.hadd(hkey)
+	return e.vec.add(hkey, 1)
 }
 
 func (e *estimator[T]) HAdd(hkey uint64) error {
 	if e.once.Do(e.init); e.err != nil {
 		return e.err
 	}
-	return e.hadd(hkey)
-}
-
-func (e *estimator[T]) hadd(hkey uint64) error {
-	lo, hi := uint32(hkey>>32), uint32(hkey)
-	for i := uint64(0); i < e.d; i++ {
-		e.vec[i*e.w+uint64(lo+hi*uint32(i))%e.w]++
-	}
-	return nil
+	return e.vec.add(hkey, 1)
 }
 
 func (e *estimator[T]) Estimate(key T) uint64 {
@@ -65,31 +55,21 @@ func (e *estimator[T]) Estimate(key T) uint64 {
 	if err != nil {
 		return 0
 	}
-	return e.hestimate(hkey)
+	return e.vec.estimate(hkey)
 }
 
 func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
 	if e.once.Do(e.init); e.err != nil {
 		return 0
 	}
-	return e.hestimate(hkey)
-}
-
-func (e *estimator[T]) hestimate(hkey uint64) (r uint64) {
-	lo, hi := uint32(hkey>>32), uint32(hkey)
-	for i := uint64(0); i < e.d; i++ {
-		if ce := e.vec[i*e.w+uint64(lo+hi*uint32(i))%e.w]; r == 0 || r > ce {
-			r = ce
-		}
-	}
-	return
+	return e.vec.estimate(hkey)
 }
 
 func (e *estimator[T]) Reset() {
 	if e.once.Do(e.init); e.err != nil {
 		return
 	}
-	openrt.MemclrUnsafe(unsafe.Pointer(&e.vec[0]), int(e.w*e.d*8))
+	e.vec.reset()
 }
 
 func (e *estimator[T]) ReadFrom(r io.Reader) (n int64, err error) {
@@ -124,7 +104,22 @@ func (e *estimator[T]) init() {
 	if e.conf.MetricsWriter == nil {
 		e.conf.MetricsWriter = frequency.DummyMetricsWriter{}
 	}
+	if e.conf.CounterBits != 32 && e.conf.CounterBits != 64 {
+		e.conf.CounterBits = defaultCounterBits
+	}
 
 	e.w, e.d = optimalWD(e.conf.Confidence, e.conf.Epsilon)
-	e.vec = make([]uint64, e.w*e.d)
+	if e.conf.Concurrent != nil {
+		if e.conf.CounterBits == 32 {
+			e.vec = newConcurrentVector32(e.d, e.w, e.conf.Concurrent.WriteAttemptsLimit)
+		} else {
+			e.vec = newConcurrentVector64(e.d, e.w, e.conf.Concurrent.WriteAttemptsLimit)
+		}
+	} else {
+		if e.conf.CounterBits == 32 {
+			e.vec = newVector32(e.d, e.w)
+		} else {
+			e.vec = newVector64(e.d, e.w)
+		}
+	}
 }

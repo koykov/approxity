@@ -3,9 +3,13 @@ package countminsketch
 import "io"
 
 type vector interface {
-	add(uint64) error
-	estimate(uint64) uint64
+	add(hkey, delta uint64) error
+	estimate(hkey uint64) uint64
 	reset()
-	readFrom(io.Reader) (int64, error)
-	writeTo(io.Writer) (int64, error)
+	readFrom(r io.Reader) (int64, error)
+	writeTo(w io.Writer) (int64, error)
+}
+
+func vecpos(lo, hi uint32, w, i uint64) uint64 {
+	return i*w + uint64(lo+hi*uint32(i))%w
 }
