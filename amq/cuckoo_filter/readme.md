@@ -43,7 +43,7 @@ import "github.com/koykov/approxity/amq/metrics/prometheus"
 func main() {
     // set items number and hasher
     f, _ := cuckoo.NewFilter[string](cuckoo.NewConfig(1e7, xxhash.Hasher64[[]byte]{}).
-		// limit for cuckoo kicks to avoid infinite loop
+        // limit for cuckoo kicks to avoid infinite loop
         WithKicksLimit(10).
         // switch to race protected buckets array (atomic based)
         WithConcurrency().

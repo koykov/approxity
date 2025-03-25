@@ -8,7 +8,7 @@ HyperBitBit is a memory-efficient probabilistic algorithm for estimating the num
 large datasets. It is an enhancement over the HyperLogLog algorithm, designed to reduce memory usage while maintaining
 high accuracy.
 
-See [full scription](https://www.birs.ca/workshops/2022/22w5004/files/Bob%20Sedgewick/HyperBit.pdf).
+See [full description](https://www.birs.ca/workshops/2022/22w5004/files/Bob%20Sedgewick/HyperBit.pdf).
 
 ## How It Works
 

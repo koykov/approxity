@@ -58,7 +58,7 @@ func main() {
 		    _ = est.Add(fmt.Sprintf("item-%d", j))
 	    }	
     }
-	println(est.Cardinality()) // ~1000000
+    println(est.Cardinality()) // ~1000000
 }
 ```
 , but [initial config](config.go) allows to tune estimation for better efficiency:
@@ -75,7 +75,7 @@ func func main() {
     
     // estimation is ready to use
     est, _ := NewEstimator(config)
-	...
+    ...
 }
 ```
 

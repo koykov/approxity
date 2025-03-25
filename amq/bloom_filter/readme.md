@@ -41,7 +41,7 @@ func func main() {
     
     // filter is ready to use
     f, _ := NewFilter(config)
-	...
+    ...
 }
 ```
 
@@ -51,7 +51,7 @@ CBF allows to delete elements from the filter, but eats a bit more memory. Besid
 CBF enables by setting CBF param of [Config](config.go) to true or calling `WithCBF()` method of [Config](config.go):
 ```go
 conf := Config{
-	...
+    ...
     CBF: true,
 }
 // or

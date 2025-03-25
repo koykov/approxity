@@ -17,15 +17,15 @@ See [full description](https://en.wikipedia.org/wiki/Quotient_filter).
 
 ```go
 import (
-	"github.com/koykov/approxity/amq/quotient_filter"
-	"github.com/koykov/hash/xxhash"
+    "github.com/koykov/approxity/amq/quotient_filter"
+    "github.com/koykov/hash/xxhash"
 )
 
 func main() {
-	f, err := quotient.NewFilter[string](quotient.NewConfig(1e3, 0.01, xxhash.Hasher64[[]byte]{}))
+    f, err := quotient.NewFilter[string](quotient.NewConfig(1e3, 0.01, xxhash.Hasher64[[]byte]{}))
     _ = err
-	_ = f.Set("foobar")
-	print(f.Contains("foobar")) // true
+    _ = f.Set("foobar")
+    print(f.Contains("foobar")) // true
     print(f.Contains("qwerty")) // false
 }
 ```

@@ -48,11 +48,11 @@ func main() {
     est, err := loglog.NewEstimator[string](loglog.NewConfig(18, xxhash.Hasher64[[]byte]{}))
     _ = err
     for i:=0; i<5; i++ {
-	    for j:=0; j<1e6; j++ {
-		    _ = est.Add(fmt.Sprintf("item-%d", j))
-	    }	
+        for j:=0; j<1e6; j++ {
+            _ = est.Add(fmt.Sprintf("item-%d", j))
+        }	
     }
-	println(est.Cardinality()) // ~1000000
+    println(est.Cardinality()) // ~1000000
 }
 ```
 , but [initial config](config.go) allows to tune estimation for better efficiency:
@@ -69,7 +69,7 @@ func func main() {
     
     // estimation is ready to use
     est, _ := NewEstimator(config)
-	...
+    ...
 }
 ```
 

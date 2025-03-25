@@ -28,10 +28,10 @@ const n = 10 // desired number of unique elements
 
 func main() {
     est, err := linear.NewEstimator[[]byte](linear.NewConfig(n, xxhash.Hasher64[[]byte]{}))
-	_ = err
-	est.Add("foo")
-	est.Add("bar")
-	fmt.Println(est.Estimate()) // 2
+    _ = err
+    est.Add("foo")
+    est.Add("bar")
+    fmt.Println(est.Estimate()) // 2
 }
 ```
 , but [initial config](config.go) allows to tune filter for better efficiency:
@@ -50,7 +50,7 @@ func func main() {
     
     // filter is ready to use
     est, _ := linear.NewEstimator(config)
-	...
+    ...
 }
 ```
 
