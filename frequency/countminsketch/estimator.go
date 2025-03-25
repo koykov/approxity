@@ -30,6 +30,10 @@ func NewEstimator[T approxity.Hashable](conf *Config) (frequency.Estimator[T], e
 }
 
 func (e *estimator[T]) Add(key T) error {
+	return e.AddN(key, 1)
+}
+
+func (e *estimator[T]) AddN(key T, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
 		return e.err
 	}
@@ -37,14 +41,18 @@ func (e *estimator[T]) Add(key T) error {
 	if err != nil {
 		return err
 	}
-	return e.vec.add(hkey, 1)
+	return e.vec.add(hkey, n)
 }
 
 func (e *estimator[T]) HAdd(hkey uint64) error {
+	return e.HAddN(hkey, 1)
+}
+
+func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
 		return e.err
 	}
-	return e.vec.add(hkey, 1)
+	return e.vec.add(hkey, n)
 }
 
 func (e *estimator[T]) Estimate(key T) uint64 {
