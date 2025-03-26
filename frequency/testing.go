@@ -2,8 +2,10 @@ package frequency
 
 import (
 	"context"
+	"encoding/binary"
 	"math"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -89,6 +91,73 @@ func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T]) {
 			}()
 
 			wg.Wait()
+		})
+	})
+}
+
+func BenchMe(b *testing.B, est Estimator[[]byte]) {
+	b.Run("add", func(b *testing.B) {
+		b.ReportAllocs()
+		est.Reset()
+		var buf [8]byte
+		for i := 0; i < b.N; i++ {
+			binary.LittleEndian.PutUint64(buf[:], uint64(i))
+			_ = est.Add(buf[:])
+		}
+	})
+	b.Run("estimate", func(b *testing.B) {
+		est.Reset()
+		var buf [8]byte
+		for i := uint64(0); i < 1e7; i++ {
+			binary.LittleEndian.PutUint64(buf[:], i)
+			_ = est.Add(buf[:])
+		}
+		b.ResetTimer()
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			binary.LittleEndian.PutUint64(buf[:], uint64(i))
+			_ = est.Estimate(buf[:])
+		}
+	})
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+		b.Run(ds.Name, func(b *testing.B) {
+			est.Reset()
+			for i := 0; i < len(ds.All); i++ {
+				_ = est.Add(ds.All[i])
+			}
+			b.ResetTimer()
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				est.Estimate(ds.All[i%len(ds.All)])
+			}
+		})
+	})
+}
+
+func BenchMeConcurrently[T []byte](b *testing.B, est Estimator[T]) {
+	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+		b.Run(ds.Name, func(b *testing.B) {
+			var pool = sync.Pool{New: func() any {
+				var buf [8]byte
+				return &buf
+			}}
+			est.Reset()
+			b.ReportAllocs()
+			b.RunParallel(func(pb *testing.PB) {
+				var i uint64 = math.MaxUint64
+				for pb.Next() {
+					ci := atomic.AddUint64(&i, 1)
+					buf := pool.Get().(*[8]byte)
+					binary.LittleEndian.PutUint64((*buf)[:], ci)
+					switch ci % 100 {
+					case 99:
+						est.Estimate(buf[:])
+					default:
+						_ = est.Add(buf[:])
+					}
+					pool.Put(buf)
+				}
+			})
 		})
 	})
 }
