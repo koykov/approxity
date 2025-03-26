@@ -1,4 +1,4 @@
-package countminsketch
+package cmsketch
 
 // Synchronous 32/64-bit vector implementations. Generics approach is too slow in general, also there is no way
 // to use atomics (in concurrent vector) together with generics.

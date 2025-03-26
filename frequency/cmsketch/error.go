@@ -1,4 +1,4 @@
-package countminsketch
+package cmsketch
 
 import "errors"
 
