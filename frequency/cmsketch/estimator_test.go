@@ -123,3 +123,21 @@ func TestEstimator(t *testing.T) {
 		})
 	})
 }
+
+func BenchmarkEstimator(b *testing.B) {
+	b.Run("sync", func(b *testing.B) {
+		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh))
+		if err != nil {
+			b.Fatal(err)
+		}
+		frequency.BenchMe(b, est)
+	})
+	b.Run("concurrent", func(b *testing.B) {
+		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh).
+			WithConcurrency().WithWriteAttemptsLimit(5))
+		if err != nil {
+			b.Fatal(err)
+		}
+		frequency.BenchMeConcurrently(b, est)
+	})
+}
