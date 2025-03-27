@@ -100,11 +100,11 @@ func (e *estimator[T]) init() {
 		return
 	}
 	if e.conf.Confidence == 0 || e.conf.Confidence > 1 {
-		e.err = ErrInvalidConfidence
+		e.err = frequency.ErrInvalidConfidence
 		return
 	}
 	if e.conf.Epsilon == 0 || e.conf.Epsilon > 1 {
-		e.err = ErrInvalidEpsilon
+		e.err = frequency.ErrInvalidEpsilon
 		return
 	}
 	if e.conf.MetricsWriter == nil {

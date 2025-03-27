@@ -1,4 +1,4 @@
-package cmsketch
+package frequency
 
 import "errors"
 
