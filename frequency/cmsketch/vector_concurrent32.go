@@ -16,9 +16,8 @@ const (
 // 32-bit version of concurrent vector implementation.
 type cnvector32 struct {
 	basevec
-	lim  uint64
-	bits uint64
-	buf  []uint32
+	lim uint64
+	buf []uint32
 }
 
 func (vec *cnvector32) add(hkey, delta uint64) error {

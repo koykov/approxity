@@ -16,9 +16,8 @@ const (
 // 64-bit version of concurrent vector implementation.
 type cnvector64 struct {
 	basevec
-	lim  uint64
-	bits uint64
-	buf  []uint64
+	lim uint64
+	buf []uint64
 }
 
 func (vec *cnvector64) add(hkey, delta uint64) error {
