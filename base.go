@@ -10,15 +10,27 @@ type Base[T Hashable] struct{}
 
 // HashSalt calculates hash sum of data + salt using given hasher.
 func (b Base[T]) HashSalt(hasher Hasher, data T, salt uint64) (uint64, error) {
-	return b.hash(hasher, data, salt, true)
+	h, err := b.hash(hasher, nil, data, salt, true)
+	return h[0], err
 }
 
 // Hash calculates hash sum of data using given hasher.
 func (b Base[T]) Hash(hasher Hasher, data T) (uint64, error) {
-	return b.hash(hasher, data, 0, false)
+	h, err := b.hash(hasher, nil, data, 0, false)
+	return h[0], err
 }
 
-func (b Base[T]) hash(hasher Hasher, data T, salt uint64, saltext bool) (_ uint64, err error) {
+// HashSalt128 calculates 128-bit hash sum of data + salt using given hasher.
+func (b Base[T]) HashSalt128(hasher Hasher128, data T, salt uint64) ([2]uint64, error) {
+	return b.hash(nil, hasher, data, salt, true)
+}
+
+// Hash128 calculates 128-bit hash sum of data using given hasher.
+func (b Base[T]) Hash128(hasher Hasher128, data T) ([2]uint64, error) {
+	return b.hash(nil, hasher, data, 0, false)
+}
+
+func (b Base[T]) hash(hasher Hasher, hasher128 Hasher128, data T, salt uint64, saltext bool) (r [2]uint64, err error) {
 	const bufsz = 64
 	var a [bufsz]byte
 	var h struct {
@@ -71,10 +83,19 @@ func (b Base[T]) hash(hasher Hasher, data T, salt uint64, saltext bool) (_ uint6
 			}
 		}
 	default:
-		return 0, ErrEncoding
+		return r, ErrEncoding
 	}
 	if saltext {
 		buf = strconv.AppendUint(buf, salt, 10)
 	}
-	return hasher.Sum64(buf), err
+	switch {
+	case hasher != nil:
+		r[0] = hasher.Sum64(buf)
+		return r, err
+	case hasher128 != nil:
+		r = hasher128.Sum128(buf)
+		return r, err
+	default:
+		return r, ErrEncoding
+	}
 }
