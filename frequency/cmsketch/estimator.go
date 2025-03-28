@@ -22,7 +22,7 @@ func NewEstimator[T approxity.Hashable](conf *Config) (frequency.Estimator[T], e
 	if conf == nil {
 		return nil, approxity.ErrInvalidConfig
 	}
-	e := &estimator[T]{conf: conf}
+	e := &estimator[T]{conf: conf.copy()}
 	if e.once.Do(e.init); e.err != nil {
 		return nil, e.err
 	}
@@ -99,11 +99,11 @@ func (e *estimator[T]) init() {
 		e.err = approxity.ErrNoHasher
 		return
 	}
-	if e.conf.Confidence == 0 || e.conf.Confidence > 1 {
+	if e.conf.Confidence <= 0 || e.conf.Confidence >= 1 {
 		e.err = frequency.ErrInvalidConfidence
 		return
 	}
-	if e.conf.Epsilon == 0 || e.conf.Epsilon > 1 {
+	if e.conf.Epsilon <= 0 || e.conf.Epsilon >= 1 {
 		e.err = frequency.ErrInvalidEpsilon
 		return
 	}
