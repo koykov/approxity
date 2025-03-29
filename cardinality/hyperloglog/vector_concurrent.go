@@ -6,7 +6,7 @@ import (
 	"math"
 	"sync/atomic"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -34,7 +34,7 @@ func (vec *cnvec) add(idx uint64, val uint8) error {
 			return nil
 		}
 	}
-	return approxity.ErrWriteLimitExceed
+	return pbtk.ErrWriteLimitExceed
 }
 
 func (vec *cnvec) estimate() (raw, nz float64) {
@@ -109,10 +109,10 @@ func (vec *cnvec) readFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[32:40])
 
 	if sign != cnvecDumpSignature {
-		return n, approxity.ErrInvalidSignature
+		return n, pbtk.ErrInvalidSignature
 	}
 	if ver != math.Float64bits(cnvecDumpVersion) {
-		return n, approxity.ErrVersionMismatch
+		return n, pbtk.ErrVersionMismatch
 	}
 	vec.a, vec.m = math.Float64frombits(a), math.Float64frombits(m_)
 	atomic.StoreUint64(&vec.s, s)

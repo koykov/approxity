@@ -1,8 +1,8 @@
 package cuckoo
 
 import (
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 const defaultKicksLimit = 500
@@ -13,7 +13,7 @@ type Config struct {
 	ItemsNumber uint64
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher approxity.Hasher
+	Hasher pbtk.Hasher
 	// How many kicks may filter do to set the item.
 	KicksLimit uint64
 	// Setting up this section enables concurrent read/write operations.
@@ -28,7 +28,7 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
-func NewConfig(items uint64, hasher approxity.Hasher) *Config {
+func NewConfig(items uint64, hasher pbtk.Hasher) *Config {
 	return &Config{ItemsNumber: items, Hasher: hasher}
 }
 
@@ -42,7 +42,7 @@ func (c *Config) WithItemsNumber(items uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHasher(hasher approxity.Hasher) *Config {
+func (c *Config) WithHasher(hasher pbtk.Hasher) *Config {
 	c.Hasher = hasher
 	return c
 }

@@ -8,9 +8,9 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
 	"github.com/koykov/openrt"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 const (
@@ -19,8 +19,8 @@ const (
 )
 
 // XorBinaryFuse8 implementation.
-type filter[T approxity.Hashable] struct {
-	approxity.Base[T]
+type filter[T pbtk.Hashable] struct {
+	pbtk.Base[T]
 	conf *Config
 	once sync.Once
 
@@ -41,11 +41,11 @@ type filter[T approxity.Hashable] struct {
 	err error
 }
 
-func NewFilterWithKeys[T approxity.Hashable](config *Config, keys []T) (amq.Filter[T], error) {
+func NewFilterWithKeys[T pbtk.Hashable](config *Config, keys []T) (amq.Filter[T], error) {
 	if config == nil {
-		return nil, approxity.ErrInvalidConfig
+		return nil, pbtk.ErrInvalidConfig
 	}
-	if keys = approxity.Deduplicate(keys); len(keys) == 0 {
+	if keys = pbtk.Deduplicate(keys); len(keys) == 0 {
 		return nil, ErrEmptyKeyset
 	}
 	f := &filter[T]{
@@ -71,9 +71,9 @@ func NewFilterWithKeys[T approxity.Hashable](config *Config, keys []T) (amq.Filt
 
 func NewFilterWithHKeys(config *Config, hkeys []uint64) (amq.Filter[uint64], error) {
 	if config == nil {
-		return nil, approxity.ErrInvalidConfig
+		return nil, pbtk.ErrInvalidConfig
 	}
-	if hkeys = approxity.Deduplicate(hkeys); len(hkeys) == 0 {
+	if hkeys = pbtk.Deduplicate(hkeys); len(hkeys) == 0 {
 		return nil, ErrEmptyKeyset
 	}
 	f := &filter[uint64]{
@@ -89,9 +89,9 @@ func NewFilterWithHKeys(config *Config, hkeys []uint64) (amq.Filter[uint64], err
 	return f, nil
 }
 
-func NewFilterFromReader[T approxity.Hashable](config *Config, r io.Reader) (amq.Filter[T], int64, error) {
+func NewFilterFromReader[T pbtk.Hashable](config *Config, r io.Reader) (amq.Filter[T], int64, error) {
 	if config == nil {
-		return nil, 0, approxity.ErrInvalidConfig
+		return nil, 0, pbtk.ErrInvalidConfig
 	}
 	f := &filter[T]{
 		conf: config.copy(),
@@ -336,10 +336,10 @@ func (f *filter[T]) ReadFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[40:48])
 
 	if sign != dumpSignature {
-		return n, approxity.ErrInvalidSignature
+		return n, pbtk.ErrInvalidSignature
 	}
 	if ver != math.Float64bits(dumpVersion) {
-		return n, approxity.ErrVersionMismatch
+		return n, pbtk.ErrVersionMismatch
 	}
 	f.segl, f.segcl, f.seglmask, f.cap = segl, segcl, seglmask, cap_
 
@@ -357,7 +357,7 @@ func (f *filter[T]) ReadFrom(r io.Reader) (n int64, err error) {
 
 func (f *filter[T]) tinyinit() {
 	if f.conf.Hasher == nil {
-		f.err = approxity.ErrNoHasher
+		f.err = pbtk.ErrNoHasher
 		return
 	}
 	if f.conf.MetricsWriter == nil {

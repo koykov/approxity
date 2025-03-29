@@ -10,7 +10,7 @@ This package implements XorBinaryFuse8 variant as the fastest and memory-efficie
 The minimal working example:
 ```go
 import (
-    "github.com/koykov/approxity/amq/xor_filter"
+    "github.com/koykov/pbtk/amq/xor_filter"
     "github.com/koykov/hash/xxhash"
 )
 
@@ -26,7 +26,7 @@ func main() {
 
 Similar to [bloom filter](../bloom_filter/readme.md#usage) xor allows to initiate config more detailed:
 ```go
-import "github.com/koykov/approxity/amq/metrics/prometheus"
+import "github.com/koykov/pbtk/amq/metrics/prometheus"
 
 func main() {
     // set items number and hasher

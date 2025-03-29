@@ -30,7 +30,7 @@ This makes it ideal for applications where confirming "at least X occurrences" m
 The minimal working example:
 ```go
 import (
-    "github.com/koykov/approxity/frequency/cmsketch"
+    "github.com/koykov/pbtk/frequency/cmsketch"
     "github.com/koykov/hash/xxhash"
 )
 
@@ -56,7 +56,7 @@ func main() {
 ```
 , but [initial config](config.go) allows to tune estimation for better efficiency:
 ```go
-import "github.com/koykov/approxity/cardinality/metrics/prometheus"
+import "github.com/koykov/pbtk/cardinality/metrics/prometheus"
 
 func func main() {
     // set estimation precision and hasher

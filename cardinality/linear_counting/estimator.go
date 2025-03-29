@@ -5,13 +5,13 @@ import (
 	"math"
 	"sync"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/cardinality"
 	"github.com/koykov/bitvector"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/cardinality"
 )
 
-type estimator[T approxity.Hashable] struct {
-	approxity.Base[T]
+type estimator[T pbtk.Hashable] struct {
+	pbtk.Base[T]
 	conf *Config
 	once sync.Once
 	vec  bitvector.Interface
@@ -20,9 +20,9 @@ type estimator[T approxity.Hashable] struct {
 	err error
 }
 
-func NewEstimator[T approxity.Hashable](config *Config) (cardinality.Estimator[T], error) {
+func NewEstimator[T pbtk.Hashable](config *Config) (cardinality.Estimator[T], error) {
 	if config == nil {
-		return nil, approxity.ErrInvalidConfig
+		return nil, pbtk.ErrInvalidConfig
 	}
 	e := &estimator[T]{
 		conf: config.copy(),
@@ -89,7 +89,7 @@ func (e *estimator[T]) Reset() {
 
 func (e *estimator[T]) init() {
 	if e.conf.Hasher == nil {
-		e.err = approxity.ErrNoHasher
+		e.err = pbtk.ErrNoHasher
 		return
 	}
 	if e.conf.MetricsWriter == nil {
@@ -99,7 +99,7 @@ func (e *estimator[T]) init() {
 		e.conf.CollisionProbability = defaultCP
 	}
 	if e.m = optimalM(e.conf.ItemsNumber, e.conf.CollisionProbability); e.m == 0 {
-		e.err = approxity.ErrInvalidConfig
+		e.err = pbtk.ErrInvalidConfig
 		return
 	}
 	if e.conf.Concurrent != nil {

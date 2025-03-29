@@ -10,7 +10,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 func TestMe[T []byte](t *testing.T, est Estimator[T], delta float64) {
@@ -32,7 +32,7 @@ func TestMe[T []byte](t *testing.T, est Estimator[T], delta float64) {
 		}
 	})
 
-	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
 			est.Reset()
 			for i := 0; i < len(ds.All); i++ {
@@ -97,7 +97,7 @@ func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T], delta float64)
 
 		wg.Wait()
 	})
-	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
 			est.Reset()
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -166,7 +166,7 @@ func BenchMe(b *testing.B, est Estimator[[]byte]) {
 		}
 	})
 
-	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		b.Run(ds.Name, func(b *testing.B) {
 			est.Reset()
 			for i := 0; i < len(ds.All); i++ {
@@ -204,7 +204,7 @@ func BenchMeConcurrently[T []byte](b *testing.B, est Estimator[T]) {
 		}
 	})
 
-	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		b.Run(ds.Name, func(b *testing.B) {
 			est.Reset()
 			b.ReportAllocs()

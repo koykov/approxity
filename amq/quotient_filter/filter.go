@@ -5,14 +5,14 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
 	"github.com/koykov/openrt"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 // Quotient filter implementation.
-type filter[T approxity.Hashable] struct {
-	approxity.Base[T]
+type filter[T pbtk.Hashable] struct {
+	pbtk.Base[T]
 	conf                 *Config
 	once                 sync.Once
 	qbits, rbits         uint64 // quotient and remainder bits
@@ -26,9 +26,9 @@ type filter[T approxity.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T approxity.Hashable](config *Config) (amq.Filter[T], error) {
+func NewFilter[T pbtk.Hashable](config *Config) (amq.Filter[T], error) {
 	if config == nil {
-		return nil, approxity.ErrInvalidConfig
+		return nil, pbtk.ErrInvalidConfig
 	}
 	f := &filter[T]{
 		conf: config.copy(),
@@ -312,14 +312,14 @@ func (f *filter[T]) ReadFrom(r io.Reader) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	return 0, approxity.ErrUnsupportedOp
+	return 0, pbtk.ErrUnsupportedOp
 }
 
 func (f *filter[T]) WriteTo(w io.Writer) (int64, error) {
 	if f.once.Do(f.init); f.err != nil {
 		return 0, f.err
 	}
-	return 0, approxity.ErrUnsupportedOp
+	return 0, pbtk.ErrUnsupportedOp
 }
 
 func (f *filter[T]) init() {
@@ -329,7 +329,7 @@ func (f *filter[T]) init() {
 		return
 	}
 	if c.Hasher == nil {
-		f.err = approxity.ErrNoHasher
+		f.err = pbtk.ErrNoHasher
 		return
 	}
 	if c.MetricsWriter == nil {

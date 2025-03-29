@@ -1,8 +1,8 @@
 package quotient
 
 import (
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 const (
@@ -22,12 +22,12 @@ type Config struct {
 	LoadFactor float64
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher approxity.Hasher
+	Hasher pbtk.Hasher
 	// Metrics writer handler.
 	MetricsWriter amq.MetricsWriter
 }
 
-func NewConfig(items uint64, fpp float64, hasher approxity.Hasher) *Config {
+func NewConfig(items uint64, fpp float64, hasher pbtk.Hasher) *Config {
 	return &Config{
 		ItemsNumber: items,
 		FPP:         fpp,
@@ -40,7 +40,7 @@ func (c *Config) WithItemsNumber(items uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHasher(hasher approxity.Hasher) *Config {
+func (c *Config) WithHasher(hasher pbtk.Hasher) *Config {
 	c.Hasher = hasher
 	return c
 }

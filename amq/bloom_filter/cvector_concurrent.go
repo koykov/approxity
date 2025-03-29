@@ -6,7 +6,7 @@ import (
 	"math"
 	"sync/atomic"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -144,10 +144,10 @@ func (vec *ccnvector) ReadFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[16:24]), binary.LittleEndian.Uint64(buf[24:32])
 
 	if sign != ccnvectorDumpSignature {
-		return n, approxity.ErrInvalidSignature
+		return n, pbtk.ErrInvalidSignature
 	}
 	if ver != math.Float64bits(ccnvectorDumpVersion) {
-		return n, approxity.ErrVersionMismatch
+		return n, pbtk.ErrVersionMismatch
 	}
 	vec.s, vec.lim = s, lim
 	vec.buf = vec.buf[:0]

@@ -6,7 +6,7 @@ import (
 	"math"
 	"sync/atomic"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -130,10 +130,10 @@ func (vec *cnvec) readFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[16:24])
 
 	if sign != cnvecDumpSignature {
-		return n, approxity.ErrInvalidSignature
+		return n, pbtk.ErrInvalidSignature
 	}
 	if ver != math.Float64bits(cnvecDumpVersion) {
-		return n, approxity.ErrVersionMismatch
+		return n, pbtk.ErrVersionMismatch
 	}
 	vec.s = s
 

@@ -20,7 +20,7 @@ The minimal working example:
 
 ```go
 import (
-	"github.com/koykov/approxity/linear_counting"
+"github.com/koykov/pbtk/linear_counting"
 	"github.com/koykov/hash/xxhash"
 )
 
@@ -36,7 +36,7 @@ func main() {
 ```
 , but [initial config](config.go) allows to tune filter for better efficiency:
 ```go
-import "github.com/koykov/approxity/cardinality/metrics/prometheus"
+import "github.com/koykov/pbtk/cardinality/metrics/prometheus"
 
 func func main() {
     // set filter size and hasher

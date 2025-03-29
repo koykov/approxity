@@ -3,11 +3,11 @@ package amq
 import (
 	"io"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 // Filter describes AMQ filter interface.
-type Filter[T approxity.Hashable] interface {
+type Filter[T pbtk.Hashable] interface {
 	io.ReaderFrom
 	io.WriterTo
 	// Set add new key to the filter.

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 type TestAdapter[T []byte] struct {
@@ -65,7 +65,7 @@ func (t *TestAdapter[T]) StubEstimate(key T) {
 }
 
 func TestMe[T []byte](t *testing.T, a *TestAdapter[T]) {
-	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
 			a.Reset()
 			for i := 0; i < len(ds.All); i++ {
@@ -114,7 +114,7 @@ func TestMe[T []byte](t *testing.T, a *TestAdapter[T]) {
 }
 
 func TestMeConcurrently[T []byte](t *testing.T, a *TestAdapter[T]) {
-	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
 			a.Reset()
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -177,7 +177,7 @@ func BenchMe[T []byte](b *testing.B, a *TestAdapter[T]) {
 			a.StubEstimate(buf[:])
 		}
 	})
-	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		b.Run(ds.Name, func(b *testing.B) {
 			a.Reset()
 			for i := 0; i < len(ds.All); i++ {
@@ -193,7 +193,7 @@ func BenchMe[T []byte](b *testing.B, a *TestAdapter[T]) {
 }
 
 func BenchMeConcurrently[T []byte](b *testing.B, a *TestAdapter[T]) {
-	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		b.Run(ds.Name, func(b *testing.B) {
 			var pool = sync.Pool{New: func() any {
 				var buf [8]byte

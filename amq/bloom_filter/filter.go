@@ -5,17 +5,17 @@ import (
 	"io"
 	"sync"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
 	"github.com/koykov/bitvector"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 // Bloom filter implementation.
 // By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
 // Concurrent reading allowed afterward.
 // If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
-type filter[T approxity.Hashable] struct {
-	approxity.Base[T]
+type filter[T pbtk.Hashable] struct {
+	pbtk.Base[T]
 	once sync.Once
 	conf *Config
 	m, k uint64
@@ -25,9 +25,9 @@ type filter[T approxity.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T approxity.Hashable](config *Config) (amq.Filter[T], error) {
+func NewFilter[T pbtk.Hashable](config *Config) (amq.Filter[T], error) {
 	if config == nil {
-		return nil, approxity.ErrInvalidConfig
+		return nil, pbtk.ErrInvalidConfig
 	}
 	f := &filter[T]{
 		conf: config.copy(),
@@ -39,9 +39,9 @@ func NewFilter[T approxity.Hashable](config *Config) (amq.Filter[T], error) {
 }
 
 // NewCountingFilter creates new counting filter.
-func NewCountingFilter[T approxity.Hashable](config *Config) (amq.Filter[T], error) {
+func NewCountingFilter[T pbtk.Hashable](config *Config) (amq.Filter[T], error) {
 	if config == nil {
-		return nil, approxity.ErrInvalidConfig
+		return nil, pbtk.ErrInvalidConfig
 	}
 	config.CBF = true
 	f := &filter[T]{
@@ -78,7 +78,7 @@ func (f *filter[T]) HSet(hkey uint64) error {
 // Caution! Bloom filter doesn't support this operation!
 func (f *filter[T]) Unset(key T) error {
 	if !f.conf.CBF {
-		return f.mw().Unset(approxity.ErrUnsupportedOp)
+		return f.mw().Unset(pbtk.ErrUnsupportedOp)
 	}
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
@@ -89,7 +89,7 @@ func (f *filter[T]) Unset(key T) error {
 			return f.mw().Unset(err)
 		}
 		if !f.vec.Unset(h % f.m) {
-			return f.mw().Unset(approxity.ErrWriteLimitExceed)
+			return f.mw().Unset(pbtk.ErrWriteLimitExceed)
 		}
 	}
 	return f.mw().Unset(nil)
@@ -99,7 +99,7 @@ func (f *filter[T]) Unset(key T) error {
 // Caution! Bloom filter doesn't support this operation!
 func (f *filter[T]) HUnset(hkey uint64) error {
 	if !f.conf.CBF {
-		return f.mw().Unset(approxity.ErrUnsupportedOp)
+		return f.mw().Unset(pbtk.ErrUnsupportedOp)
 	}
 	if f.once.Do(f.init); f.err != nil {
 		return f.err
@@ -109,7 +109,7 @@ func (f *filter[T]) HUnset(hkey uint64) error {
 
 func (f *filter[T]) hunset(hkey uint64) error {
 	if !f.vec.Unset(hkey % f.m) {
-		return f.mw().Unset(approxity.ErrWriteLimitExceed)
+		return f.mw().Unset(pbtk.ErrWriteLimitExceed)
 	}
 	return f.mw().Unset(nil)
 }
@@ -193,7 +193,7 @@ func (f *filter[T]) init() {
 		return
 	}
 	if c.Hasher == nil {
-		f.err = approxity.ErrNoHasher
+		f.err = pbtk.ErrNoHasher
 		return
 	}
 	if c.MetricsWriter == nil {

@@ -1,8 +1,8 @@
 package hyperbitbit
 
 import (
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/cardinality"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/cardinality"
 )
 
 const defaultN = 1e6
@@ -13,12 +13,12 @@ type Config struct {
 	ItemsNumber uint64
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher approxity.Hasher
+	Hasher pbtk.Hasher
 	// Metrics writer handler.
 	MetricsWriter cardinality.MetricsWriter
 }
 
-func NewConfig(itemNumber uint64, hasher approxity.Hasher) *Config {
+func NewConfig(itemNumber uint64, hasher pbtk.Hasher) *Config {
 	return &Config{
 		ItemsNumber: itemNumber,
 		Hasher:      hasher,

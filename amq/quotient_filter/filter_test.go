@@ -3,8 +3,8 @@ package quotient
 import (
 	"testing"
 
-	"github.com/koykov/approxity/amq"
 	"github.com/koykov/hash/xxhash"
+	"github.com/koykov/pbtk/amq"
 )
 
 const (

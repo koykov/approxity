@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/koykov/approxity/cardinality"
 	"github.com/koykov/hash/xxhash"
+	"github.com/koykov/pbtk/cardinality"
 )
 
 const testsz = 1e6

@@ -24,7 +24,7 @@ See [full description](https://www.birs.ca/workshops/2022/22w5004/files/Bob%20Se
 The minimal working example:
 ```go
 import (
-    "github.com/koykov/approxity/cardinality/hyperbitbit"
+"github.com/koykov/pbtk/cardinality/hyperbitbit"
     "github.com/koykov/hash/xxhash"
 )
 

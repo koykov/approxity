@@ -1,4 +1,4 @@
-module github.com/koykov/approxity
+module github.com/koykov/pbtk
 
 go 1.22
 

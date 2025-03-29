@@ -1,8 +1,8 @@
 package cmsketch
 
 import (
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/frequency"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/frequency"
 )
 
 type Config struct {
@@ -18,7 +18,7 @@ type Config struct {
 	Epsilon float64
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher approxity.Hasher
+	Hasher pbtk.Hasher
 	// Enable compact mode.
 	// By default, uses 64 bit per counter. This param allows to use 32 bit per counter.
 	Compact bool
@@ -34,7 +34,7 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
-func NewConfig(confidence, epsilon float64, hasher approxity.Hasher) *Config {
+func NewConfig(confidence, epsilon float64, hasher pbtk.Hasher) *Config {
 	return &Config{
 		Confidence: confidence,
 		Epsilon:    epsilon,

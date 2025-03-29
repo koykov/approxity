@@ -4,12 +4,12 @@ import (
 	"io"
 	"sync"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/frequency"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/frequency"
 )
 
-type estimator[T approxity.Hashable] struct {
-	approxity.Base[T]
+type estimator[T pbtk.Hashable] struct {
+	pbtk.Base[T]
 	conf *Config
 	once sync.Once
 	w, d uint64
@@ -18,9 +18,9 @@ type estimator[T approxity.Hashable] struct {
 	err error
 }
 
-func NewEstimator[T approxity.Hashable](conf *Config) (frequency.Estimator[T], error) {
+func NewEstimator[T pbtk.Hashable](conf *Config) (frequency.Estimator[T], error) {
 	if conf == nil {
-		return nil, approxity.ErrInvalidConfig
+		return nil, pbtk.ErrInvalidConfig
 	}
 	e := &estimator[T]{conf: conf.copy()}
 	if e.once.Do(e.init); e.err != nil {
@@ -96,7 +96,7 @@ func (e *estimator[T]) WriteTo(w io.Writer) (int64, error) {
 
 func (e *estimator[T]) init() {
 	if e.conf.Hasher == nil {
-		e.err = approxity.ErrNoHasher
+		e.err = pbtk.ErrNoHasher
 		return
 	}
 	if e.conf.Confidence <= 0 || e.conf.Confidence >= 1 {

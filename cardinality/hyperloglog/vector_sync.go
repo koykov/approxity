@@ -5,8 +5,8 @@ import (
 	"io"
 	"math"
 
-	"github.com/koykov/approxity"
 	"github.com/koykov/openrt"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -96,10 +96,10 @@ func (vec *syncvec) readFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[32:40])
 
 	if sign != syncvecDumpSignature {
-		return n, approxity.ErrInvalidSignature
+		return n, pbtk.ErrInvalidSignature
 	}
 	if ver != math.Float64bits(syncvecDumpVersion) {
-		return n, approxity.ErrVersionMismatch
+		return n, pbtk.ErrVersionMismatch
 	}
 	vec.a, vec.m, vec.s = math.Float64frombits(a), math.Float64frombits(m_), s
 

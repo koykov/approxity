@@ -1,8 +1,8 @@
 package linear
 
 import (
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/cardinality"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/cardinality"
 )
 
 const defaultCP = .01
@@ -16,7 +16,7 @@ type Config struct {
 	CollisionProbability float64
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher approxity.Hasher
+	Hasher pbtk.Hasher
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
@@ -29,7 +29,7 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
-func NewConfig(itemsNumber uint64, hasher approxity.Hasher) *Config {
+func NewConfig(itemsNumber uint64, hasher pbtk.Hasher) *Config {
 	return &Config{
 		ItemsNumber: itemsNumber,
 		Hasher:      hasher,

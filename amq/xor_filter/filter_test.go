@@ -6,15 +6,15 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
 	"github.com/koykov/hash/xxhash"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 var testh = xxhash.Hasher64[[]byte]{}
 
 func TestFilter(t *testing.T) {
-	approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+	pbtk.EachTestingDataset(func(i int, ds *pbtk.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
 			f, err := NewFilterWithKeys[[]byte](&Config{Hasher: testh}, ds.Positives)
 			if err != nil {
@@ -90,7 +90,7 @@ func TestFilter(t *testing.T) {
 
 func BenchmarkFilter(b *testing.B) {
 	b.Run("sync", func(b *testing.B) {
-		approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+		pbtk.EachTestingDataset(func(i int, ds *pbtk.TestingDataset[[]byte]) {
 			b.Run(ds.Name, func(b *testing.B) {
 				f, _ := NewFilterWithKeys[[]byte](&Config{Hasher: testh}, ds.Positives)
 				b.ReportAllocs()
@@ -102,7 +102,7 @@ func BenchmarkFilter(b *testing.B) {
 		})
 	})
 	b.Run("concurrent", func(b *testing.B) {
-		approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+		pbtk.EachTestingDataset(func(i int, ds *pbtk.TestingDataset[[]byte]) {
 			b.Run(ds.Name, func(b *testing.B) {
 				f, _ := NewFilterWithKeys[[]byte](&Config{Hasher: testh}, ds.Positives)
 				b.ReportAllocs()

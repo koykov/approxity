@@ -3,14 +3,14 @@ package xor
 import (
 	"sync"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 var p sync.Pool
 
-func AcquireWithKeys[T approxity.Hashable](config *Config, keys []T) (_ amq.Filter[T], err error) {
-	if keys = approxity.Deduplicate(keys); len(keys) == 0 {
+func AcquireWithKeys[T pbtk.Hashable](config *Config, keys []T) (_ amq.Filter[T], err error) {
+	if keys = pbtk.Deduplicate(keys); len(keys) == 0 {
 		return nil, ErrEmptyKeyset
 	}
 	var f amq.Filter[T]
@@ -27,7 +27,7 @@ func AcquireWithKeys[T approxity.Hashable](config *Config, keys []T) (_ amq.Filt
 }
 
 func AcquireWithHKeys(config *Config, hkeys []uint64) (_ amq.Filter[uint64], err error) {
-	if hkeys = approxity.Deduplicate(hkeys); len(hkeys) == 0 {
+	if hkeys = pbtk.Deduplicate(hkeys); len(hkeys) == 0 {
 		return nil, ErrEmptyKeyset
 	}
 	var f amq.Filter[uint64]
@@ -42,7 +42,7 @@ func AcquireWithHKeys(config *Config, hkeys []uint64) (_ amq.Filter[uint64], err
 	return f, err
 }
 
-func Release[T approxity.Hashable](f amq.Filter[T]) {
+func Release[T pbtk.Hashable](f amq.Filter[T]) {
 	f.Reset()
 	p.Put(f)
 }

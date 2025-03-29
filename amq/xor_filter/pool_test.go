@@ -3,12 +3,12 @@ package xor
 import (
 	"testing"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 func BenchmarkPool(b *testing.B) {
 	b.Run("sync", func(b *testing.B) {
-		approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+		pbtk.EachTestingDataset(func(i int, ds *pbtk.TestingDataset[[]byte]) {
 			b.Run(ds.Name, func(b *testing.B) {
 				b.ReportAllocs()
 				b.ResetTimer()
@@ -20,7 +20,7 @@ func BenchmarkPool(b *testing.B) {
 		})
 	})
 	b.Run("concurrent", func(b *testing.B) {
-		approxity.EachTestingDataset(func(i int, ds *approxity.TestingDataset[[]byte]) {
+		pbtk.EachTestingDataset(func(i int, ds *pbtk.TestingDataset[[]byte]) {
 			b.Run(ds.Name, func(b *testing.B) {
 				b.ReportAllocs()
 				b.RunParallel(func(pb *testing.PB) {

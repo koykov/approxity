@@ -47,7 +47,7 @@ hash tables, making it robust for detecting low-frequency elements in adversaria
 The minimal working example:
 ```go
 import (
-    "github.com/koykov/approxity/frequency/countsketch"
+    "github.com/koykov/pbtk/frequency/countsketch"
     "github.com/koykov/hash/xxhash"
 )
 
@@ -73,7 +73,7 @@ func main() {
 ```
 , but [initial config](config.go) allows to tune estimation for better efficiency:
 ```go
-import "github.com/koykov/approxity/cardinality/metrics/prometheus"
+import "github.com/koykov/pbtk/cardinality/metrics/prometheus"
 
 func func main() {
     // set estimation precision and hasher

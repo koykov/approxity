@@ -6,12 +6,12 @@ import (
 	"math/bits"
 	"sync"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/cardinality"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/cardinality"
 )
 
-type estimator[T approxity.Hashable] struct {
-	approxity.Base[T]
+type estimator[T pbtk.Hashable] struct {
+	pbtk.Base[T]
 	conf *Config
 	once sync.Once
 
@@ -22,9 +22,9 @@ type estimator[T approxity.Hashable] struct {
 	err error
 }
 
-func NewEstimator[T approxity.Hashable](conf *Config) (cardinality.Estimator[T], error) {
+func NewEstimator[T pbtk.Hashable](conf *Config) (cardinality.Estimator[T], error) {
 	if conf == nil {
-		return nil, approxity.ErrInvalidConfig
+		return nil, pbtk.ErrInvalidConfig
 	}
 	e := &estimator[T]{conf: conf}
 	if e.once.Do(e.init); e.err != nil {
@@ -94,7 +94,7 @@ func (e *estimator[T]) init() {
 		return
 	}
 	if e.conf.Hasher == nil {
-		e.err = approxity.ErrNoHasher
+		e.err = pbtk.ErrNoHasher
 		return
 	}
 	if e.conf.MetricsWriter == nil {

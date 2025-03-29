@@ -7,16 +7,16 @@ import (
 	"math/rand"
 	"sync"
 
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 // Cuckoo filter implementation.
 // By default, filter doesn't support concurrent read/write operations - you must set up the filter before reading.
 // Concurrent reading allowed afterward.
 // If you want to use concurrent read/write operations, fill up Concurrent section in Config object.
-type filter[T approxity.Hashable] struct {
-	approxity.Base[T]
+type filter[T pbtk.Hashable] struct {
+	pbtk.Base[T]
 	once sync.Once
 	conf *Config
 
@@ -29,7 +29,7 @@ type filter[T approxity.Hashable] struct {
 }
 
 // NewFilter creates new filter.
-func NewFilter[T approxity.Hashable](conf *Config) (amq.Filter[T], error) {
+func NewFilter[T pbtk.Hashable](conf *Config) (amq.Filter[T], error) {
 	f := &filter[T]{
 		conf: conf.copy(),
 	}
@@ -217,7 +217,7 @@ func (f *filter[T]) init() {
 		return
 	}
 	if c.Hasher == nil {
-		f.err = approxity.ErrNoHasher
+		f.err = pbtk.ErrNoHasher
 		return
 	}
 	if c.MetricsWriter == nil {

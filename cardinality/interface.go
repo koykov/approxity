@@ -3,11 +3,11 @@ package cardinality
 import (
 	"io"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 // Estimator describes cardinality estimation counter interface.
-type Estimator[T approxity.Hashable] interface {
+type Estimator[T pbtk.Hashable] interface {
 	io.ReaderFrom
 	io.WriterTo
 	// Add adds new key to the counter.

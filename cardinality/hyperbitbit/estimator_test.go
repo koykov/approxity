@@ -3,8 +3,8 @@ package hyperbitbit
 import (
 	"testing"
 
-	"github.com/koykov/approxity/cardinality"
 	"github.com/koykov/hash/xxhash"
+	"github.com/koykov/pbtk/cardinality"
 )
 
 const testN = 1e6

@@ -23,7 +23,7 @@ are taken, one of the values is kicked out and the process repeats again.
 The minimal working example:
 ```go
 import (
-    "github.com/koykov/approxity/amq/cuckoo_filter"
+    "github.com/koykov/pbtk/amq/cuckoo_filter"
     "github.com/koykov/hash/xxhash"
 )
 
@@ -38,7 +38,7 @@ func main() {
 
 Similar to [bloom filter](../bloom_filter/readme.md#usage) cuckoo allows to initiate config more detailed:
 ```go
-import "github.com/koykov/approxity/amq/metrics/prometheus"
+import "github.com/koykov/pbtk/amq/metrics/prometheus"
 
 func main() {
     // set items number and hasher

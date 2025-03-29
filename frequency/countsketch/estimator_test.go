@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/koykov/approxity/frequency"
 	"github.com/koykov/hash/xxhash"
+	"github.com/koykov/pbtk/frequency"
 )
 
 const (

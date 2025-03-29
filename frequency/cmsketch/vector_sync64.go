@@ -5,8 +5,8 @@ import (
 	"io"
 	"unsafe"
 
-	"github.com/koykov/approxity"
 	"github.com/koykov/openrt"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -54,11 +54,11 @@ func (vec *syncvec64) readFrom(r io.Reader) (n int64, err error) {
 	}
 
 	if binary.LittleEndian.Uint64(buf[0:8]) != dumpSignature64 {
-		err = approxity.ErrInvalidSignature
+		err = pbtk.ErrInvalidSignature
 		return
 	}
 	if binary.LittleEndian.Uint64(buf[8:16]) != dumpVersion64 {
-		err = approxity.ErrVersionMismatch
+		err = pbtk.ErrVersionMismatch
 		return
 	}
 

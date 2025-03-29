@@ -6,8 +6,8 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/koykov/approxity"
 	"github.com/koykov/openrt"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -132,10 +132,10 @@ func (vec *cvector) ReadFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[16:24])
 
 	if sign != cvectorDumpSignature {
-		return n, approxity.ErrInvalidSignature
+		return n, pbtk.ErrInvalidSignature
 	}
 	if ver != math.Float64bits(cvectorDumpVersion) {
-		return n, approxity.ErrVersionMismatch
+		return n, pbtk.ErrVersionMismatch
 	}
 	vec.s = s
 	vec.buf = vec.buf[:0]

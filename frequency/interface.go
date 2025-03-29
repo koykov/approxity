@@ -3,10 +3,10 @@ package frequency
 import (
 	"io"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
-type base[T approxity.Hashable] interface {
+type base[T pbtk.Hashable] interface {
 	io.ReaderFrom
 	io.WriterTo
 	// Add adds new key to the counter.
@@ -21,7 +21,7 @@ type base[T approxity.Hashable] interface {
 	Reset()
 }
 
-type Estimator[T approxity.Hashable] interface {
+type Estimator[T pbtk.Hashable] interface {
 	base[T]
 	// Estimate returns frequency estimation of key.
 	Estimate(key T) uint64
@@ -29,7 +29,7 @@ type Estimator[T approxity.Hashable] interface {
 	HEstimate(hkey uint64) uint64
 }
 
-type SignedEstimator[T approxity.Hashable] interface {
+type SignedEstimator[T pbtk.Hashable] interface {
 	base[T]
 	// Estimate returns frequency estimation of key.
 	Estimate(key T) int64

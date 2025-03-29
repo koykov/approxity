@@ -1,8 +1,8 @@
 package hyperloglog
 
 import (
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/cardinality"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/cardinality"
 )
 
 type Config struct {
@@ -11,7 +11,7 @@ type Config struct {
 	Precision uint64
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher approxity.Hasher
+	Hasher pbtk.Hasher
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
@@ -24,7 +24,7 @@ type ConcurrentConfig struct {
 	WriteAttemptsLimit uint64
 }
 
-func NewConfig(precision uint64, hasher approxity.Hasher) *Config {
+func NewConfig(precision uint64, hasher pbtk.Hasher) *Config {
 	return &Config{
 		Precision: precision,
 		Hasher:    hasher,
@@ -41,7 +41,7 @@ func (c *Config) WithPrecision(precision uint64) *Config {
 	return c
 }
 
-func (c *Config) WithHasher(hasher approxity.Hasher) *Config {
+func (c *Config) WithHasher(hasher pbtk.Hasher) *Config {
 	c.Hasher = hasher
 	return c
 }

@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync/atomic"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -27,7 +27,7 @@ func (vec *cnvector64) add(pos uint64, delta int64) error {
 			return nil
 		}
 	}
-	return approxity.ErrWriteLimitExceed
+	return pbtk.ErrWriteLimitExceed
 }
 
 func (vec *cnvector64) estimate(pos uint64) int64 {
@@ -52,11 +52,11 @@ func (vec *cnvector64) readFrom(r io.Reader) (n int64, err error) {
 	}
 
 	if binary.LittleEndian.Uint64(buf[0:8]) != dumpSignatureConcurrent64 {
-		err = approxity.ErrInvalidSignature
+		err = pbtk.ErrInvalidSignature
 		return
 	}
 	if binary.LittleEndian.Uint64(buf[8:16]) != dumpVersionConcurrent64 {
-		err = approxity.ErrVersionMismatch
+		err = pbtk.ErrVersionMismatch
 		return
 	}
 

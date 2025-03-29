@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync/atomic"
 
-	"github.com/koykov/approxity"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -33,10 +33,10 @@ func (vec *cnvector64) add(hkey, delta uint64) error {
 			}
 		}
 		if j == vec.lim+1 {
-			return approxity.ErrWriteLimitExceed
+			return pbtk.ErrWriteLimitExceed
 		}
 	}
-	return approxity.ErrWriteLimitExceed
+	return pbtk.ErrWriteLimitExceed
 }
 
 func (vec *cnvector64) estimate(hkey uint64) (r uint64) {
@@ -67,11 +67,11 @@ func (vec *cnvector64) readFrom(r io.Reader) (n int64, err error) {
 	}
 
 	if binary.LittleEndian.Uint64(buf[0:8]) != dumpSignatureConcurrent64 {
-		err = approxity.ErrInvalidSignature
+		err = pbtk.ErrInvalidSignature
 		return
 	}
 	if binary.LittleEndian.Uint64(buf[8:16]) != dumpVersionConcurrent64 {
-		err = approxity.ErrVersionMismatch
+		err = pbtk.ErrVersionMismatch
 		return
 	}
 

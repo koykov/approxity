@@ -1,4 +1,4 @@
-package approxity
+package pbtk
 
 type Hasher interface {
 	Sum64(data []byte) uint64

@@ -1,19 +1,19 @@
 package xor
 
 import (
-	"github.com/koykov/approxity"
-	"github.com/koykov/approxity/amq"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/amq"
 )
 
 type Config struct {
 	// Hasher to calculate hash sum of the items.
 	// Mandatory param.
-	Hasher approxity.Hasher
+	Hasher pbtk.Hasher
 	// Metrics writer handler.
 	MetricsWriter amq.MetricsWriter
 }
 
-func NewConfig(hasher approxity.Hasher) *Config {
+func NewConfig(hasher pbtk.Hasher) *Config {
 	return &Config{Hasher: hasher}
 }
 

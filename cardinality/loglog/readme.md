@@ -40,7 +40,7 @@ where $V$ is the number of buckets with $M_j=0$.
 The minimal working example:
 ```go
 import (
-    "github.com/koykov/approxity/cardinality/loglog"
+    "github.com/koykov/pbtk/cardinality/loglog"
     "github.com/koykov/hash/xxhash"
 )
 
@@ -57,7 +57,7 @@ func main() {
 ```
 , but [initial config](config.go) allows to tune estimation for better efficiency:
 ```go
-import "github.com/koykov/approxity/cardinality/metrics/prometheus"
+import "github.com/koykov/pbtk/cardinality/metrics/prometheus"
 
 func func main() {
     // set estimation precision and hasher

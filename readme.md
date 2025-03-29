@@ -1,3 +1,3 @@
-# Approximate probability solutions
+# Probabilistic toolkit
 
 TODO ...

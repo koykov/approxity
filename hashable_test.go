@@ -1,4 +1,4 @@
-package approxity
+package pbtk
 
 import (
 	"fmt"
