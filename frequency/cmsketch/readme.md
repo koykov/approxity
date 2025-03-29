@@ -1,7 +1,11 @@
 # Count-Min Sketch
 
-Count-Min Sketch is a probabilistic data structure that estimates the frequency of elements in a data stream with minimal
-memory usage. It provides approximate counts with controlled error bounds.
+A probabilistic data structure that estimates how often items appear in a data stream. It provides fast,
+memory-efficient frequency counts that may slightly overestimate but never underestimate the true values.
+
+Unlike [Count Sketch](../countsketch) which balances over- and under-estimates to achieve unbiased results,
+Count-Min Sketch uses a simpler approach that requires less memory while guaranteeing all errors are overcounts.
+This makes it ideal for applications where confirming "at least X occurrences" matters more than perfect accuracy.
 
 ## How It Works
 
@@ -10,8 +14,8 @@ memory usage. It provides approximate counts with controlled error bounds.
     * $confidence$ - possibility that potential error will be in range of acceptable error rate
     * $ϵ (epsilon)$ - estimation precision (0..1)
   * Making a 2D array of counters $C[w][d]$, where
-    * $w$ - number of counters (width) $$ w = {e \over ϵ} = {Euler \over epsilon} $$
-    * $d$ - number of hash functions (height) $$ d = ln({1 \over δ}) = ln({1 \over {1-confidence}}) $$
+    * $w$ - number of counters (width) $$w = {e \over ϵ} = {Euler \over epsilon}$$
+    * $d$ - number of hash functions (height) $$d = ln({1 \over δ}) = ln({1 \over {1-confidence}})$$
 * **Insertion**:
   * For item $x$ and its weight $Δ$:
     * for each hash function $h_i$ calculates index $j = h_i(x)$
