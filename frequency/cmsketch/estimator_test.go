@@ -21,7 +21,7 @@ func TestEstimator(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		frequency.TestMe(t, est)
+		frequency.TestMe(t, frequency.NewTestAdapter(est))
 	})
 	t.Run("concurrent", func(t *testing.T) {
 		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh).
@@ -29,7 +29,7 @@ func TestEstimator(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		frequency.TestMeConcurrently(t, est)
+		frequency.TestMeConcurrently(t, frequency.NewTestAdapter(est))
 	})
 	t.Run("writer", func(t *testing.T) {
 		testWrite := func(t *testing.T, est frequency.Estimator[string], path string, expect int64) {
@@ -130,7 +130,7 @@ func BenchmarkEstimator(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		frequency.BenchMe(b, est)
+		frequency.BenchMe(b, frequency.NewTestAdapter(est))
 	})
 	b.Run("concurrent", func(b *testing.B) {
 		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh).
@@ -138,6 +138,6 @@ func BenchmarkEstimator(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		frequency.BenchMeConcurrently(b, est)
+		frequency.BenchMeConcurrently(b, frequency.NewTestAdapter(est))
 	})
 }
