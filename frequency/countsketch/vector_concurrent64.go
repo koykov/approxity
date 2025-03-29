@@ -24,7 +24,7 @@ func (vec *cnvector64) add(pos uint64, delta int64) error {
 		o := atomic.LoadInt64(&vec.buf[pos])
 		n := o + delta
 		if atomic.CompareAndSwapInt64(&vec.buf[pos], o, n) {
-			break
+			return nil
 		}
 	}
 	return approxity.ErrWriteLimitExceed

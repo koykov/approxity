@@ -122,16 +122,14 @@ func (e *estimator[T]) ReadFrom(r io.Reader) (int64, error) {
 	if e.once.Do(e.init); e.err != nil {
 		return 0, e.err
 	}
-	// todo implement me
-	return 0, nil
+	return e.vec.readFrom(r)
 }
 
 func (e *estimator[T]) WriteTo(w io.Writer) (int64, error) {
 	if e.once.Do(e.init); e.err != nil {
 		return 0, e.err
 	}
-	// todo implement me
-	return 0, nil
+	return e.vec.writeTo(w)
 }
 
 func (e *estimator[T]) init() {
