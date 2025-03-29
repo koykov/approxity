@@ -3,6 +3,7 @@ package frequency
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"math"
 	"sync"
 	"sync/atomic"
@@ -12,23 +13,74 @@ import (
 	"github.com/koykov/approxity"
 )
 
-func TestMe[T []byte](t *testing.T, est Estimator[T]) {
+type TestAdapter[T []byte] struct {
+	signed   SignedEstimator[T]
+	unsigned Estimator[T]
+}
+
+func NewTestAdapter[T []byte](est Estimator[T]) *TestAdapter[T] {
+	return &TestAdapter[T]{unsigned: est}
+}
+
+func NewTestSignedAdapter[T []byte](est SignedEstimator[T]) *TestAdapter[T] {
+	return &TestAdapter[T]{signed: est}
+}
+
+func (t *TestAdapter[T]) Add(key T) error {
+	switch {
+	case t.unsigned != nil:
+		return t.unsigned.Add(key)
+	case t.signed != nil:
+		return t.signed.Add(key)
+	}
+	return fmt.Errorf("no estimator found")
+}
+
+func (t *TestAdapter[T]) HAdd(hkey uint64) error {
+	switch {
+	case t.unsigned != nil:
+		return t.unsigned.HAdd(hkey)
+	case t.signed != nil:
+		return t.signed.HAdd(hkey)
+	}
+	return fmt.Errorf("no estimator found")
+}
+
+func (t *TestAdapter[T]) Reset() {
+	switch {
+	case t.unsigned != nil:
+		t.unsigned.Reset()
+	case t.signed != nil:
+		t.signed.Reset()
+	}
+}
+
+func (t *TestAdapter[T]) StubEstimate(key T) {
+	switch {
+	case t.unsigned != nil:
+		t.unsigned.Estimate(key)
+	case t.signed != nil:
+		t.signed.Estimate(key)
+	}
+}
+
+func TestMe[T []byte](t *testing.T, a *TestAdapter[T]) {
 	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
-			est.Reset()
+			a.Reset()
 			for i := 0; i < len(ds.All); i++ {
-				_ = est.Add(ds.All[i])
+				_ = a.Add(ds.All[i])
 				if i != 0 && i%1000 == 0 {
 					for j := 0; j < 1000; j++ {
-						_ = est.Add(ds.All[i])
+						_ = a.Add(ds.All[i])
 					}
 				} else if i != 0 && i%100 == 0 {
 					for j := 0; j < 100; j++ {
-						_ = est.Add(ds.All[i])
+						_ = a.Add(ds.All[i])
 					}
 				} else if i != 0 && i%10 == 0 {
 					for j := 0; j < 10; j++ {
-						_ = est.Add(ds.All[i])
+						_ = a.Add(ds.All[i])
 					}
 				}
 			}
@@ -42,8 +94,14 @@ func TestMe[T []byte](t *testing.T, est Estimator[T]) {
 				} else if i != 0 && i%10 == 0 {
 					must = 11
 				}
-				e := est.Estimate(ds.All[i])
-				if diff := math.Abs(float64(e) - float64(must)); diff > 0 {
+				var e float64
+				switch {
+				case a.unsigned != nil:
+					e = float64(a.unsigned.Estimate(ds.All[i]))
+				case a.signed != nil:
+					e = float64(a.signed.Estimate(ds.All[i]))
+				}
+				if diff := math.Abs(e - float64(must)); diff > 0 {
 					diffv += diff
 					diffc++
 				}
@@ -55,10 +113,10 @@ func TestMe[T []byte](t *testing.T, est Estimator[T]) {
 	})
 }
 
-func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T]) {
+func TestMeConcurrently[T []byte](t *testing.T, a *TestAdapter[T]) {
 	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
-			est.Reset()
+			a.Reset()
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
 			var wg sync.WaitGroup
@@ -71,7 +129,7 @@ func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T]) {
 					case <-ctx.Done():
 						return
 					default:
-						_ = est.Add(ds.All[i%len(ds.All)])
+						_ = a.Add(ds.All[i%len(ds.All)])
 					}
 				}
 			}()
@@ -85,7 +143,7 @@ func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T]) {
 					case <-ctx.Done():
 						return
 					case <-tick.C:
-						est.Estimate(ds.All[i%len(ds.All)])
+						a.StubEstimate(ds.All[i%len(ds.All)])
 					}
 				}
 			}()
@@ -95,53 +153,53 @@ func TestMeConcurrently[T []byte](t *testing.T, est Estimator[T]) {
 	})
 }
 
-func BenchMe(b *testing.B, est Estimator[[]byte]) {
+func BenchMe[T []byte](b *testing.B, a *TestAdapter[T]) {
 	b.Run("add", func(b *testing.B) {
 		b.ReportAllocs()
-		est.Reset()
+		a.Reset()
 		var buf [8]byte
 		for i := 0; i < b.N; i++ {
 			binary.LittleEndian.PutUint64(buf[:], uint64(i))
-			_ = est.Add(buf[:])
+			_ = a.Add(buf[:])
 		}
 	})
 	b.Run("estimate", func(b *testing.B) {
-		est.Reset()
+		a.Reset()
 		var buf [8]byte
 		for i := uint64(0); i < 1e7; i++ {
 			binary.LittleEndian.PutUint64(buf[:], i)
-			_ = est.Add(buf[:])
+			_ = a.Add(buf[:])
 		}
 		b.ResetTimer()
 		b.ReportAllocs()
 		for i := 0; i < b.N; i++ {
 			binary.LittleEndian.PutUint64(buf[:], uint64(i))
-			_ = est.Estimate(buf[:])
+			a.StubEstimate(buf[:])
 		}
 	})
 	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
 		b.Run(ds.Name, func(b *testing.B) {
-			est.Reset()
+			a.Reset()
 			for i := 0; i < len(ds.All); i++ {
-				_ = est.Add(ds.All[i])
+				_ = a.Add(ds.All[i])
 			}
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				est.Estimate(ds.All[i%len(ds.All)])
+				a.StubEstimate(ds.All[i%len(ds.All)])
 			}
 		})
 	})
 }
 
-func BenchMeConcurrently[T []byte](b *testing.B, est Estimator[T]) {
+func BenchMeConcurrently[T []byte](b *testing.B, a *TestAdapter[T]) {
 	approxity.EachTestingDataset(func(_ int, ds *approxity.TestingDataset[[]byte]) {
 		b.Run(ds.Name, func(b *testing.B) {
 			var pool = sync.Pool{New: func() any {
 				var buf [8]byte
 				return &buf
 			}}
-			est.Reset()
+			a.Reset()
 			b.ReportAllocs()
 			b.RunParallel(func(pb *testing.PB) {
 				var i uint64 = math.MaxUint64
@@ -151,9 +209,9 @@ func BenchMeConcurrently[T []byte](b *testing.B, est Estimator[T]) {
 					binary.LittleEndian.PutUint64((*buf)[:], ci)
 					switch ci % 100 {
 					case 99:
-						est.Estimate(buf[:])
+						a.StubEstimate(buf[:])
 					default:
-						_ = est.Add(buf[:])
+						_ = a.Add(buf[:])
 					}
 					pool.Put(buf)
 				}
