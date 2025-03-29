@@ -20,6 +20,6 @@ func TestEstimator(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		frequency.TestMe(t, est)
+		frequency.TestMe(t, frequency.NewTestSignedAdapter(est))
 	})
 }

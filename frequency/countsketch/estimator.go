@@ -23,7 +23,7 @@ type estimator[T approxity.Hashable] struct {
 
 var tsign = [2]int64{1, -1}
 
-func NewEstimator[T approxity.Hashable](conf *Config) (frequency.Estimator[T], error) {
+func NewEstimator[T approxity.Hashable](conf *Config) (frequency.SignedEstimator[T], error) {
 	if conf == nil {
 		return nil, approxity.ErrInvalidConfig
 	}
@@ -79,7 +79,7 @@ func (e *estimator[T]) mix(hkey, seed uint64) uint64 {
 	return hkey
 }
 
-func (e *estimator[T]) Estimate(key T) uint64 {
+func (e *estimator[T]) Estimate(key T) int64 {
 	if e.once.Do(e.init); e.err != nil {
 		return 0
 	}
@@ -90,27 +90,25 @@ func (e *estimator[T]) Estimate(key T) uint64 {
 	return e.hestimate(hkey)
 }
 
-func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
+func (e *estimator[T]) HEstimate(hkey uint64) int64 {
 	if e.once.Do(e.init); e.err != nil {
 		return 0
 	}
 	return e.hestimate(hkey)
 }
 
-func (e *estimator[T]) hestimate(hkey uint64) uint64 {
+func (e *estimator[T]) hestimate(hkey uint64) int64 {
 	var a [16]int64
 	buf := a[:0]
 	for i := uint64(0); i < e.d; i++ {
 		hkeymix := e.mix(hkey, i)
 		pos := hkeymix % e.w
-		buf = append(buf, e.vec[i*e.w+pos])
+		sign := tsign[hkeymix>>63]
+		buf = append(buf, e.vec[i*e.w+pos]*sign)
 	}
 	slices.Sort(buf)
 	median := buf[len(buf)/2]
-	if median < 0 {
-		median = -median
-	}
-	return uint64(median)
+	return median
 }
 
 func (e *estimator[T]) Reset() {
