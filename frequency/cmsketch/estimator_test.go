@@ -54,11 +54,11 @@ func TestEstimator(t *testing.T) {
 			t.Run("32", func(t *testing.T) {
 				e, _ := NewEstimator[string](NewConfig(.99, .01, testh).
 					WithCompact())
-				testWrite(t, e, "testdata/estimator32.bin", 5456)
+				testWrite(t, e, "testdata/estimator32.bin", 5464)
 			})
 			t.Run("64", func(t *testing.T) {
 				e, _ := NewEstimator[string](NewConfig(.99, .01, testh))
-				testWrite(t, e, "testdata/estimator64.bin", 10896)
+				testWrite(t, e, "testdata/estimator64.bin", 10904)
 			})
 		})
 		t.Run("concurrent", func(t *testing.T) {
@@ -66,12 +66,12 @@ func TestEstimator(t *testing.T) {
 				e, _ := NewEstimator[string](NewConfig(.99, .01, testh).
 					WithConcurrency().
 					WithCompact())
-				testWrite(t, e, "testdata/concurrent_estimator32.bin", 5456)
+				testWrite(t, e, "testdata/concurrent_estimator32.bin", 5464)
 			})
 			t.Run("64", func(t *testing.T) {
 				e, _ := NewEstimator[string](NewConfig(.99, .01, testh).
 					WithConcurrency())
-				testWrite(t, e, "testdata/concurrent_estimator64.bin", 10896)
+				testWrite(t, e, "testdata/concurrent_estimator64.bin", 10904)
 			})
 		})
 	})
@@ -101,11 +101,11 @@ func TestEstimator(t *testing.T) {
 			t.Run("32", func(t *testing.T) {
 				f, _ := NewEstimator[string](NewConfig(.99, .01, testh).
 					WithCompact())
-				testRead(t, f, "testdata/estimator32.bin", 5456, 1, 100)
+				testRead(t, f, "testdata/estimator32.bin", 5464, 1, 100)
 			})
 			t.Run("64", func(t *testing.T) {
 				f, _ := NewEstimator[string](NewConfig(.99, .01, testh))
-				testRead(t, f, "testdata/estimator64.bin", 10896, 1, 100)
+				testRead(t, f, "testdata/estimator64.bin", 10904, 1, 100)
 			})
 		})
 		t.Run("concurrent", func(t *testing.T) {
@@ -113,12 +113,12 @@ func TestEstimator(t *testing.T) {
 				f, _ := NewEstimator[string](NewConfig(.99, .01, testh).
 					WithConcurrency().
 					WithCompact())
-				testRead(t, f, "testdata/concurrent_estimator32.bin", 5456, 1, 100)
+				testRead(t, f, "testdata/concurrent_estimator32.bin", 5464, 1, 100)
 			})
 			t.Run("64", func(t *testing.T) {
 				f, _ := NewEstimator[string](NewConfig(.99, .01, testh).
 					WithConcurrency())
-				testRead(t, f, "testdata/concurrent_estimator64.bin", 10896, 1, 100)
+				testRead(t, f, "testdata/concurrent_estimator64.bin", 10904, 1, 100)
 			})
 		})
 	})

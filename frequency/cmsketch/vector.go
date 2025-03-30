@@ -1,6 +1,15 @@
 package cmsketch
 
-import "io"
+import (
+	"io"
+
+	"github.com/koykov/bitset"
+)
+
+const (
+	flagConservativeUpdate = 1<<iota - 1
+	flagLFU                // reserved
+)
 
 type vector interface {
 	add(hkey, delta uint64) error
@@ -11,7 +20,8 @@ type vector interface {
 }
 
 type basevec struct {
-	w, d uint64
+	w, d  uint64
+	flags bitset.Bitset64
 }
 
 func vecpos(lo, hi uint32, w, i uint64) uint64 {

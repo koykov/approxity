@@ -3,8 +3,10 @@ package cmsketch
 import (
 	"encoding/binary"
 	"io"
+	"math"
 	"sync/atomic"
 
+	"github.com/koykov/bitset"
 	"github.com/koykov/pbtk"
 )
 
@@ -22,6 +24,18 @@ type cnvector32 struct {
 
 func (vec *cnvector32) add(hkey, delta uint64) error {
 	lo, hi := uint32(hkey>>32), uint32(hkey)
+
+	switch {
+	case vec.flags.CheckBit(flagConservativeUpdate):
+		return vec.addCU(lo, hi, delta)
+	case vec.flags.CheckBit(flagLFU):
+		return vec.addLFU(lo, hi, delta)
+	default:
+		return vec.addClassic(lo, hi, delta)
+	}
+}
+
+func (vec *cnvector32) addClassic(lo, hi uint32, delta uint64) error {
 	for i := uint64(0); i < vec.d; i++ {
 		pos := i*vec.w + uint64(lo+hi*uint32(i))%vec.w
 		var j uint64
@@ -36,7 +50,37 @@ func (vec *cnvector32) add(hkey, delta uint64) error {
 			return pbtk.ErrWriteLimitExceed
 		}
 	}
-	return pbtk.ErrWriteLimitExceed
+	return nil
+}
+
+func (vec *cnvector32) addCU(lo, hi uint32, delta uint64) error {
+	var mn uint32 = math.MaxUint32
+	for i := uint64(0); i < vec.d; i++ {
+		mn = min(mn, atomic.LoadUint32(&vec.buf[vecpos(lo, hi, vec.w, i)]))
+	}
+	for i := uint64(0); i < vec.d; i++ {
+		pos := vecpos(lo, hi, vec.w, i)
+		if atomic.LoadUint32(&vec.buf[pos]) == mn {
+			var j uint64
+			for j = 0; j < vec.lim+1; j++ {
+				o := atomic.LoadUint32(&vec.buf[pos])
+				n := o + uint32(delta)
+				if atomic.CompareAndSwapUint32(&vec.buf[pos], o, n) {
+					break
+				}
+			}
+			if j == vec.lim+1 {
+				return pbtk.ErrWriteLimitExceed
+			}
+		}
+	}
+	return nil
+}
+
+func (vec *cnvector32) addLFU(lo, hi uint32, delta uint64) error {
+	_, _, _ = lo, hi, delta
+	// todo implement me
+	return nil
 }
 
 func (vec *cnvector32) estimate(hkey uint64) (r uint64) {
@@ -57,7 +101,7 @@ func (vec *cnvector32) reset() {
 
 func (vec *cnvector32) readFrom(r io.Reader) (n int64, err error) {
 	var (
-		buf [16]byte
+		buf [24]byte
 		m   int
 	)
 	m, err = r.Read(buf[:])
@@ -74,6 +118,7 @@ func (vec *cnvector32) readFrom(r io.Reader) (n int64, err error) {
 		err = pbtk.ErrVersionMismatch
 		return
 	}
+	vec.flags = bitset.Bitset64(binary.LittleEndian.Uint64(buf[16:24]))
 
 	for i := 0; i < len(vec.buf); i++ {
 		m, err = r.Read(buf[:4])
@@ -89,11 +134,12 @@ func (vec *cnvector32) readFrom(r io.Reader) (n int64, err error) {
 
 func (vec *cnvector32) writeTo(w io.Writer) (n int64, err error) {
 	var (
-		buf [16]byte
+		buf [24]byte
 		m   int
 	)
 	binary.LittleEndian.PutUint64(buf[0:8], dumpSignatureConcurrent32)
 	binary.LittleEndian.PutUint64(buf[8:16], dumpVersionConcurrent32)
+	binary.LittleEndian.PutUint64(buf[16:24], uint64(vec.flags))
 	m, err = w.Write(buf[:])
 	n += int64(m)
 	if err != nil {
@@ -112,9 +158,9 @@ func (vec *cnvector32) writeTo(w io.Writer) (n int64, err error) {
 	return
 }
 
-func newConcurrentVector32(d, w, lim uint64) *cnvector32 {
+func newConcurrentVector32(d, w, lim uint64, flags bitset.Bitset64) *cnvector32 {
 	return &cnvector32{
-		basevec: basevec{d: d, w: w},
+		basevec: basevec{d: d, w: w, flags: flags},
 		lim:     lim,
 		buf:     make([]uint32, d*w),
 	}

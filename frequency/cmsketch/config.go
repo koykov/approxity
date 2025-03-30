@@ -1,6 +1,7 @@
 package cmsketch
 
 import (
+	"github.com/koykov/bitset"
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/frequency"
 )
@@ -26,6 +27,8 @@ type Config struct {
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
 	MetricsWriter frequency.MetricsWriter
+	// Extended flags.
+	Flags bitset.Bitset64
 }
 
 // ConcurrentConfig configures concurrent section of config.
@@ -63,6 +66,11 @@ func (c *Config) WithCompact() *Config {
 func WithMetricsWriter(conf *Config, mw frequency.MetricsWriter) *Config {
 	conf.MetricsWriter = mw
 	return conf
+}
+
+func (c *Config) WithFlag(flag int, value bool) *Config {
+	c.Flags.SetBit(flag, value)
+	return c
 }
 
 func (c *Config) copy() *Config {

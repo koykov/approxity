@@ -3,8 +3,10 @@ package cmsketch
 import (
 	"encoding/binary"
 	"io"
+	"math"
 	"unsafe"
 
+	"github.com/koykov/bitset"
 	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
 )
@@ -22,9 +24,40 @@ type syncvec64 struct {
 
 func (vec *syncvec64) add(hkey, delta uint64) error {
 	lo, hi := uint32(hkey>>32), uint32(hkey)
+	switch {
+	case vec.flags.CheckBit(flagConservativeUpdate):
+		return vec.addCU(lo, hi, delta)
+	case vec.flags.CheckBit(flagLFU):
+		return vec.addLFU(lo, hi, delta)
+	default:
+		return vec.addClassic(lo, hi, delta)
+	}
+}
+
+func (vec *syncvec64) addClassic(lo, hi uint32, delta uint64) error {
 	for i := uint64(0); i < vec.d; i++ {
 		vec.buf[vecpos(lo, hi, vec.w, i)] += delta
 	}
+	return nil
+}
+
+func (vec *syncvec64) addCU(lo, hi uint32, delta uint64) error {
+	var mn uint64 = math.MaxUint64
+	for i := uint64(0); i < vec.d; i++ {
+		mn = min(mn, vec.buf[vecpos(lo, hi, vec.w, i)])
+	}
+	for i := uint64(0); i < vec.d; i++ {
+		pos := vecpos(lo, hi, vec.w, i)
+		if vec.buf[pos] == mn {
+			vec.buf[pos] += delta
+		}
+	}
+	return nil
+}
+
+func (vec *syncvec64) addLFU(lo, hi uint32, delta uint64) error {
+	_, _, _ = lo, hi, delta
+	// todo implement me
 	return nil
 }
 
@@ -44,7 +77,7 @@ func (vec *syncvec64) reset() {
 
 func (vec *syncvec64) readFrom(r io.Reader) (n int64, err error) {
 	var (
-		buf [16]byte
+		buf [24]byte
 		m   int
 	)
 	m, err = r.Read(buf[:])
@@ -61,6 +94,7 @@ func (vec *syncvec64) readFrom(r io.Reader) (n int64, err error) {
 		err = pbtk.ErrVersionMismatch
 		return
 	}
+	vec.flags = bitset.Bitset64(binary.LittleEndian.Uint64(buf[16:24]))
 
 	h := vecbufh{
 		p: uintptr(unsafe.Pointer(&vec.buf[0])),
@@ -75,11 +109,12 @@ func (vec *syncvec64) readFrom(r io.Reader) (n int64, err error) {
 
 func (vec *syncvec64) writeTo(w io.Writer) (n int64, err error) {
 	var (
-		buf [16]byte
+		buf [24]byte
 		m   int
 	)
 	binary.LittleEndian.PutUint64(buf[0:8], dumpSignature64)
 	binary.LittleEndian.PutUint64(buf[8:16], dumpVersion64)
+	binary.LittleEndian.PutUint64(buf[16:24], uint64(vec.flags))
 	m, err = w.Write(buf[:])
 	n += int64(m)
 	if err != nil {
@@ -97,9 +132,9 @@ func (vec *syncvec64) writeTo(w io.Writer) (n int64, err error) {
 	return
 }
 
-func newVector64(d, w uint64) *syncvec64 {
+func newVector64(d, w uint64, flags bitset.Bitset64) *syncvec64 {
 	return &syncvec64{
-		basevec: basevec{d: d, w: w},
+		basevec: basevec{d: d, w: w, flags: flags},
 		buf:     make([]uint64, d*w),
 	}
 }

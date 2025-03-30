@@ -114,15 +114,15 @@ func (e *estimator[T]) init() {
 	e.w, e.d = optimalWD(e.conf.Confidence, e.conf.Epsilon)
 	if e.conf.Concurrent != nil {
 		if e.conf.Compact {
-			e.vec = newConcurrentVector32(e.d, e.w, e.conf.Concurrent.WriteAttemptsLimit)
+			e.vec = newConcurrentVector32(e.d, e.w, e.conf.Concurrent.WriteAttemptsLimit, e.conf.Flags)
 		} else {
-			e.vec = newConcurrentVector64(e.d, e.w, e.conf.Concurrent.WriteAttemptsLimit)
+			e.vec = newConcurrentVector64(e.d, e.w, e.conf.Concurrent.WriteAttemptsLimit, e.conf.Flags)
 		}
 	} else {
 		if e.conf.Compact {
-			e.vec = newVector32(e.d, e.w)
+			e.vec = newVector32(e.d, e.w, e.conf.Flags)
 		} else {
-			e.vec = newVector64(e.d, e.w)
+			e.vec = newVector64(e.d, e.w, e.conf.Flags)
 		}
 	}
 }

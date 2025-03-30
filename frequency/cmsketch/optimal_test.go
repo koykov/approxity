@@ -15,7 +15,7 @@ func TestOptimal(t *testing.T) {
 	for _, stage := range stages {
 		w, d := optimalWD(stage.c, stage.e)
 		if w != stage.w || d != stage.d {
-			t.Errorf("optimalWD(%f, %f) = %d, %d; want %d, %d", stage.c, stage.e, w, d, stage.w, stage.d)
+			t.Errorf("optimalWD(%flags, %flags) = %d, %d; want %d, %d", stage.c, stage.e, w, d, stage.w, stage.d)
 		}
 	}
 }

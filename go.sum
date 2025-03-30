@@ -1,3 +1,5 @@
+github.com/koykov/bitset v1.0.0 h1:2mEbAhKelhpdWqnpa+mR3HRhdMsto5od7ACOi6MIAmk=
+github.com/koykov/bitset v1.0.0/go.mod h1:DVR3bH49c1oOcNtD38h+aQq7lp1ZY91cXmjOldlTk8A=
 github.com/koykov/bitvector v0.0.0-20250322105604-109770cfb31e h1:EOXmKYrBihu2jq+9WVVq2QsT4IqkDO40VFVejNK4GvA=
 github.com/koykov/bitvector v0.0.0-20250322105604-109770cfb31e/go.mod h1:v75FckQfdMLqABpA92evDoPDDqM09QvJiRqod6wBbUA=
 github.com/koykov/hash v1.0.1-0.20250305161527-55fd63f527af h1:GvMAZundlBUMYxU15YTJ0TQ67K3NCLj8SrTjsXlIO8I=
