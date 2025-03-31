@@ -1,19 +1,21 @@
 package cmsketch
 
 import (
+	"context"
 	"io"
 
 	"github.com/koykov/bitset"
 )
 
 const (
-	flagConservativeUpdate = 1<<iota - 1
+	flagConservativeUpdate = iota
 	flagLFU                // reserved
 )
 
 type vector interface {
 	add(hkey, delta uint64) error
 	estimate(hkey uint64) uint64
+	decay(ctx context.Context, factor float64) error
 	reset()
 	readFrom(r io.Reader) (int64, error)
 	writeTo(w io.Writer) (int64, error)

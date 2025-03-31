@@ -4,6 +4,7 @@ package cmsketch
 // to use atomics (in concurrent vector) together with generics.
 
 import (
+	"context"
 	"encoding/binary"
 	"io"
 	"math"
@@ -59,9 +60,7 @@ func (vec *syncvec32) addCU(lo, hi uint32, delta uint64) error {
 }
 
 func (vec *syncvec32) addLFU(lo, hi uint32, delta uint64) error {
-	_, _, _ = lo, hi, delta
-	// todo implement me
-	return nil
+	return vec.addClassic(lo, hi, delta)
 }
 
 func (vec *syncvec32) estimate(hkey uint64) (r uint64) {
@@ -72,6 +71,18 @@ func (vec *syncvec32) estimate(hkey uint64) (r uint64) {
 		}
 	}
 	return
+}
+
+func (vec *syncvec32) decay(ctx context.Context, factor float64) error {
+	for i := 0; i < len(vec.buf); i++ {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			vec.buf[i] = uint32(float64(vec.buf[i]) * factor)
+		}
+	}
+	return nil
 }
 
 func (vec *syncvec32) reset() {

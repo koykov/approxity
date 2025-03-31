@@ -1,6 +1,7 @@
 package cmsketch
 
 import (
+	"context"
 	"io"
 	"sync"
 
@@ -92,6 +93,13 @@ func (e *estimator[T]) WriteTo(w io.Writer) (int64, error) {
 		return 0, e.err
 	}
 	return e.vec.writeTo(w)
+}
+
+func (e *estimator[T]) Decay(ctx context.Context, factor float64) error {
+	if e.once.Do(e.init); e.err != nil {
+		return e.err
+	}
+	return e.vec.decay(ctx, factor)
 }
 
 func (e *estimator[T]) init() {

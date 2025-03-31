@@ -1,6 +1,7 @@
 package cmsketch
 
 import (
+	"context"
 	"encoding/binary"
 	"io"
 	"math"
@@ -56,9 +57,7 @@ func (vec *syncvec64) addCU(lo, hi uint32, delta uint64) error {
 }
 
 func (vec *syncvec64) addLFU(lo, hi uint32, delta uint64) error {
-	_, _, _ = lo, hi, delta
-	// todo implement me
-	return nil
+	return vec.addClassic(lo, hi, delta)
 }
 
 func (vec *syncvec64) estimate(hkey uint64) (r uint64) {
@@ -69,6 +68,18 @@ func (vec *syncvec64) estimate(hkey uint64) (r uint64) {
 		}
 	}
 	return
+}
+
+func (vec *syncvec64) decay(ctx context.Context, factor float64) error {
+	for i := 0; i < len(vec.buf); i++ {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			vec.buf[i] = uint64(float64(vec.buf[i]) * factor)
+		}
+	}
+	return nil
 }
 
 func (vec *syncvec64) reset() {
