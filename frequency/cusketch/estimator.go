@@ -6,7 +6,7 @@ import (
 	"github.com/koykov/pbtk/frequency/cmsketch"
 )
 
-const flagConservativeUpdate = 1<<iota - 1
+const flagConservativeUpdate = 0
 
 func NewEstimator[T pbtk.Hashable](config *cmsketch.Config) (frequency.Estimator[T], error) {
 	if config == nil {
