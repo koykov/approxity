@@ -10,4 +10,5 @@ var (
 	ErrWriteLimitExceed = errors.New("write limit exceeded")
 	ErrInvalidSignature = errors.New("invalid signature")
 	ErrVersionMismatch  = errors.New("version mismatch")
+	ErrClosed           = errors.New("closed")
 )
