@@ -31,7 +31,10 @@ func TestEstimator(t *testing.T) {
 				_ = est.Add("qwerty")
 			}
 			_ = est.Add("final")
-			t.Log(est.Estimate("foobar"), est.Estimate("qwerty"))
+			e0, e1 := est.Estimate("foobar"), est.Estimate("qwerty")
+			if e0 != 5 || e1 != 5 {
+				t.Fatalf("unexpected estimates: %d, %d", e0, e1)
+			}
 		})
 	})
 }

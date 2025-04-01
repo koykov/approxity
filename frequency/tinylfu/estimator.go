@@ -60,7 +60,6 @@ func (e *estimator[T]) checkCntr(err error) error {
 		return err
 	}
 	if atomic.AddUint64(&e.c, 1) == e.conf.DecayLimit {
-		atomic.StoreUint64(&e.c, 0)
 		e.cntr <- struct{}{}
 	}
 	return nil
@@ -135,6 +134,6 @@ func (e *estimator[T]) decay(ctx context.Context) {
 
 	e.timer.Reset(e.conf.DecayInterval)
 	atomic.StoreUint64(&e.c, 0)
-	_ = e.dec.Decay(ctx, factor)
 	atomic.StoreInt64(&e.lt, time.Now().UnixNano())
+	_ = e.dec.Decay(ctx, factor)
 }
