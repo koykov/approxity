@@ -94,10 +94,10 @@ func (vec *cnvector32) estimate(hkey uint64) (r uint64) {
 
 func (vec *cnvector32) decay(ctx context.Context, factor float64) error {
 	for i := 0; i < len(vec.buf); i++ {
-		o := atomic.LoadUint32(&vec.buf[i])
-		n := uint32(float64(o) * factor)
 		var j uint64
 		for j = 0; j < vec.lim+1; j++ {
+			o := atomic.LoadUint32(&vec.buf[i])
+			n := uint32(float64(o) * factor)
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
