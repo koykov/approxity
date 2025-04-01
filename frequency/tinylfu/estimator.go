@@ -24,7 +24,7 @@ type estimator[T pbtk.Hashable] struct {
 	c      uint64             // counter of added items
 	cntr   chan struct{}      // counter reached notifier
 	svc    uint32             // decay running flag
-	lt     int64              // last decay moment
+	lt     int64              // last decay timestamp
 
 	err error
 }
@@ -86,6 +86,10 @@ func (e *estimator[T]) init() {
 	}
 	if e.conf.ForceDecayNotifier == nil {
 		e.conf.ForceDecayNotifier = dummyForceDecayNotifier{}
+	}
+	if e.conf.Concurrent == nil {
+		// only concurrent CMS allowed due to async decay
+		e.conf.Concurrent = &cmsketch.ConcurrentConfig{}
 	}
 
 	// counter

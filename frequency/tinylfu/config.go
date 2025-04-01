@@ -25,6 +25,7 @@ type Config struct {
 
 func NewConfig(confidence, epsilon float64, hasher pbtk.Hasher) *Config {
 	c := &Config{Config: cmsketch.Config{
+		Concurrent: &cmsketch.ConcurrentConfig{}, // TinyLFU allows only concurrent CMS due to async decay
 		Confidence: confidence,
 		Epsilon:    epsilon,
 		Hasher:     hasher,
