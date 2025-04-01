@@ -38,15 +38,16 @@ func (vec *cnvector64) add(hkey, delta uint64) error {
 func (vec *cnvector64) addClassic(lo, hi uint32, delta uint64) error {
 	for i := uint64(0); i < vec.d; i++ {
 		pos := i*vec.w + uint64(lo+hi*uint32(i))%vec.w
+		var ok bool
 		var j uint64
 		for j = 0; j < vec.lim+1; j++ {
 			o := atomic.LoadUint64(&vec.buf[pos])
 			n := o + delta
-			if atomic.CompareAndSwapUint64(&vec.buf[pos], o, n) {
+			if ok = atomic.CompareAndSwapUint64(&vec.buf[pos], o, n); ok {
 				break
 			}
 		}
-		if j == vec.lim+1 {
+		if !ok {
 			return pbtk.ErrWriteLimitExceed
 		}
 	}
@@ -61,15 +62,16 @@ func (vec *cnvector64) addCU(lo, hi uint32, delta uint64) error {
 	for i := uint64(0); i < vec.d; i++ {
 		pos := vecpos(lo, hi, vec.w, i)
 		if atomic.LoadUint64(&vec.buf[pos]) == mn {
+			var ok bool
 			var j uint64
 			for j = 0; j < vec.lim+1; j++ {
 				o := atomic.LoadUint64(&vec.buf[pos])
 				n := o + delta
-				if atomic.CompareAndSwapUint64(&vec.buf[pos], o, n) {
+				if ok = atomic.CompareAndSwapUint64(&vec.buf[pos], o, n); ok {
 					break
 				}
 			}
-			if j == vec.lim+1 {
+			if !ok {
 				return pbtk.ErrWriteLimitExceed
 			}
 		}
