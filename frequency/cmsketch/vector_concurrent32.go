@@ -94,6 +94,7 @@ func (vec *cnvector32) estimate(hkey uint64) (r uint64) {
 
 func (vec *cnvector32) decay(ctx context.Context, factor float64) error {
 	for i := 0; i < len(vec.buf); i++ {
+		var ok bool
 		var j uint64
 		for j = 0; j < vec.lim+1; j++ {
 			o := atomic.LoadUint32(&vec.buf[i])
@@ -102,12 +103,12 @@ func (vec *cnvector32) decay(ctx context.Context, factor float64) error {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				if atomic.CompareAndSwapUint32(&vec.buf[i], o, n) {
+				if ok = atomic.CompareAndSwapUint32(&vec.buf[i], o, n); ok {
 					break
 				}
 			}
 		}
-		if j == vec.lim+1 {
+		if !ok {
 			return pbtk.ErrWriteLimitExceed
 		}
 	}
