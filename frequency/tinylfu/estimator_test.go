@@ -77,7 +77,24 @@ func TestEstimator(t *testing.T) {
 			}
 		})
 		t.Run("mixed", func(t *testing.T) {
-
+			fd := testForceDecay{}
+			est, _ := NewEstimator[string](NewConfig(0.99, 0.01, testh).
+				WithDecayLimit(50).
+				WithDecayInterval(time.Millisecond * 100).
+				WithForceDecayNotifier(&fd))
+			for i := 0; i < 1e3; i++ {
+				_ = est.Add("foobar")
+				_ = est.Add("qwerty")
+				if i%100 == 0 {
+					fd.trigger()
+				}
+				time.Sleep(time.Millisecond)
+			}
+			e0, e1 := est.Estimate("foobar"), est.Estimate("qwerty")
+			_ = tryclose(est)
+			if e0 != 87 || e1 != 87 {
+				t.Fatalf("unexpected estimates: %d, %d", e0, e1)
+			}
 		})
 	})
 }
