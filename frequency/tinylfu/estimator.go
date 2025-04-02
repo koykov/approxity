@@ -20,9 +20,9 @@ type estimator[T pbtk.Hashable] struct {
 	dec    frequency.Decayer
 	once   sync.Once
 	cancel context.CancelFunc // main stop func
-	timer  *time.Timer        // timer reached notifier
+	tc     timer              // time reached notifier
 	c      uint64             // counter of added items
-	cntr   chan struct{}      // counter reached notifier
+	cc     chan struct{}      // counter reached notifier
 	svc    uint32             // decay running flag
 	lt     int64              // last decay timestamp
 
@@ -56,11 +56,11 @@ func (e *estimator[T]) HAdd(hkey uint64) error            { return e.checkCntr(e
 func (e *estimator[T]) HAddN(hkey uint64, n uint64) error { return e.checkCntr(e.est.HAddN(hkey, n)) }
 
 func (e *estimator[T]) checkCntr(err error) error {
-	if err != nil {
+	if err != nil || e.conf.DecayLimit == 0 {
 		return err
 	}
 	if atomic.AddUint64(&e.c, 1) == e.conf.DecayLimit {
-		e.cntr <- struct{}{}
+		e.cc <- struct{}{}
 	}
 	return nil
 }
@@ -71,12 +71,6 @@ func (e *estimator[T]) Close() error {
 }
 
 func (e *estimator[T]) init() {
-	if e.conf.DecayLimit == 0 {
-		e.conf.DecayLimit = defaultDecayLimit
-	}
-	if e.conf.DecayInterval == 0 {
-		e.conf.DecayInterval = defaultDecayInterval
-	}
 	if e.conf.DecayFactor == 0 {
 		e.conf.DecayFactor = defaultDecayFactor
 	}
@@ -93,9 +87,14 @@ func (e *estimator[T]) init() {
 
 	// counter
 	e.c = math.MaxUint64
-	e.cntr = make(chan struct{})
+	if e.conf.DecayLimit > 0 {
+		e.cc = make(chan struct{})
+	}
 	// timer
-	e.timer = time.NewTimer(e.conf.DecayInterval)
+	e.tc = &stuckTimer{}
+	if e.conf.DecayInterval > 0 {
+		e.tc = newNativeTimer(e.conf.DecayInterval)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	e.cancel = cancel
@@ -107,14 +106,14 @@ func (e *estimator[T]) watch(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			e.err = pbtk.ErrClosed
-			e.timer.Stop()
-			close(e.cntr)
+			e.tc.Stop()
+			close(e.cc)
 			return
 		case <-e.conf.ForceDecayNotifier.Notify():
 			e.decay(ctx)
-		case <-e.timer.C:
+		case <-e.tc.C():
 			e.decay(ctx)
-		case <-e.cntr:
+		case <-e.cc:
 			e.decay(ctx)
 		}
 	}
@@ -141,7 +140,7 @@ func (e *estimator[T]) decay(ctx context.Context) {
 		}
 	}
 
-	e.timer.Reset(e.conf.DecayInterval)
+	e.tc.Reset(e.conf.DecayInterval)
 	atomic.StoreUint64(&e.c, 0)
 	atomic.StoreInt64(&e.lt, time.Now().UnixNano())
 	_ = e.dec.Decay(ctx, factor)
