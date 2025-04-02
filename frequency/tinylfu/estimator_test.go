@@ -2,6 +2,7 @@ package tinylfu
 
 import (
 	"testing"
+	"time"
 
 	"github.com/koykov/hash/xxhash"
 	"github.com/koykov/pbtk/frequency"
@@ -35,6 +36,23 @@ func TestEstimator(t *testing.T) {
 			if e0 != 5 || e1 != 5 {
 				t.Fatalf("unexpected estimates: %d, %d", e0, e1)
 			}
+		})
+		t.Run("time interval", func(t *testing.T) {
+			est, _ := NewEstimator[string](NewConfig(0.99, 0.01, testh).
+				WithDecayLimit(25).
+				WithDecayInterval(time.Millisecond * 100))
+			for i := 0; i < 10; i++ {
+				_ = est.Add("foobar")
+				_ = est.Add("qwerty")
+			}
+			time.Sleep(time.Millisecond * 110)
+			e0, e1 := est.Estimate("foobar"), est.Estimate("qwerty")
+			if e0 != 5 || e1 != 5 {
+				t.Fatalf("unexpected estimates: %d, %d", e0, e1)
+			}
+		})
+		t.Run("force decay", func(t *testing.T) {
+			// todo implement me
 		})
 	})
 }

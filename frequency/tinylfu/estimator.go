@@ -127,9 +127,18 @@ func (e *estimator[T]) decay(ctx context.Context) {
 	defer atomic.StoreUint32(&e.svc, 0)
 
 	factor := e.conf.DecayFactor
-	if time.Now().Sub(time.Unix(0, atomic.LoadInt64(&e.lt))) < e.conf.DecayInterval/2 ||
-		atomic.LoadUint64(&e.c) < e.conf.DecayLimit/2 {
-		factor = e.conf.SoftDecayFactor
+	{
+		// try soft decay
+		var interval, counter bool
+		if lt := atomic.LoadInt64(&e.lt); lt > 0 {
+			left := time.Now().Sub(time.Unix(0, lt))
+			interval = left > 0 && left < e.conf.DecayInterval/2
+		}
+		c := atomic.LoadUint64(&e.c)
+		counter = c > 0 && c < e.conf.DecayLimit/2
+		if interval || counter {
+			factor = e.conf.SoftDecayFactor
+		}
 	}
 
 	e.timer.Reset(e.conf.DecayInterval)
