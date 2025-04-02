@@ -107,7 +107,9 @@ func (e *estimator[T]) watch(ctx context.Context) {
 		case <-ctx.Done():
 			e.err = pbtk.ErrClosed
 			e.tc.Stop()
-			close(e.cc)
+			if e.cc != nil {
+				close(e.cc)
+			}
 			return
 		case <-e.conf.ForceDecayNotifier.Notify():
 			e.decay(ctx)

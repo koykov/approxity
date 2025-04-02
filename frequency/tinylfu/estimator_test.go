@@ -54,6 +54,7 @@ func TestEstimator(t *testing.T) {
 			}
 			time.Sleep(time.Millisecond * 110)
 			e0, e1 := est.Estimate("foobar"), est.Estimate("qwerty")
+			_ = tryclose(est)
 			if e0 != 5 || e1 != 5 {
 				t.Fatalf("unexpected estimates: %d, %d", e0, e1)
 			}
@@ -70,9 +71,13 @@ func TestEstimator(t *testing.T) {
 				}
 			}
 			e0, e1 := est.Estimate("foobar"), est.Estimate("qwerty")
+			_ = tryclose(est)
 			if e0 != 2 || e1 != 2 {
 				t.Fatalf("unexpected estimates: %d, %d", e0, e1)
 			}
+		})
+		t.Run("mixed", func(t *testing.T) {
+
 		})
 	})
 }
