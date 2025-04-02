@@ -74,3 +74,22 @@ func BenchmarkEstimator(b *testing.B) {
 		frequency.BenchMeConcurrently(b, frequency.NewTestAdapter(est))
 	})
 }
+
+type testForceDecay struct {
+	c chan struct{}
+}
+
+func (d *testForceDecay) Notify() <-chan struct{} {
+	return d.c
+}
+
+func (d *testForceDecay) trigger() {
+	if d.c == nil {
+		d.c = make(chan struct{})
+	}
+	d.c <- struct{}{}
+}
+
+func (d *testForceDecay) close() {
+	close(d.c)
+}
