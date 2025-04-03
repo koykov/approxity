@@ -74,8 +74,16 @@ func (e *estimator[T]) init() {
 	if e.conf.DecayFactor == 0 {
 		e.conf.DecayFactor = defaultDecayFactor
 	}
+	if e.conf.DecayFactor < 0 || e.conf.DecayFactor >= 1 {
+		e.err = ErrDecayRange
+		return
+	}
 	if e.conf.SoftDecayFactor == 0 {
 		e.conf.SoftDecayFactor = defaultSoftDecayFactor
+	}
+	if e.conf.SoftDecayFactor < 0 || e.conf.SoftDecayFactor >= 1 {
+		e.err = ErrDecayRange
+		return
 	}
 	if e.conf.ForceDecayNotifier == nil {
 		e.conf.ForceDecayNotifier = dummyForceDecayNotifier{}

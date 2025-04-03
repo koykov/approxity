@@ -8,19 +8,24 @@ import (
 )
 
 const (
-	defaultDecayLimit      = 1e6
-	defaultDecayInterval   = time.Minute
 	defaultDecayFactor     = .5
 	defaultSoftDecayFactor = .75
 )
 
 type Config struct {
 	cmsketch.Config
-	DecayLimit         uint64
-	DecayInterval      time.Duration
+	// Count of added items to start decay.
+	DecayLimit uint64
+	// Time interval to start decay.
+	DecayInterval time.Duration
+	// External decay notifier to force decay start.
 	ForceDecayNotifier ForceDecayNotifier
-	DecayFactor        float64
-	SoftDecayFactor    float64
+	// Default factor to decay counters.
+	// Must be in range (0..1).
+	DecayFactor float64
+	// Soft factor to decay counters. Uses for too often decay operations.
+	// Must be in range (0..1).
+	SoftDecayFactor float64
 }
 
 func NewConfig(confidence, epsilon float64, hasher pbtk.Hasher) *Config {
