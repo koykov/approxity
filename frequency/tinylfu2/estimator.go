@@ -2,7 +2,9 @@ package tinylfu
 
 import (
 	"io"
+	"math"
 	"sync"
+	"time"
 
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/frequency"
@@ -10,10 +12,11 @@ import (
 
 type estimator[T pbtk.Hashable] struct {
 	pbtk.Base[T]
-	conf *Config
-	once sync.Once
-	w, d uint64
-	vec  []uint64
+	conf  *Config
+	once  sync.Once
+	stime uint32 // start time
+	w, d  uint64
+	vec   []uint64
 
 	err error
 }
@@ -41,9 +44,7 @@ func (e *estimator[T]) AddN(key T, n uint64) error {
 	if err != nil {
 		return err
 	}
-	_ = hkey
-	// todo implement me
-	return nil
+	return e.HAddN(hkey, n)
 }
 
 func (e *estimator[T]) HAdd(hkey uint64) error {
@@ -54,7 +55,15 @@ func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
 		return e.err
 	}
-	// todo implement me
+	ndelta := uint32(time.Now().Unix()) - e.stime
+	for i := uint64(0); i < e.d; i++ {
+		pos := i*e.w + hkey%e.w
+		odelta, on := decode(e.vec[pos])
+		tdelta := ndelta - odelta
+		decay := math.Exp(-float64(tdelta) / float64(e.conf.EWMA.Tau)) // e^(-Δt/τ)
+		nn := uint32(float64(on)*decay + float64(n)*(1-decay))
+		e.vec[pos] = encode(ndelta, nn)
+	}
 	return nil
 }
 
@@ -66,17 +75,26 @@ func (e *estimator[T]) Estimate(key T) uint64 {
 	if err != nil {
 		return 0
 	}
-	_ = hkey
-	// todo implement me
-	return 0
+	return e.HEstimate(hkey)
 }
 
 func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
 	if e.once.Do(e.init); e.err != nil {
 		return 0
 	}
-	// todo implement me
-	return 0
+	now := uint32(time.Now().Unix())
+	mn := uint32(math.MaxUint32)
+	for i := uint64(0); i < e.d; i++ {
+		pos := i*e.w + hkey%e.w
+		odelta, val := decode(e.vec[pos])
+		tdelta := now - e.stime - odelta
+		decay := math.Exp(-float64(tdelta) / float64(e.conf.EWMA.Tau)) // e^(-Δt/τ)
+		freq := uint32(float64(val) * decay)
+		if freq < mn {
+			mn = freq
+		}
+	}
+	return uint64(mn)
 }
 
 func (e *estimator[T]) Reset() {
