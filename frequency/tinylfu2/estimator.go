@@ -4,7 +4,6 @@ import (
 	"io"
 	"math"
 	"sync"
-	"time"
 	"unsafe"
 
 	"github.com/koykov/openrt"
@@ -57,7 +56,7 @@ func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
 		return e.err
 	}
-	timeDeltaNew := uint32(time.Now().Unix()) - e.stime
+	timeDeltaNew := e.now() - e.stime
 	for i := uint64(0); i < e.d; i++ {
 		pos := i*e.w + hkey%e.w
 		timeDeltaOld, valOld := decode(e.vec[pos])
@@ -89,19 +88,25 @@ func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
 	if e.once.Do(e.init); e.err != nil {
 		return 0
 	}
-	now := uint32(time.Now().Unix())
-	mn := uint32(math.MaxUint32)
+	now := e.now()
+	minVal := uint32(math.MaxUint32)
 	for i := uint64(0); i < e.d; i++ {
 		pos := i*e.w + hkey%e.w
-		odelta, val := decode(e.vec[pos])
-		tdelta := now - e.stime - odelta
-		decay := math.Exp(-float64(tdelta) / float64(e.conf.EWMA.Tau)) // e^(-Δt/τ)
-		freq := uint32(float64(val) * decay)
-		if freq < mn {
-			mn = freq
+		timeDeltaOld, valOld := decode(e.vec[pos])
+		if valOld == 0 && timeDeltaOld == 0 {
+			continue
+		}
+		timeDelta := now - e.stime - timeDeltaOld
+		decay := math.Exp(-float64(timeDelta) / float64(e.conf.EWMA.Tau)) // e^(-Δt/τ)
+		val := uint32(float64(valOld) * decay)
+		if val < minVal {
+			minVal = val
 		}
 	}
-	return uint64(mn)
+	if minVal == math.MaxUint32 {
+		minVal = 0
+	}
+	return uint64(minVal)
 }
 
 func (e *estimator[T]) Reset() {
@@ -140,11 +145,18 @@ func (e *estimator[T]) init() {
 		e.err = frequency.ErrInvalidEpsilon
 		return
 	}
+	if e.conf.Clock == nil {
+		e.conf.Clock = nativeClock{}
+	}
 	if e.conf.MetricsWriter == nil {
 		e.conf.MetricsWriter = frequency.DummyMetricsWriter{}
 	}
 
 	e.w, e.d = optimalWD(e.conf.Confidence, e.conf.Epsilon)
 	e.vec = make([]uint64, e.w*e.d)
-	e.stime = uint32(time.Now().Unix())
+	e.stime = e.now()
+}
+
+func (e *estimator[T]) now() uint32 {
+	return e.conf.Clock.UNow32()
 }
