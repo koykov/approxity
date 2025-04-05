@@ -145,6 +145,9 @@ func (e *estimator[T]) init() {
 		e.err = frequency.ErrInvalidEpsilon
 		return
 	}
+	if e.conf.EWMA.Tau == 0 {
+		e.conf.EWMA.Tau = defaultTau
+	}
 	if e.conf.Clock == nil {
 		e.conf.Clock = nativeClock{}
 	}

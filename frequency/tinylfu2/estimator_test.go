@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/koykov/hash/xxhash"
+	"github.com/koykov/pbtk/frequency"
 )
 
 const (
@@ -16,12 +17,10 @@ var testh = xxhash.Hasher64[[]byte]{}
 
 func TestEstimator(t *testing.T) {
 	t.Run("eshop simulation", func(t *testing.T) {
-		now := time.Now()
-		clock := newTestClock(now)
-		conf := NewConfig(0.99, 0.01, xxhash.Hasher64[[]byte]{})
-		conf.EWMA.Tau = 60
-		conf.Clock = clock
-		est, err := NewEstimator[string](conf)
+		clock := newTestClock(time.Now())
+		est, err := NewEstimator[string](NewConfig(0.99, 0.01, xxhash.Hasher64[[]byte]{}).
+			WithEWMA(60).
+			WithClock(clock))
 		if err != nil {
 			t.Fatal(err)
 		}
