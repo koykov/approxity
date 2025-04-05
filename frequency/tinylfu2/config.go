@@ -10,6 +10,7 @@ type Config struct {
 	Epsilon       float64
 	EWMA          EWMA
 	Hasher        pbtk.Hasher
+	Clock         Clock
 	Concurrent    *ConcurrentConfig
 	MetricsWriter frequency.MetricsWriter
 }
