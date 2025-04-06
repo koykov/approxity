@@ -60,15 +60,24 @@ func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	for i := uint64(0); i < e.d; i++ {
 		pos := i*e.w + hkey%e.w
 		timeDeltaOld, valOld := decode(e.vec[pos])
-		var valNew uint32
+		var valNew float64
 		if valOld == 0 && timeDeltaOld == 0 {
-			valNew = uint32(n)
+			// first addition
+			valNew = float64(n)
 		} else {
 			timeDelta := timeDeltaNew - timeDeltaOld
-			decay := math.Exp(-float64(timeDelta) / float64(e.conf.EWMA.Tau)) // e^(-Δt/τ)
-			valNew = uint32(float64(valOld)*decay + float64(n)*(1-decay))
+			var decay float64
+			if uint64(timeDelta) < e.conf.EWMA.MinDeltaTime {
+				// special case - update item before minDeltaTime
+				decay = math.Exp(-float64(e.conf.EWMA.MinDeltaTime) / float64(e.conf.EWMA.Tau))
+				valNew = float64(valOld) + float64(n)*(1-decay)
+			} else {
+				// regular case - update item after minDeltaTime since addition
+				decay = math.Exp(-float64(timeDelta) / float64(e.conf.EWMA.Tau)) // e^(-Δt/τ)
+				valNew = float64(valOld)*decay + float64(n)*(1-decay)
+			}
 		}
-		e.vec[pos] = encode(timeDeltaNew, valNew)
+		e.vec[pos] = encode(timeDeltaNew, uint32(valNew))
 	}
 	return nil
 }
@@ -147,6 +156,9 @@ func (e *estimator[T]) init() {
 	}
 	if e.conf.EWMA.Tau == 0 {
 		e.conf.EWMA.Tau = defaultTau
+	}
+	if e.conf.EWMA.MinDeltaTime == 0 {
+		e.conf.EWMA.MinDeltaTime = defaultMinDeltaTime
 	}
 	if e.conf.Clock == nil {
 		e.conf.Clock = nativeClock{}

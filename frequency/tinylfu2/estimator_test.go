@@ -1,11 +1,13 @@
 package tinylfu
 
 import (
+	"fmt"
+	"math"
 	"testing"
 	"time"
 
 	"github.com/koykov/hash/xxhash"
-	"github.com/koykov/pbtk/frequency"
+	"github.com/koykov/pbtk"
 )
 
 const (
@@ -19,7 +21,7 @@ func TestEstimator(t *testing.T) {
 	t.Run("eshop simulation", func(t *testing.T) {
 		clock := newTestClock(time.Now())
 		est, err := NewEstimator[string](NewConfig(0.99, 0.01, xxhash.Hasher64[[]byte]{}).
-			WithEWMA(60).
+			WithEWMATau(60).
 			WithClock(clock))
 		if err != nil {
 			t.Fatal(err)
@@ -93,6 +95,59 @@ func TestEstimator(t *testing.T) {
 			// est = floor(rawEst) = 0
 			// conclusion: samsung s24 is not popular
 			assert(180, "samsung s24", 0)
+		})
+	})
+	t.Run("sync", func(t *testing.T) {
+		epochs := []int{0, 1, 5, 10, 30, 60}
+		now := time.Now()
+		clock := newTestClock(now)
+		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh).
+			WithEWMATau(60).
+			WithClock(clock))
+		if err != nil {
+			t.Fatal(err)
+		}
+		pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
+			t.Run(ds.Name, func(t *testing.T) {
+				est.Reset()
+				for i := 0; i < len(ds.All); i++ {
+					var n uint64 = 1
+					if i != 0 && i%1000 == 0 {
+						n = 1000
+					} else if i != 0 && i%100 == 0 {
+						n = 100
+					} else if i != 0 && i%10 == 0 {
+						n = 10
+					}
+					_ = est.AddN(ds.All[i], n)
+				}
+				for _, epoch := range epochs {
+					t.Run(fmt.Sprintf("t=%d", epoch), func(t *testing.T) {
+						clock.set(now.Add(time.Duration(epoch) * time.Second))
+						var diffv, diffc float64
+						for i := 0; i < len(ds.All); i++ {
+							var must uint64 = 1
+							if i != 0 && i%1000 == 0 {
+								must = 1000
+							} else if i != 0 && i%100 == 0 {
+								must = 100
+							} else if i != 0 && i%10 == 0 {
+								must = 10
+							}
+							var e float64
+							e = float64(est.Estimate(ds.All[i]))
+							if diff := math.Abs(e - float64(must)); diff > 0 {
+								est.Estimate(ds.All[i])
+								diffv += diff
+								diffc++
+							}
+						}
+						if diffc > 0 {
+							t.Logf("avg diff: %f", diffv/diffc)
+						}
+					})
+				}
+			})
 		})
 	})
 }

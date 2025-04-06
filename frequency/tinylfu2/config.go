@@ -5,7 +5,10 @@ import (
 	"github.com/koykov/pbtk/frequency"
 )
 
-const defaultTau = 30 // 30 seconds
+const (
+	defaultTau          = 30 // 30 seconds
+	defaultMinDeltaTime = 1
+)
 
 type Config struct {
 	// Confidence represent a possibility that potential error will be in range of acceptable error rate (see Epsilon).
@@ -31,10 +34,14 @@ type Config struct {
 	MetricsWriter frequency.MetricsWriter
 }
 
-// EWMA (exponentially weighted moving average) stores Tau - smoothing constant (time in seconds) to decay Count-Min Sketch
-// counters.
+// EWMA (exponentially weighted moving average) params.
 type EWMA struct {
+	// Smoothing constant (time in seconds) to decay Count-Min Sketch counters.
 	Tau uint64
+	// Minimal time delta to apply native EWMA.
+	// For less time deltas uses hybrid approach - sum of old value with EWMA (e^(-MinDeltaTime/Tau)).
+	// Hybrid approach allows to handle quick updates and keep precision/stability balance of EWMA.
+	MinDeltaTime uint64
 }
 
 // ConcurrentConfig configures concurrent section of config.
@@ -64,8 +71,19 @@ func (c *Config) WithWriteAttemptsLimit(limit uint64) *Config {
 	return c
 }
 
-func (c *Config) WithEWMA(tau uint64) *Config {
+func (c *Config) WithEWMA(tau, minDeltaTime uint64) *Config {
 	c.EWMA.Tau = tau
+	c.EWMA.MinDeltaTime = minDeltaTime
+	return c
+}
+
+func (c *Config) WithEWMATau(tau uint64) *Config {
+	c.EWMA.Tau = tau
+	return c
+}
+
+func (c *Config) WithEWMAminDeltaTime(minDeltaTime uint64) *Config {
+	c.EWMA.MinDeltaTime = minDeltaTime
 	return c
 }
 
