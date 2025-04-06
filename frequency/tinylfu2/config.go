@@ -40,10 +40,12 @@ type Config struct {
 // EWMA (exponentially weighted moving average) params.
 type EWMA struct {
 	// Smoothing constant (time in seconds) to decay Count-Min Sketch counters.
+	// Tau unit defined by TimePrecision param.
 	Tau uint64
 	// Minimal time delta to apply native EWMA.
 	// For less time deltas uses hybrid approach - sum of old value with EWMA (e^(-MinDeltaTime/Tau)).
 	// Hybrid approach allows to handle quick updates and keep precision/stability balance of EWMA.
+	// MinDeltaTime unit defined by TimePrecision param.
 	MinDeltaTime uint64
 	// Minimal time unit. Default value is one second.
 	// Precision less than 1 millisecond is senseless.
