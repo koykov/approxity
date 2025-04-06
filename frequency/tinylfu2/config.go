@@ -1,13 +1,16 @@
 package tinylfu
 
 import (
+	"time"
+
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/frequency"
 )
 
 const (
-	defaultTau          = 30 // 30 seconds
-	defaultMinDeltaTime = 1
+	defaultTau           = 30 // 30 seconds
+	defaultMinDeltaTime  = 1
+	defaultTimePrecision = time.Second
 )
 
 type Config struct {
@@ -42,6 +45,9 @@ type EWMA struct {
 	// For less time deltas uses hybrid approach - sum of old value with EWMA (e^(-MinDeltaTime/Tau)).
 	// Hybrid approach allows to handle quick updates and keep precision/stability balance of EWMA.
 	MinDeltaTime uint64
+	// Minimal time unit. Default value is one second.
+	// Precision less than 1 millisecond is senseless.
+	TimePrecision time.Duration
 }
 
 // ConcurrentConfig configures concurrent section of config.

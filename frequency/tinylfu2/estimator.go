@@ -160,6 +160,9 @@ func (e *estimator[T]) init() {
 	if e.conf.EWMA.MinDeltaTime == 0 {
 		e.conf.EWMA.MinDeltaTime = defaultMinDeltaTime
 	}
+	if e.conf.EWMA.TimePrecision == 0 {
+		e.conf.EWMA.TimePrecision = defaultTimePrecision
+	}
 	if e.conf.Clock == nil {
 		e.conf.Clock = nativeClock{}
 	}
@@ -173,5 +176,5 @@ func (e *estimator[T]) init() {
 }
 
 func (e *estimator[T]) now() uint32 {
-	return uint32(e.conf.Clock.Now().Unix())
+	return uint32(e.conf.Clock.Now().UnixNano() / int64(e.conf.EWMA.TimePrecision))
 }
