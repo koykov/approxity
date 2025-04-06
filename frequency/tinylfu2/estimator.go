@@ -173,5 +173,5 @@ func (e *estimator[T]) init() {
 }
 
 func (e *estimator[T]) now() uint32 {
-	return e.conf.Clock.UNow32()
+	return uint32(e.conf.Clock.Now().Unix())
 }

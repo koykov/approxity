@@ -10,14 +10,6 @@ func (c *testClock) Now() time.Time {
 	return c.now
 }
 
-func (c *testClock) UNow() uint64 {
-	return uint64(c.now.UnixNano())
-}
-
-func (c *testClock) UNow32() uint32 {
-	return uint32(c.now.Unix())
-}
-
 func (c *testClock) set(now time.Time) {
 	c.now = now
 }
