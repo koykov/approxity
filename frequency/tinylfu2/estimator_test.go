@@ -8,6 +8,7 @@ import (
 
 	"github.com/koykov/hash/xxhash"
 	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/frequency"
 )
 
 const (
@@ -149,5 +150,23 @@ func TestEstimator(t *testing.T) {
 				}
 			})
 		})
+	})
+}
+
+func BenchmarkEstimator(b *testing.B) {
+	b.Run("dataset", func(b *testing.B) {
+		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh))
+		if err != nil {
+			b.Fatal(err)
+		}
+		frequency.BenchMe(b, frequency.NewTestAdapter(est))
+	})
+	b.Run("dataset parallel", func(b *testing.B) {
+		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh).
+			WithConcurrency().WithWriteAttemptsLimit(5))
+		if err != nil {
+			b.Fatal(err)
+		}
+		frequency.BenchMeConcurrently(b, frequency.NewTestAdapter(est))
 	})
 }

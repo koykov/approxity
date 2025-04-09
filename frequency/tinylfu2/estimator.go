@@ -4,9 +4,7 @@ import (
 	"io"
 	"math"
 	"sync"
-	"unsafe"
 
-	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/frequency"
 )
@@ -17,7 +15,7 @@ type estimator[T pbtk.Hashable] struct {
 	once  sync.Once
 	stime uint32 // start time
 	w, d  uint64
-	vec   []uint64
+	vec   vector
 
 	err error
 }
@@ -56,28 +54,13 @@ func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
 		return e.err
 	}
-	timeDeltaNew := e.now() - e.stime
+	now := e.now()
+	timeDeltaNew := now - e.stime
 	for i := uint64(0); i < e.d; i++ {
 		pos := i*e.w + hkey%e.w
-		timeDeltaOld, valOld := decode(e.vec[pos])
-		var valNew float64
-		if valOld == 0 && timeDeltaOld == 0 {
-			// first addition
-			valNew = float64(n)
-		} else {
-			timeDelta := timeDeltaNew - timeDeltaOld
-			var decay float64
-			if uint64(timeDelta) < e.conf.EWMA.MinDeltaTime {
-				// special case - update item before minDeltaTime
-				decay = math.Exp(-float64(e.conf.EWMA.MinDeltaTime) / float64(e.conf.EWMA.Tau))
-				valNew = float64(valOld) + float64(n)*(1-decay)
-			} else {
-				// regular case - update item after minDeltaTime since addition
-				decay = math.Exp(-float64(timeDelta) / float64(e.conf.EWMA.Tau)) // e^(-Δt/τ)
-				valNew = float64(valOld)*decay + float64(n)*(1-decay)
-			}
+		if err := e.vec.set(pos, n, timeDeltaNew); err != nil {
+			return err
 		}
-		e.vec[pos] = encode(timeDeltaNew, uint32(valNew))
 	}
 	return nil
 }
@@ -101,13 +84,7 @@ func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
 	minVal := uint32(math.MaxUint32)
 	for i := uint64(0); i < e.d; i++ {
 		pos := i*e.w + hkey%e.w
-		timeDeltaOld, valOld := decode(e.vec[pos])
-		if valOld == 0 && timeDeltaOld == 0 {
-			continue
-		}
-		timeDelta := now - e.stime - timeDeltaOld
-		decay := math.Exp(-float64(timeDelta) / float64(e.conf.EWMA.Tau)) // e^(-Δt/τ)
-		val := uint32(float64(valOld) * decay)
+		val := e.vec.get(pos, e.stime, now)
 		if val < minVal {
 			minVal = val
 		}
@@ -122,7 +99,7 @@ func (e *estimator[T]) Reset() {
 	if e.once.Do(e.init); e.err != nil {
 		return
 	}
-	openrt.MemclrUnsafe(unsafe.Pointer(&e.vec[0]), len(e.vec)*8)
+	e.vec.reset()
 }
 
 func (e *estimator[T]) ReadFrom(r io.Reader) (int64, error) {
@@ -171,7 +148,11 @@ func (e *estimator[T]) init() {
 	}
 
 	e.w, e.d = optimalWD(e.conf.Confidence, e.conf.Epsilon)
-	e.vec = make([]uint64, e.w*e.d)
+	if e.conf.Concurrent != nil {
+		e.vec = newConcurrentVector(e.w*e.d, e.conf.Concurrent.WriteAttemptsLimit, &e.conf.EWMA)
+	} else {
+		e.vec = newVector(e.w*e.d, &e.conf.EWMA)
+	}
 	e.stime = e.now()
 }
 
