@@ -1,7 +1,6 @@
 package frequency
 
 import (
-	"context"
 	"io"
 
 	"github.com/koykov/pbtk"
@@ -32,13 +31,16 @@ type Estimator[T pbtk.Hashable] interface {
 
 type SignedEstimator[T pbtk.Hashable] interface {
 	base[T]
-	// Estimate returns frequency estimation of key.
+	// Estimate returns signed frequency estimation of key.
 	Estimate(key T) int64
-	// HEstimate returns frequency estimation of precalculated hash key.
+	// HEstimate returns signed frequency estimation of precalculated hash key.
 	HEstimate(hkey uint64) int64
 }
 
-type Decayer interface {
-	// Decay applies factor to all counters inside.
-	Decay(ctx context.Context, factor float64) error
+type PreciseEstimator[T pbtk.Hashable] interface {
+	base[T]
+	// Estimate returns float frequency estimation of key.
+	Estimate(key T) float64
+	// HEstimate returns float frequency estimation of precalculated hash key.
+	HEstimate(hkey uint64) float64
 }

@@ -16,6 +16,7 @@ import (
 type TestAdapter[T []byte] struct {
 	signed   SignedEstimator[T]
 	unsigned Estimator[T]
+	precise  PreciseEstimator[T]
 }
 
 func NewTestAdapter[T []byte](est Estimator[T]) *TestAdapter[T] {
@@ -26,12 +27,18 @@ func NewTestSignedAdapter[T []byte](est SignedEstimator[T]) *TestAdapter[T] {
 	return &TestAdapter[T]{signed: est}
 }
 
+func NewTestPreciseAdapter[T []byte](est PreciseEstimator[T]) *TestAdapter[T] {
+	return &TestAdapter[T]{precise: est}
+}
+
 func (t *TestAdapter[T]) Add(key T) error {
 	switch {
 	case t.unsigned != nil:
 		return t.unsigned.Add(key)
 	case t.signed != nil:
 		return t.signed.Add(key)
+	case t.precise != nil:
+		return t.precise.Add(key)
 	}
 	return fmt.Errorf("no estimator found")
 }
@@ -42,6 +49,8 @@ func (t *TestAdapter[T]) HAdd(hkey uint64) error {
 		return t.unsigned.HAdd(hkey)
 	case t.signed != nil:
 		return t.signed.HAdd(hkey)
+	case t.precise != nil:
+		return t.precise.HAdd(hkey)
 	}
 	return fmt.Errorf("no estimator found")
 }
@@ -61,6 +70,8 @@ func (t *TestAdapter[T]) StubEstimate(key T) {
 		t.unsigned.Estimate(key)
 	case t.signed != nil:
 		t.signed.Estimate(key)
+	case t.precise != nil:
+		t.precise.Estimate(key)
 	}
 }
 
@@ -100,6 +111,8 @@ func TestMe[T []byte](t *testing.T, a *TestAdapter[T]) {
 					e = float64(a.unsigned.Estimate(ds.All[i]))
 				case a.signed != nil:
 					e = float64(a.signed.Estimate(ds.All[i]))
+				case a.precise != nil:
+					e = a.precise.Estimate(ds.All[i])
 				}
 				if diff := math.Abs(e - float64(must)); diff > 0 {
 					diffv += diff
