@@ -3,6 +3,7 @@ package tinylfu
 import (
 	"fmt"
 	"math"
+	"os"
 	"testing"
 	"time"
 
@@ -149,6 +150,67 @@ func TestEstimator(t *testing.T) {
 					})
 				}
 			})
+		})
+	})
+	t.Run("writer", func(t *testing.T) {
+		testWrite := func(t *testing.T, est frequency.Estimator[string], path string, expect int64) {
+			_ = est.Add("foobar")
+			for i := 0; i < 100; i++ {
+				_ = est.AddN("qwerty", 10)
+			}
+			fh, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = fh.Close() }()
+			n, err := est.WriteTo(fh)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != expect {
+				t.Fatalf("expected %d bytes, got %d", expect, n)
+			}
+		}
+		t.Run("sync", func(t *testing.T) {
+			est, _ := NewEstimator[string](NewConfig(0.99, 0.01, testh).
+				WithEWMATau(60))
+			testWrite(t, est, "testdata/estimator.bin", 810936)
+		})
+		t.Run("concurrent", func(t *testing.T) {
+			est, _ := NewEstimator[string](NewConfig(0.99, 0.01, testh).
+				WithEWMATau(60).
+				WithConcurrency())
+			testWrite(t, est, "testdata/concurrent_estimator.bin", 810944)
+		})
+	})
+	t.Run("reader", func(t *testing.T) {
+		testRead := func(t *testing.T, est frequency.Estimator[string], path string, expectBytes int64, expectEst uint64) {
+			fh, err := os.OpenFile(path, os.O_RDONLY, 0644)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = fh.Close() }()
+			n, err := est.ReadFrom(fh)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != expectBytes {
+				t.Fatalf("expected %d bytes, got %d", expectBytes, n)
+			}
+			if e := est.Estimate("qwerty"); e != expectEst {
+				t.Errorf("expected %d estimate, got %d", expectEst, e)
+			}
+		}
+		t.Run("sync", func(t *testing.T) {
+			est, _ := NewEstimator[string](NewConfig(0.99, 0.01, testh).
+				WithEWMATau(60))
+			testRead(t, est, "testdata/estimator.bin", 810936, 10)
+		})
+		t.Run("concurrent", func(t *testing.T) {
+			est, _ := NewEstimator[string](NewConfig(0.99, 0.01, testh).
+				WithEWMATau(60).
+				WithConcurrency())
+			testRead(t, est, "testdata/concurrent_estimator.bin", 810944, 10)
 		})
 	})
 }

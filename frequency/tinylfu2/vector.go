@@ -64,17 +64,17 @@ func (vec *basevec) estimate(val uint64, stime, now uint32) uint32 {
 	return uint32(float64(valOld) * decay)
 }
 
+func (vec *basevec) exp(dtime uint32) float64 {
+	if uint64(dtime) >= vec.exptabsz {
+		return math.Exp(-float64(dtime) / float64(vec.tau))
+	}
+	return vec.exptab[dtime]
+}
+
 func (vec *basevec) init() {
 	vec.decayMin = math.Exp(-float64(vec.dtimeMin) / float64(vec.tau))
 	vec.exptab = make([]float64, vec.exptabsz)
 	for i := uint64(0); i < vec.exptabsz; i++ {
 		vec.exptab[i] = math.Exp(-float64(i) / float64(vec.tau))
 	}
-}
-
-func (vec *basevec) exp(dtime uint32) float64 {
-	if uint64(dtime) >= vec.exptabsz {
-		return math.Exp(-float64(dtime) / float64(vec.tau))
-	}
-	return vec.exptab[dtime]
 }
