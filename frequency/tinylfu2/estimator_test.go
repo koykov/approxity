@@ -29,9 +29,10 @@ func TestEstimator(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert := func(since int, key string, expect uint64) {
-			if e := est.Estimate(key); e != expect {
-				t.Errorf("time since start = %d; estimation espected %d, got %d", since, expect, e)
+		assert := func(since int, key string, expect float64) {
+			const eps = 1e-6
+			if e := est.Estimate(key); math.Abs(e-expect) > eps {
+				t.Errorf("time since start = %d; estimation expected %f, got %f", since, expect, e)
 			}
 		}
 		t.Run("t=0", func(t *testing.T) {
@@ -66,7 +67,7 @@ func TestEstimator(t *testing.T) {
 			// decay = e^(-30/60) ≈ 0.6065
 			// rawEst = oldEst*0.6065 = 0.6065
 			// est = floor(rawEst) = 0
-			assert(0, "iphone 15", 0)
+			assert(60, "iphone 15", 0.606531)
 		})
 
 		t.Run("t=120", func(t *testing.T) {
@@ -89,14 +90,14 @@ func TestEstimator(t *testing.T) {
 			// rawEst = oldEst*0.3679 ≈ 14.3472
 			// est = floor(rawEst) = 14
 			// conclusion: iphone 15 still is popular
-			assert(180, "iphone 15", 14)
+			assert(180, "iphone 15", 14.347298)
 			// counter decreases by decay:
 			// Δt = 135, oldEst = 1
 			// decay = e^(-135/60) ≈ 0.1054
 			// rawEst = oldEst*0.1054 ≈ 0.1054
 			// est = floor(rawEst) = 0
 			// conclusion: samsung s24 is not popular
-			assert(180, "samsung s24", 0)
+			assert(180, "samsung s24", 0.105399)
 		})
 	})
 	t.Run("sync", func(t *testing.T) {
@@ -153,7 +154,7 @@ func TestEstimator(t *testing.T) {
 		})
 	})
 	t.Run("writer", func(t *testing.T) {
-		testWrite := func(t *testing.T, est frequency.Estimator[string], path string, expect int64) {
+		testWrite := func(t *testing.T, est frequency.PreciseEstimator[string], path string, expect int64) {
 			_ = est.Add("foobar")
 			for i := 0; i < 100; i++ {
 				_ = est.AddN("qwerty", 10)
@@ -184,7 +185,7 @@ func TestEstimator(t *testing.T) {
 		})
 	})
 	t.Run("reader", func(t *testing.T) {
-		testRead := func(t *testing.T, est frequency.Estimator[string], path string, expectBytes int64, expectEst uint64) {
+		testRead := func(t *testing.T, est frequency.PreciseEstimator[string], path string, expectBytes int64, expectEst float64) {
 			fh, err := os.OpenFile(path, os.O_RDONLY, 0644)
 			if err != nil {
 				t.Fatal(err)
@@ -198,7 +199,7 @@ func TestEstimator(t *testing.T) {
 				t.Fatalf("expected %d bytes, got %d", expectBytes, n)
 			}
 			if e := est.Estimate("qwerty"); e != expectEst {
-				t.Errorf("expected %d estimate, got %d", expectEst, e)
+				t.Errorf("expected %f estimate, got %f", expectEst, e)
 			}
 		}
 		t.Run("sync", func(t *testing.T) {
@@ -221,7 +222,7 @@ func BenchmarkEstimator(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		frequency.BenchMe(b, frequency.NewTestAdapter(est))
+		frequency.BenchMe(b, frequency.NewTestPreciseAdapter(est))
 	})
 	b.Run("dataset parallel", func(b *testing.B) {
 		est, err := NewEstimator[[]byte](NewConfig(testConfidence, testEpsilon, testh).
@@ -229,6 +230,6 @@ func BenchmarkEstimator(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		frequency.BenchMeConcurrently(b, frequency.NewTestAdapter(est))
+		frequency.BenchMeConcurrently(b, frequency.NewTestPreciseAdapter(est))
 	})
 }

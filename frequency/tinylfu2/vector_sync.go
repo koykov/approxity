@@ -26,7 +26,7 @@ func (vec *syncvec) set(pos, n uint64, dtime uint32) error {
 	return nil
 }
 
-func (vec *syncvec) get(pos uint64, stime, now uint32) uint32 {
+func (vec *syncvec) get(pos uint64, stime, now uint32) float64 {
 	val := vec.buf[pos]
 	return vec.estimate(val, stime, now)
 }

@@ -20,7 +20,7 @@ type estimator[T pbtk.Hashable] struct {
 	err error
 }
 
-func NewEstimator[T pbtk.Hashable](conf *Config) (frequency.Estimator[T], error) {
+func NewEstimator[T pbtk.Hashable](conf *Config) (frequency.PreciseEstimator[T], error) {
 	if conf == nil {
 		return nil, pbtk.ErrInvalidConfig
 	}
@@ -65,7 +65,7 @@ func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	return nil
 }
 
-func (e *estimator[T]) Estimate(key T) uint64 {
+func (e *estimator[T]) Estimate(key T) float64 {
 	if e.once.Do(e.init); e.err != nil {
 		return 0
 	}
@@ -76,12 +76,12 @@ func (e *estimator[T]) Estimate(key T) uint64 {
 	return e.HEstimate(hkey)
 }
 
-func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
+func (e *estimator[T]) HEstimate(hkey uint64) float64 {
 	if e.once.Do(e.init); e.err != nil {
 		return 0
 	}
 	now := e.now()
-	minVal := uint32(math.MaxUint32)
+	minVal := float64(math.MaxUint32)
 	for i := uint64(0); i < e.d; i++ {
 		pos := i*e.w + hkey%e.w
 		val := e.vec.get(pos, e.stime, now)
@@ -92,7 +92,7 @@ func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
 	if minVal == math.MaxUint32 {
 		minVal = 0
 	}
-	return uint64(minVal)
+	return minVal
 }
 
 func (e *estimator[T]) Reset() {

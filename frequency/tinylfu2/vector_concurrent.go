@@ -30,7 +30,7 @@ func (vec *cnvec) set(pos, n uint64, dtime uint32) error {
 	return pbtk.ErrWriteLimitExceed
 }
 
-func (vec *cnvec) get(pos uint64, stime, now uint32) uint32 {
+func (vec *cnvec) get(pos uint64, stime, now uint32) float64 {
 	val := atomic.LoadUint64(&vec.buf[pos])
 	return vec.estimate(val, stime, now)
 }
@@ -58,10 +58,10 @@ func (vec *cnvec) readFrom(r io.Reader) (n int64, err error) {
 		binary.LittleEndian.Uint64(buf[40:48]), binary.LittleEndian.Uint64(buf[48:56]),
 		binary.LittleEndian.Uint64(buf[56:64])
 
-	if sign != syncvecDumpSignature {
+	if sign != cnvecDumpSignature {
 		return n, pbtk.ErrInvalidSignature
 	}
-	if ver != math.Float64bits(syncvecDumpVersion) {
+	if ver != math.Float64bits(cnvecDumpVersion) {
 		return n, pbtk.ErrVersionMismatch
 	}
 	vec.dtimeMin, vec.tau = dtimeMin, tau
@@ -108,8 +108,8 @@ func (vec *cnvec) writeTo(w io.Writer) (n int64, err error) {
 		buf [64]byte
 		m   int
 	)
-	binary.LittleEndian.PutUint64(buf[0:8], syncvecDumpSignature)
-	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(syncvecDumpVersion))
+	binary.LittleEndian.PutUint64(buf[0:8], cnvecDumpSignature)
+	binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(cnvecDumpVersion))
 	binary.LittleEndian.PutUint64(buf[16:24], vec.dtimeMin)
 	binary.LittleEndian.PutUint64(buf[24:32], vec.tau)
 	binary.LittleEndian.PutUint64(buf[32:40], math.Float64bits(vec.decayMin))

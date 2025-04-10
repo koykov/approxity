@@ -7,7 +7,7 @@ import (
 
 type vector interface {
 	set(pos, n uint64, dtime uint32) error
-	get(pos uint64, stime, now uint32) uint32
+	get(pos uint64, stime, now uint32) float64
 	reset()
 	readFrom(r io.Reader) (int64, error)
 	writeTo(w io.Writer) (int64, error)
@@ -54,14 +54,14 @@ func (vec *basevec) recalc(val, n uint64, dtimeNew uint32) uint64 {
 	return vec.encode(dtimeNew, uint32(valNew))
 }
 
-func (vec *basevec) estimate(val uint64, stime, now uint32) uint32 {
+func (vec *basevec) estimate(val uint64, stime, now uint32) float64 {
 	timeDeltaOld, valOld := vec.decode(val)
 	if valOld == 0 && timeDeltaOld == 0 {
 		return math.MaxUint32
 	}
 	timeDelta := now - stime - timeDeltaOld
 	decay := vec.exp(timeDelta) // e^(-Δt/τ)
-	return uint32(float64(valOld) * decay)
+	return float64(valOld) * decay
 }
 
 func (vec *basevec) exp(dtime uint32) float64 {
