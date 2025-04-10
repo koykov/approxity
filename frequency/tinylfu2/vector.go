@@ -14,9 +14,12 @@ type vector interface {
 }
 
 type basevec struct {
-	buf []uint64
+	buf    []uint64
+	exptab []float64
 
 	dtimeMin, tau uint64
+	decayMin      float64
+	exptabsz      uint64
 }
 
 func (vec *basevec) encode(tdelta uint32, n uint32) uint64 {
@@ -40,11 +43,11 @@ func (vec *basevec) recalc(val, n uint64, dtimeNew uint32) uint64 {
 		var decay float64
 		if uint64(dtime) < vec.dtimeMin {
 			// special case - update item before minDeltaTime
-			decay = math.Exp(-float64(vec.dtimeMin) / float64(vec.tau))
+			decay = vec.decayMin
 			valNew = float64(valOld) + float64(n)*(1-decay)
 		} else {
 			// regular case - update item after minDeltaTime since addition
-			decay = math.Exp(-float64(dtime) / float64(vec.tau)) // e^(-Δt/τ)
+			decay = vec.exp(dtime) // e^(-Δt/τ)
 			valNew = float64(valOld)*decay + float64(n)*(1-decay)
 		}
 	}
@@ -57,6 +60,21 @@ func (vec *basevec) estimate(val uint64, stime, now uint32) uint32 {
 		return math.MaxUint32
 	}
 	timeDelta := now - stime - timeDeltaOld
-	decay := math.Exp(-float64(timeDelta) / float64(vec.tau)) // e^(-Δt/τ)
+	decay := vec.exp(timeDelta) // e^(-Δt/τ)
 	return uint32(float64(valOld) * decay)
+}
+
+func (vec *basevec) init() {
+	vec.decayMin = math.Exp(-float64(vec.dtimeMin) / float64(vec.tau))
+	vec.exptab = make([]float64, vec.exptabsz)
+	for i := uint64(0); i < vec.exptabsz; i++ {
+		vec.exptab[i] = math.Exp(-float64(i) / float64(vec.tau))
+	}
+}
+
+func (vec *basevec) exp(dtime uint32) float64 {
+	if uint64(dtime) >= vec.exptabsz {
+		return math.Exp(-float64(dtime) / float64(vec.tau))
+	}
+	return vec.exptab[dtime]
 }

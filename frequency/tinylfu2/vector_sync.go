@@ -8,12 +8,13 @@ import (
 )
 
 type syncvec struct {
-	basevec
+	*basevec
 }
 
 func (vec *syncvec) set(pos, n uint64, dtime uint32) error {
 	val := vec.buf[pos]
-	vec.buf[pos] = vec.recalc(val, n, dtime)
+	val = vec.recalc(val, n, dtime)
+	vec.buf[pos] = val
 	return nil
 }
 
@@ -37,11 +38,14 @@ func (vec *syncvec) writeTo(w io.Writer) (int64, error) {
 }
 
 func newVector(sz uint64, ewma *EWMA) vector {
-	return &syncvec{
-		basevec: basevec{
+	vec := &syncvec{
+		basevec: &basevec{
 			buf:      make([]uint64, sz),
 			dtimeMin: ewma.MinDeltaTime,
 			tau:      ewma.Tau,
+			exptabsz: ewma.ExpTableSize,
 		},
 	}
+	vec.basevec.init()
+	return vec
 }

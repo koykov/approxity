@@ -140,6 +140,9 @@ func (e *estimator[T]) init() {
 	if e.conf.EWMA.TimePrecision == 0 {
 		e.conf.EWMA.TimePrecision = defaultTimePrecision
 	}
+	if e.conf.EWMA.ExpTableSize == 0 {
+		e.conf.EWMA.ExpTableSize = defaultExpTableSize
+	}
 	if e.conf.Clock == nil {
 		e.conf.Clock = nativeClock{}
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 type cnvec struct {
-	basevec
+	*basevec
 	lim uint64
 }
 
@@ -45,12 +45,15 @@ func (vec *cnvec) writeTo(w io.Writer) (int64, error) {
 }
 
 func newConcurrentVector(sz, lim uint64, ewma *EWMA) vector {
-	return &cnvec{
-		basevec: basevec{
+	vec := &cnvec{
+		basevec: &basevec{
 			buf:      make([]uint64, sz),
 			dtimeMin: ewma.MinDeltaTime,
 			tau:      ewma.Tau,
+			exptabsz: ewma.ExpTableSize,
 		},
 		lim: lim,
 	}
+	vec.basevec.init()
+	return vec
 }

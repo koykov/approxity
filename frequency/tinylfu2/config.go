@@ -11,6 +11,7 @@ const (
 	defaultTau           = 30 // 30 seconds
 	defaultMinDeltaTime  = 1
 	defaultTimePrecision = time.Second
+	defaultExpTableSize  = 1e5
 )
 
 type Config struct {
@@ -50,6 +51,9 @@ type EWMA struct {
 	// Minimal time unit. Default value is one second.
 	// Precision less than 1 millisecond is senseless.
 	TimePrecision time.Duration
+	// Precalculated exp table size to reduce pressure of calculating Exp.
+	// Exp table is a table cache of first ExpTableSize precalculated Exp values.
+	ExpTableSize uint64
 }
 
 // ConcurrentConfig configures concurrent section of config.
