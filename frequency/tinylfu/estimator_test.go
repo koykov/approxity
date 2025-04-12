@@ -1,7 +1,6 @@
 package tinylfu
 
 import (
-	"fmt"
 	"io"
 	"testing"
 	"time"
@@ -16,29 +15,6 @@ const (
 )
 
 var testh = xxhash.Hasher64[[]byte]{}
-
-func TestEst(t *testing.T) {
-	est, err := NewEstimator[string](NewConfig(0.99, 0.01, xxhash.Hasher64[[]byte]{}).
-		WithDecayLimit(50).
-		WithWriteAttemptsLimit(50))
-	_ = err
-	for i := 0; i < 5; i++ {
-		key := fmt.Sprintf("item-%d", i)
-		if err := est.Add(key); err != nil {
-			t.Log(err)
-		}
-		// time.Sleep(time.Microsecond * 5)
-		if i == 3 {
-			for j := 0; j < 1e6; j++ {
-				if err := est.Add(key); err != nil {
-					t.Log(err)
-				}
-				// time.Sleep(time.Microsecond * 5)
-			}
-		}
-	}
-	println(est.Estimate("item-3")) // ~1000000
-}
 
 func TestEstimator(t *testing.T) {
 	t.Run("dataset", func(t *testing.T) {
