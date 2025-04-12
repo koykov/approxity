@@ -1,6 +1,7 @@
 package frequency
 
 import (
+	"context"
 	"io"
 
 	"github.com/koykov/pbtk"
@@ -43,4 +44,9 @@ type PreciseEstimator[T pbtk.Hashable] interface {
 	Estimate(key T) float64
 	// HEstimate returns float frequency estimation of precalculated hash key.
 	HEstimate(hkey uint64) float64
+}
+
+type Decayer interface {
+	// Decay applies factor to all counters inside.
+	Decay(ctx context.Context, factor float64) error
 }
