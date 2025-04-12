@@ -15,7 +15,7 @@ import (
   "time"
 
   "github.com/koykov/hash/xxhash"
-  "github.com/koykov/pbtk/frequency/tinylfu"
+  "github.com/koykov/pbtk/frequency/tinylfu_ewma"
 )
 
 const (
