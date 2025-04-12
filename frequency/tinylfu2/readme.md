@@ -9,33 +9,37 @@ TinyLFU (Tiny Least Frequently Used) это вероятностная стру�
 Минимальный рабочий пример:
 
 ```go
-  import (
-"github.com/koykov/hash/xxhash"
-"github.com/koykov/pbtk/frequency/tinylfu_ewma"
+package main
+
+import (
+  "time"
+
+  "github.com/koykov/hash/xxhash"
+  "github.com/koykov/pbtk/frequency/tinylfu"
 )
 
 const (
-confidence = 0.99999
-epsilon = 0.00001
+  confidence = 0.99999
+  epsilon    = 0.00001
 )
 
 func main() {
-conf := tinylfu.NewConfig(confidence, epsilon, xxhash.Hasher64[[]byte]{}).
-WithEWMATau(60) // smoothing constant time 1 minute
-est, err := tinylfu.NewEstimator(conf)
-_ = est.AddN("foobar", 5)
-println("time=0", est.Estimate("foobar")) // time=0 +5.000000e+000
-clock.add(15 * time.Second)
-println("time=15", est.Estimate("foobar")) // time=15 +3.894004e+000
-clock.add(30 * time.Second)
-println("time=45", est.Estimate("foobar")) // time=45 +2.361833e+000
-clock.add(15 * time.Second)
-println("time=60", est.Estimate("foobar")) // time=60 +1.839397e+000
+  conf := tinylfu.NewConfig(confidence, epsilon, xxhash.Hasher64[[]byte]{}).
+    WithEWMATau(60) // smoothing constant time 1 minute
+  est, err := tinylfu.NewEstimator(conf)
+  _ = est.AddN("foobar", 5)
+  println("time=0", est.Estimate("foobar")) // time=0 +5.000000e+000
+  clock.add(15 * time.Second)
+  println("time=15", est.Estimate("foobar")) // time=15 +3.894004e+000
+  clock.add(30 * time.Second)
+  println("time=45", est.Estimate("foobar")) // time=45 +2.361833e+000
+  clock.add(15 * time.Second)
+  println("time=60", est.Estimate("foobar")) // time=60 +1.839397e+000
 
-_ = est.AddN("foobar", 30)
-println("time=0 (after update)", est.Estimate("foobar")) // time=0 (after update) +2.000000e+001 (20)
-clock.add(15 * time.Second)
-println("time=15 (after update)", est.Estimate("foobar")) // time=15 (after update) +1.557602e+001 (~15.576)
+  _ = est.AddN("foobar", 30)
+  println("time=0 (after update)", est.Estimate("foobar")) // time=0 (after update) +2.000000e+001 (20)
+  clock.add(15 * time.Second)
+  println("time=15 (after update)", est.Estimate("foobar")) // time=15 (after update) +1.557602e+001 (~15.576)
 }
 ```
 
