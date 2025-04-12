@@ -1,4 +1,4 @@
-# TinyLFU
+# TinyLFU + EWMA
 
 TinyLFU (Tiny Least Frequently Used) is a probabilistic data structure based on [Count-Min Sketch](../cmsketch)
 that estimates element frequency in data streams while also being able to "forget" stored element data through
