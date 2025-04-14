@@ -10,6 +10,7 @@ import (
 const (
 	flagConservativeUpdate = iota
 	flagLFU                // reserved
+	flagDLC
 )
 
 type vector interface {

@@ -30,6 +30,8 @@ func (vec *syncvec64) add(hkey, delta uint64) error {
 		return vec.addCU(lo, hi, delta)
 	case vec.flags.CheckBit(flagLFU):
 		return vec.addLFU(lo, hi, delta)
+	case vec.flags.CheckBit(flagDLC):
+		return vec.addDLC(lo, hi, delta)
 	default:
 		return vec.addClassic(lo, hi, delta)
 	}
@@ -58,6 +60,23 @@ func (vec *syncvec64) addCU(lo, hi uint32, delta uint64) error {
 
 func (vec *syncvec64) addLFU(lo, hi uint32, delta uint64) error {
 	return vec.addClassic(lo, hi, delta)
+}
+
+func (vec *syncvec64) addDLC(lo, hi uint32, delta uint64) error {
+	var (
+		mn  uint64 = math.MaxUint64
+		mnp uint64 = math.MaxUint64
+	)
+	for i := uint64(0); i < vec.d; i++ {
+		pos := vecpos(lo, hi, vec.w, i)
+		if vec.buf[pos] < mn {
+			mn, mnp = vec.buf[pos], pos
+		}
+	}
+	if mnp < uint64(len(vec.buf)) {
+		vec.buf[mnp] += delta
+	}
+	return nil
 }
 
 func (vec *syncvec64) estimate(hkey uint64) (r uint64) {
