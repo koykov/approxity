@@ -35,7 +35,7 @@ type Config struct {
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
-	MetricsWriter frequency.MetricsWriter
+	MetricsWriter frequency.PreciseMetricsWriter
 }
 
 // EWMA (exponentially weighted moving average) params.
@@ -104,7 +104,7 @@ func (c *Config) WithClock(clock Clock) *Config {
 	return c
 }
 
-func WithMetricsWriter(conf *Config, mw frequency.MetricsWriter) *Config {
+func WithMetricsWriter(conf *Config, mw frequency.PreciseMetricsWriter) *Config {
 	conf.MetricsWriter = mw
 	return conf
 }

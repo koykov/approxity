@@ -37,11 +37,11 @@ func (e *estimator[T]) Add(key T) error {
 
 func (e *estimator[T]) AddN(key T, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return err
+		return e.mw().Add(err)
 	}
 	return e.HAddN(hkey, n)
 }
@@ -52,33 +52,33 @@ func (e *estimator[T]) HAdd(hkey uint64) error {
 
 func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	now := e.now()
 	timeDeltaNew := now - e.stime
 	for i := uint64(0); i < e.d; i++ {
 		pos := i*e.w + hkey%e.w
 		if err := e.vec.set(pos, n, timeDeltaNew); err != nil {
-			return err
+			return e.mw().Add(err)
 		}
 	}
-	return nil
+	return e.mw().Add(nil)
 }
 
 func (e *estimator[T]) Estimate(key T) float64 {
 	if e.once.Do(e.init); e.err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
 	return e.HEstimate(hkey)
 }
 
 func (e *estimator[T]) HEstimate(hkey uint64) float64 {
 	if e.once.Do(e.init); e.err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
 	now := e.now()
 	minVal := float64(math.MaxUint32)
@@ -92,7 +92,7 @@ func (e *estimator[T]) HEstimate(hkey uint64) float64 {
 	if minVal == math.MaxUint32 {
 		minVal = 0
 	}
-	return minVal
+	return e.mw().Estimate(minVal)
 }
 
 func (e *estimator[T]) Reset() {
@@ -114,6 +114,10 @@ func (e *estimator[T]) WriteTo(w io.Writer) (int64, error) {
 		return 0, e.err
 	}
 	return e.vec.writeTo(w)
+}
+
+func (e *estimator[T]) mw() frequency.PreciseMetricsWriter {
+	return e.conf.MetricsWriter
 }
 
 func (e *estimator[T]) init() {
@@ -145,7 +149,7 @@ func (e *estimator[T]) init() {
 		e.conf.Clock = nativeClock{}
 	}
 	if e.conf.MetricsWriter == nil {
-		e.conf.MetricsWriter = frequency.DummyMetricsWriter{}
+		e.conf.MetricsWriter = frequency.DummyPreciseMetricsWriter{}
 	}
 
 	e.w, e.d = optimalWD(e.conf.Confidence, e.conf.Epsilon)
