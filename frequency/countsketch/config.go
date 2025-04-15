@@ -25,7 +25,7 @@ type Config struct {
 	// Setting up this section enables concurrent read/write operations.
 	Concurrent *ConcurrentConfig
 	// Metrics writer handler.
-	MetricsWriter frequency.MetricsWriter
+	MetricsWriter frequency.SignedMetricsWriter
 }
 
 // ConcurrentConfig configures concurrent section of config.
@@ -60,7 +60,7 @@ func (c *Config) WithCompact() *Config {
 	return c
 }
 
-func WithMetricsWriter(conf *Config, mw frequency.MetricsWriter) *Config {
+func WithMetricsWriter(conf *Config, mw frequency.SignedMetricsWriter) *Config {
 	conf.MetricsWriter = mw
 	return conf
 }

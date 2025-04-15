@@ -38,11 +38,11 @@ func (e *estimator[T]) Add(key T) error {
 
 func (e *estimator[T]) AddN(key T, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return err
+		return e.mw().Add(err)
 	}
 	return e.hadd(hkey, n)
 }
@@ -53,7 +53,7 @@ func (e *estimator[T]) HAdd(hkey uint64) error {
 
 func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	return e.hadd(hkey, n)
 }
@@ -65,10 +65,10 @@ func (e *estimator[T]) hadd(hkey, n uint64) error {
 		sign := tsign[hkeymix>>63]
 		delta := sign * int64(n)
 		if err := e.vec.add(i*e.w+pos, delta); err != nil {
-			return err
+			return e.mw().Add(err)
 		}
 	}
-	return nil
+	return e.mw().Add(nil)
 }
 
 func (e *estimator[T]) mix(hkey, seed uint64) uint64 {
@@ -81,18 +81,18 @@ func (e *estimator[T]) mix(hkey, seed uint64) uint64 {
 
 func (e *estimator[T]) Estimate(key T) int64 {
 	if e.once.Do(e.init); e.err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
 	return e.hestimate(hkey)
 }
 
 func (e *estimator[T]) HEstimate(hkey uint64) int64 {
 	if e.once.Do(e.init); e.err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
 	return e.hestimate(hkey)
 }
@@ -108,7 +108,7 @@ func (e *estimator[T]) hestimate(hkey uint64) int64 {
 	}
 	slices.Sort(buf)
 	median := buf[len(buf)/2]
-	return median
+	return e.mw().Estimate(median)
 }
 
 func (e *estimator[T]) Reset() {
@@ -132,6 +132,10 @@ func (e *estimator[T]) WriteTo(w io.Writer) (int64, error) {
 	return e.vec.writeTo(w)
 }
 
+func (e *estimator[T]) mw() frequency.SignedMetricsWriter {
+	return e.conf.MetricsWriter
+}
+
 func (e *estimator[T]) init() {
 	if e.conf.Hasher == nil {
 		e.err = pbtk.ErrNoHasher
@@ -146,7 +150,7 @@ func (e *estimator[T]) init() {
 		return
 	}
 	if e.conf.MetricsWriter == nil {
-		e.conf.MetricsWriter = frequency.DummyMetricsWriter{}
+		e.conf.MetricsWriter = frequency.DummySignedMetricsWriter{}
 	}
 	e.w, e.d = optimalWD(e.conf.Confidence, e.conf.Epsilon)
 	if e.conf.Concurrent != nil {
