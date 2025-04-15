@@ -36,13 +36,13 @@ func (e *estimator[T]) Add(key T) error {
 
 func (e *estimator[T]) AddN(key T, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return err
+		return e.mw().Add(err)
 	}
-	return e.vec.add(hkey, n)
+	return e.mw().Add(e.vec.add(hkey, n))
 }
 
 func (e *estimator[T]) HAdd(hkey uint64) error {
@@ -51,27 +51,27 @@ func (e *estimator[T]) HAdd(hkey uint64) error {
 
 func (e *estimator[T]) HAddN(hkey uint64, n uint64) error {
 	if e.once.Do(e.init); e.err != nil {
-		return e.err
+		return e.mw().Add(e.err)
 	}
-	return e.vec.add(hkey, n)
+	return e.mw().Add(e.vec.add(hkey, n))
 }
 
 func (e *estimator[T]) Estimate(key T) uint64 {
 	if e.once.Do(e.init); e.err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
 	hkey, err := e.Hash(e.conf.Hasher, key)
 	if err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
-	return e.vec.estimate(hkey)
+	return e.mw().Estimate(e.vec.estimate(hkey))
 }
 
 func (e *estimator[T]) HEstimate(hkey uint64) uint64 {
 	if e.once.Do(e.init); e.err != nil {
-		return 0
+		return e.mw().Estimate(0)
 	}
-	return e.vec.estimate(hkey)
+	return e.mw().Estimate(e.vec.estimate(hkey))
 }
 
 func (e *estimator[T]) Reset() {
@@ -100,6 +100,10 @@ func (e *estimator[T]) Decay(ctx context.Context, factor float64) error {
 		return e.err
 	}
 	return e.vec.decay(ctx, factor)
+}
+
+func (e *estimator[T]) mw() frequency.MetricsWriter {
+	return e.conf.MetricsWriter
 }
 
 func (e *estimator[T]) init() {
