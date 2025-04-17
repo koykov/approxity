@@ -13,15 +13,15 @@ const vecsz = 64
 
 type hash[T pbtk.Hashable] struct {
 	pbtk.Base[T]
-	conf *Config
+	algo pbtk.Hasher
 	vec  [vecsz]int64
 	once sync.Once
 
 	err error
 }
 
-func NewHasher[T pbtk.Hashable](conf *Config) (lsh.Hasher[T], error) {
-	h := &hash[T]{conf: conf}
+func NewHasher[T pbtk.Hashable](algo pbtk.Hasher) (lsh.Hasher[T], error) {
+	h := &hash[T]{algo: algo}
 	if h.once.Do(h.init); h.err != nil {
 		return nil, h.err
 	}
@@ -32,7 +32,7 @@ func (h *hash[T]) Add(value T) error {
 	if h.once.Do(h.init); h.err != nil {
 		return h.err
 	}
-	hkey, err := h.Base.Hash(h.conf.Hasher, value)
+	hkey, err := h.Base.Hash(h.algo, value)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (h *hash[T]) Reset() {
 }
 
 func (h *hash[T]) init() {
-	if h.conf.Hasher == nil {
+	if h.algo == nil {
 		h.err = pbtk.ErrNoHasher
 		return
 	}
