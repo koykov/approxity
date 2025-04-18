@@ -9,13 +9,13 @@ import (
 	"github.com/koykov/pbtk/lsh"
 )
 
-const vecsz = 64
+const bucketsz = 64
 
 type hash[T pbtk.Hashable] struct {
-	pbtk.Base[T]
-	algo pbtk.Hasher
-	vec  [vecsz]int64
-	once sync.Once
+	b      pbtk.Base[T]
+	algo   pbtk.Hasher
+	bucket [bucketsz]int64
+	once   sync.Once
 
 	err error
 }
@@ -32,7 +32,7 @@ func (h *hash[T]) Add(value T) error {
 	if h.once.Do(h.init); h.err != nil {
 		return h.err
 	}
-	hkey, err := h.Base.Hash(h.algo, value)
+	hkey, err := h.b.Hash(h.algo, value)
 	if err != nil {
 		return err
 	}
@@ -47,17 +47,17 @@ func (h *hash[T]) HAdd(hvalue uint64) error {
 }
 
 func (h *hash[T]) hadd(hval uint64) error {
-	for i := uint64(0); i < vecsz; i++ {
+	for i := uint64(0); i < bucketsz; i++ {
 		v := (hval >> i) & 1
-		h.vec[i] += btable[v]
+		h.bucket[i] += btable[v]
 	}
 	return nil
 }
 
 func (h *hash[T]) Hash() []uint64 {
 	var r [1]uint64
-	for i := 0; i < vecsz; i++ {
-		if h.vec[i] >= 0 {
+	for i := 0; i < bucketsz; i++ {
+		if h.bucket[i] >= 0 {
 			r[0] = r[0] | rtable[i]
 		}
 	}
@@ -65,7 +65,7 @@ func (h *hash[T]) Hash() []uint64 {
 }
 
 func (h *hash[T]) Reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&h.vec), vecsz*8)
+	openrt.MemclrUnsafe(unsafe.Pointer(&h.bucket), bucketsz*8)
 }
 
 func (h *hash[T]) init() {
