@@ -72,7 +72,11 @@ func (b Base[T]) hash(hasher Hasher, hasher128 Hasher128, data T, salt uint64, s
 		buf = strconv.AppendFloat(buf, x, 'f', -1, 64)
 	// byteseq
 	case []byte:
-		buf = append(buf, x...)
+		if len(x) > cap(buf) {
+			buf = x
+		} else {
+			buf = append(buf, x...)
+		}
 	case string:
 		buf = append(buf, x...)
 	case []rune:
