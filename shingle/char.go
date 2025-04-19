@@ -1,6 +1,8 @@
 package shingle
 
-import "github.com/koykov/byteseq"
+import (
+	"github.com/koykov/byteseq"
+)
 
 type char[T byteseq.Q] struct {
 	k uint
@@ -11,16 +13,20 @@ func NewChar[T byteseq.Q](k uint, clean bool) Shingler[T] {
 	return &char[T]{k, clean}
 }
 
-func (c *char[T]) Shingle(s T) []T {
+func (sh *char[T]) Shingle(s T) []T {
+	buf := make([]T, 0, len(s)/int(sh.k))
+	return sh.AppendShingle(buf, s)
+}
+
+func (sh *char[T]) AppendShingle(dst []T, s T) []T {
 	// todo implement me
 	return nil
 }
 
-func (c *char[T]) AppendShingle(dst []T, s T) []T {
+func (sh *char[T]) Each(s T, fn func(T)) {
 	// todo implement me
-	return nil
 }
 
-func (c *char[T]) Each(s T, fn func(T)) {
+func (sh *char[T]) Reset() {
 	// todo implement me
 }
