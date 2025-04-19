@@ -16,11 +16,11 @@ func (c *char[T]) Shingle(s T) []T {
 	return nil
 }
 
-func (c *char[T]) AppendShingle(dts []T, s T) []T {
+func (c *char[T]) AppendShingle(dst []T, s T) []T {
 	// todo implement me
 	return nil
 }
 
-func (c *char[T]) Each(fn func(T)) {
+func (c *char[T]) Each(s T, fn func(T)) {
 	// todo implement me
 }

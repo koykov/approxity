@@ -21,6 +21,6 @@ func (w *word[T]) AppendShingle(dts []T, s T) []T {
 	return nil
 }
 
-func (w *word[T]) Each(fn func(T)) {
+func (w *word[T]) Each(s T, fn func(T)) {
 	// todo implement me
 }
