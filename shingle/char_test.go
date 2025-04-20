@@ -100,7 +100,7 @@ func TestChar(t *testing.T) {
 			t.Run("clean", func(t *testing.T) {
 				for k, list := range st.cngrams {
 					t.Run(strconv.Itoa(int(k)), func(t *testing.T) {
-						sh := NewChar[string](k, CleanSetPunct)
+						sh := NewChar[string](k, CleanSetAll)
 						r := sh.Shingle(st.text)
 						if !sheq(r, list) {
 							t.Errorf("expected %v, got %v", list, r)

@@ -14,10 +14,9 @@ type char[T byteseq.Q] struct {
 }
 
 func NewChar[T byteseq.Q](k uint, cleanSet string) Shingler[T] {
-	sh := &char[T]{
-		base: base[T]{cset: byteconv.S2B(cleanSet)},
-		k:    k,
-	}
+	sh := &char[T]{k: k}
+	sh.base.cset = byteconv.S2B(cleanSet)
+	sh.base.init()
 	return sh
 }
 
@@ -31,11 +30,6 @@ func (sh *char[T]) Shingle(s T) []T {
 }
 
 func (sh *char[T]) AppendShingle(dst []T, s T) []T {
-	b := sh.clean(s)
-	if uint(len(b)) <= sh.k {
-		dst = append(dst, s)
-		return dst
-	}
 	sh.Each(s, func(s T) { dst = append(dst, s) })
 	return dst
 }
@@ -46,7 +40,7 @@ func (sh *char[T]) Each(s T, fn func(T)) {
 		fn(s)
 		return
 	}
-	for i := uint64(0); i < uint64(len(s)); {
+	for i := uint64(0); i < uint64(len(b)); {
 		_, l := utf8.DecodeRune(b[i:])
 		ul := uint64(l)
 		sh.w = append(sh.w, i)
@@ -54,11 +48,11 @@ func (sh *char[T]) Each(s T, fn func(T)) {
 	}
 	lo, hi := uint64(0), uint64(sh.k)
 	for i := uint64(0); i < uint64(len(sh.w))-uint64(sh.k); i++ {
-		fn(s[sh.w[lo]:sh.w[hi]])
+		fn(T(b[sh.w[lo]:sh.w[hi]]))
 		lo++
 		hi++
 	}
-	fn(s[sh.w[lo]:])
+	fn(T(b[sh.w[lo]:]))
 }
 
 func (sh *char[T]) Reset() {
