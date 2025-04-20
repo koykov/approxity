@@ -33,7 +33,7 @@ var stages = []stage{
 		ngrams: map[uint][]string{
 			2: {"@u", "us", "se", "er", "r:", ": ", " $", "$1", "10", "00", "0 ", " 😊"},
 			3: {"@us", "use", "ser", "er:", "r: ", ": $", " $1", "$10", "100", "00 ", "0 😊"},
-			4: {"@use", "user", "er:", "r: ", ": $", " $1", "$10", "$100", "100 ", "00 😊"},
+			4: {"@use", "user", "ser:", "er: ", "r: $", ": $1", " $10", "$100", "100 ", "00 😊"},
 		},
 		cngrams: map[uint][]string{
 			2: {"us", "se", "er", "r ", " 1", "10", "00", "0 ", " 😊"},
@@ -45,7 +45,7 @@ var stages = []stage{
 		name: "sentence",
 		text: "Wait... why? 🤔",
 		ngrams: map[uint][]string{
-			2: {"Wa", "ai", "it", "t.", ".", ".", ". ", " w", "wh", "hy", "y?", "? ", " 🤔"},
+			2: {"Wa", "ai", "it", "t.", "..", "..", ". ", " w", "wh", "hy", "y?", "? ", " 🤔"},
 			3: {"Wai", "ait", "it.", "t..", "...", ".. ", ". w", " wh", "why", "hy?", "y? ", "? 🤔"},
 			4: {"Wait", "ait.", "it..", "t...", "... ", ".. w", ". wh", " why", "why?", "hy? ", "y? 🤔"},
 		},
@@ -59,9 +59,9 @@ var stages = []stage{
 		name: "long sentence",
 		text: "GitHub (©2024) — awesome! 🚀",
 		ngrams: map[uint][]string{
-			2: {"Gi", "it", "tH", "Hu", "ub", "b ", " (", "(©", "©2", "20", "02", "24", "4)", "),", " —", "— ", " a", "aw", "we", "es", "so", "om", "me", "e!", "! ", " 🚀"},
-			3: {"Git", "itH", "tHu", "Hub", "ub ", "b (", " (©", "(©2", "©20", "202", "024", "24)", "4),", ") —", "— a", " aw", "awe", "wes", "eso", "som", "ome", "me!", "e! ", "! 🚀"},
-			4: {"GitH", "itHu", "tHub", "Hub ", "ub (", "b (©", " (©2", "(©20", "©202", "2024", "024)", "24),", "4) —", ") — ", "— aw", " awe", "awes", "weso", "esom", "some", "ome!", "me! ", "e! 🚀"},
+			2: {"Gi", "it", "tH", "Hu", "ub", "b ", " (", "(©", "©2", "20", "02", "24", "4)", ") ", " —", "— ", " a", "aw", "we", "es", "so", "om", "me", "e!", "! ", " 🚀"},
+			3: {"Git", "itH", "tHu", "Hub", "ub ", "b (", " (©", "(©2", "©20", "202", "024", "24)", "4) ", ") —", " — ", "— a", " aw", "awe", "wes", "eso", "som", "ome", "me!", "e! ", "! 🚀"},
+			4: {"GitH", "itHu", "tHub", "Hub ", "ub (", "b (©", " (©2", "(©20", "©202", "2024", "024)", "24) ", "4) —", ") — ", " — a", "— aw", " awe", "awes", "weso", "esom", "some", "ome!", "me! ", "e! 🚀"},
 		},
 		cngrams: map[uint][]string{
 			2: {"Gi", "it", "tH", "Hu", "ub", "b ", "©2", "20", "02", "24", "4 ", " a", "aw", "we", "es", "so", "om", "me", "e ", " 🚀"},
@@ -83,33 +83,31 @@ func TestChar(t *testing.T) {
 		}
 		return true
 	}
-	t.Run("origin", func(t *testing.T) {
-		for i := 0; i < len(stages); i++ {
-			st := &stages[i]
-			t.Run(st.name, func(t *testing.T) {
-				t.Run("origin", func(t *testing.T) {
-					for k, list := range st.ngrams {
-						t.Run(strconv.Itoa(int(k)), func(t *testing.T) {
-							sh := NewChar[string](k, false)
-							r := sh.Shingle(st.text)
-							if !sheq(r, list) {
-								t.Errorf("expected %v, got %v", list, r)
-							}
-						})
-					}
-				})
-				t.Run("clean", func(t *testing.T) {
-					for k, list := range st.cngrams {
-						t.Run(strconv.Itoa(int(k)), func(t *testing.T) {
-							sh := NewChar[string](k, true)
-							r := sh.Shingle(st.text)
-							if !sheq(r, list) {
-								t.Errorf("expected %v, got %v", list, r)
-							}
-						})
-					}
-				})
+	for i := 0; i < len(stages); i++ {
+		st := &stages[i]
+		t.Run(st.name, func(t *testing.T) {
+			t.Run("origin", func(t *testing.T) {
+				for k, list := range st.ngrams {
+					t.Run(strconv.Itoa(int(k)), func(t *testing.T) {
+						sh := NewChar[string](k, "")
+						r := sh.Shingle(st.text)
+						if !sheq(r, list) {
+							t.Errorf("expected %+v, got %+v", list, r)
+						}
+					})
+				}
 			})
-		}
-	})
+			t.Run("clean", func(t *testing.T) {
+				for k, list := range st.cngrams {
+					t.Run(strconv.Itoa(int(k)), func(t *testing.T) {
+						sh := NewChar[string](k, CleanSetPunct)
+						r := sh.Shingle(st.text)
+						if !sheq(r, list) {
+							t.Errorf("expected %v, got %v", list, r)
+						}
+					})
+				}
+			})
+		})
+	}
 }
