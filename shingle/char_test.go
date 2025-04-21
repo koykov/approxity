@@ -64,9 +64,9 @@ var stages = []stage{
 			4: {"GitH", "itHu", "tHub", "Hub ", "ub (", "b (©", " (©2", "(©20", "©202", "2024", "024)", "24) ", "4) —", ") — ", " — a", "— aw", " awe", "awes", "weso", "esom", "some", "ome!", "me! ", "e! 🚀"},
 		},
 		cngrams: map[uint][]string{
-			2: {"Gi", "it", "tH", "Hu", "ub", "b ", "©2", "20", "02", "24", "4 ", " a", "aw", "we", "es", "so", "om", "me", "e ", " 🚀"},
-			3: {"Git", "itH", "tHu", "Hub", "ub ", "b ©", "©20", "202", "024", "24 ", " aw", "awe", "wes", "eso", "som", "ome", "me ", " 🚀"},
-			4: {"GitH", "itHu", "tHub", "Hub ", "ub ©", "b ©2", "©202", "2024", "024 ", " awe", "awes", "weso", "esom", "some", "ome ", " 🚀"},
+			2: {"Gi", "it", "tH", "Hu", "ub", "b ", " ©", "©2", "20", "02", "24", "4 ", "  ", " a", "aw", "we", "es", "so", "om", "me", "e ", " 🚀"},
+			3: {"Git", "itH", "tHu", "Hub", "ub ", "b ©", " ©2", "©20", "202", "024", "24 ", "4  ", "  a", " aw", "awe", "wes", "eso", "som", "ome", "me ", "e 🚀"},
+			4: {"GitH", "itHu", "tHub", "Hub ", "ub ©", "b ©2", " ©20", "©202", "2024", "024 ", "24  ", "4  a", "  aw", " awe", "awes", "weso", "esom", "some", "ome ", "me 🚀"},
 		},
 	},
 }
