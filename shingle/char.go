@@ -49,11 +49,11 @@ func (sh *char[T]) Each(s T, fn func(T)) {
 	}
 	lo, hi := uint64(0), uint64(sh.k)
 	for i := uint64(0); i < uint64(len(sh.w))-uint64(sh.k); i++ {
-		fn(T(b[sh.w[lo]:sh.w[hi]]))
+		fn(byteseq.B2Q[T](b[sh.w[lo]:sh.w[hi]]))
 		lo++
 		hi++
 	}
-	fn(T(b[sh.w[lo]:]))
+	fn(byteseq.B2Q[T](b[sh.w[lo]:]))
 }
 
 func (sh *char[T]) Reset() {
