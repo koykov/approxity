@@ -119,11 +119,12 @@ func BenchmarkChar(b *testing.B) {
 			b.Run("origin", func(b *testing.B) {
 				for k, _ := range st.ngrams {
 					b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
-						b.ReportAllocs()
 						sh := NewChar[string](k, "")
+						var buf []string
+						b.ReportAllocs()
 						for j := 0; j < b.N; j++ {
 							sh.Reset()
-							sh.Shingle(st.text)
+							buf = sh.AppendShingle(buf[:0], st.text)
 						}
 					})
 				}
@@ -131,11 +132,12 @@ func BenchmarkChar(b *testing.B) {
 			b.Run("clean", func(b *testing.B) {
 				for k, _ := range st.cngrams {
 					b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
-						b.ReportAllocs()
 						sh := NewChar[string](k, CleanSetAll)
+						var buf []string
+						b.ReportAllocs()
 						for j := 0; j < b.N; j++ {
 							sh.Reset()
-							sh.Shingle(st.text)
+							buf = sh.AppendShingle(buf[:0], st.text)
 						}
 					})
 				}
