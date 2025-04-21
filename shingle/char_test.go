@@ -111,3 +111,35 @@ func TestChar(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkChar(b *testing.B) {
+	for i := 0; i < len(stages); i++ {
+		st := &stages[i]
+		b.Run(st.name, func(b *testing.B) {
+			b.Run("origin", func(b *testing.B) {
+				for k, _ := range st.ngrams {
+					b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
+						b.ReportAllocs()
+						sh := NewChar[string](k, "")
+						for j := 0; j < b.N; j++ {
+							sh.Reset()
+							sh.Shingle(st.text)
+						}
+					})
+				}
+			})
+			b.Run("clean", func(b *testing.B) {
+				for k, _ := range st.cngrams {
+					b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
+						b.ReportAllocs()
+						sh := NewChar[string](k, CleanSetAll)
+						for j := 0; j < b.N; j++ {
+							sh.Reset()
+							sh.Shingle(st.text)
+						}
+					})
+				}
+			})
+		})
+	}
+}
