@@ -3,7 +3,6 @@ package shingle
 import (
 	"unicode/utf8"
 
-	"github.com/koykov/byteconv"
 	"github.com/koykov/byteseq"
 )
 
@@ -14,9 +13,11 @@ type char[T byteseq.Q] struct {
 }
 
 func NewChar[T byteseq.Q](k uint, cleanSet string) Shingler[T] {
-	sh := &char[T]{k: k}
-	sh.base.cset = byteconv.S2B(cleanSet)
-	sh.base.init()
+	sh := &char[T]{
+		base: base[T]{cset: cleanSet},
+		k:    k,
+	}
+	sh.init()
 	return sh
 }
 

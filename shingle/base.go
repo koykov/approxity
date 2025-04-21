@@ -1,22 +1,23 @@
 package shingle
 
 import (
-	"math"
-	"unsafe"
+	"unicode/utf8"
 
 	"github.com/koykov/byteseq"
-	"github.com/koykov/openrt"
 )
 
 type base[T byteseq.Q] struct {
-	cset   []byte
-	ctable [math.MaxUint8]bool
+	cset   string
+	ctable map[rune]struct{}
 	cbuf   []byte
 }
 
 func (b *base[T]) init() {
+	if b.ctable == nil {
+		b.ctable = make(map[rune]struct{})
+	}
 	for _, c := range b.cset {
-		b.ctable[c] = true
+		b.ctable[c] = struct{}{}
 	}
 }
 
@@ -25,12 +26,12 @@ func (b *base[T]) clean(s T) []byte {
 		b.cbuf = append(b.cbuf, s...)
 		return b.cbuf
 	}
-	_ = b.ctable[math.MaxUint8-1]
-	for i := 0; i < len(s); i++ {
-		if b.ctable[s[i]] {
+	ss := byteseq.Q2S(s)
+	for _, c := range ss {
+		if _, ok := b.ctable[c]; ok {
 			continue
 		}
-		b.cbuf = append(b.cbuf, s[i])
+		b.cbuf = utf8.AppendRune(b.cbuf, c)
 	}
 	return b.cbuf
 }
@@ -38,5 +39,7 @@ func (b *base[T]) clean(s T) []byte {
 func (b *base[T]) reset() {
 	b.cset = b.cset[:0]
 	b.cbuf = b.cbuf[:0]
-	openrt.MemclrUnsafe(unsafe.Pointer(&b.ctable[0]), len(b.ctable))
+	for k := range b.ctable {
+		delete(b.ctable, k)
+	}
 }

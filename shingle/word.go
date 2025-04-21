@@ -1,7 +1,6 @@
 package shingle
 
 import (
-	"github.com/koykov/byteconv"
 	"github.com/koykov/byteseq"
 )
 
@@ -12,7 +11,7 @@ type word[T byteseq.Q] struct {
 
 func NewWord[T byteseq.Q](k uint, cleanSet string) Shingler[T] {
 	return &word[T]{
-		base: base[T]{cset: byteconv.S2B(cleanSet)},
+		base: base[T]{cset: cleanSet},
 		k:    k,
 	}
 }
