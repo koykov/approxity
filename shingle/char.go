@@ -31,29 +31,54 @@ func (sh *char[T]) Shingle(s T) []T {
 }
 
 func (sh *char[T]) AppendShingle(dst []T, s T) []T {
-	sh.Each(s, func(s T) { dst = append(dst, s) })
-	return dst
-}
-
-func (sh *char[T]) Each(s T, fn func(T)) {
 	b := sh.clean(s)
+	sc := byteseq.B2Q[T](b)
 	if uint(len(b)) <= sh.k {
-		fn(s)
-		return
+		dst = append(dst, sc)
+		return dst
 	}
-	for i := uint64(0); i < uint64(len(b)); {
+	bl := uint64(len(b))
+	_ = b[bl-1]
+	for i := uint64(0); i < bl; {
 		_, l := utf8.DecodeRune(b[i:])
 		ul := uint64(l)
 		sh.w = append(sh.w, i)
 		i += ul
 	}
 	lo, hi := uint64(0), uint64(sh.k)
+	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
 	for i := uint64(0); i < uint64(len(sh.w))-uint64(sh.k); i++ {
-		fn(byteseq.B2Q[T](b[sh.w[lo]:sh.w[hi]]))
+		dst = append(dst, sc[sh.w[lo]:sh.w[hi]])
 		lo++
 		hi++
 	}
-	fn(byteseq.B2Q[T](b[sh.w[lo]:]))
+	dst = append(dst, sc[sh.w[lo]:])
+	return dst
+}
+
+func (sh *char[T]) Each(s T, fn func(T)) {
+	b := sh.clean(s)
+	sc := byteseq.B2Q[T](b)
+	if uint(len(b)) <= sh.k || sh.k == 0 {
+		fn(sc)
+		return
+	}
+	bl := uint64(len(b))
+	_ = b[bl-1]
+	for i := uint64(0); i < bl; {
+		_, l := utf8.DecodeRune(b[i:])
+		ul := uint64(l)
+		sh.w = append(sh.w, i)
+		i += ul
+	}
+	lo, hi := uint64(0), uint64(sh.k)
+	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
+	for i := uint64(0); i < uint64(len(sh.w))-uint64(sh.k); i++ {
+		fn(sc[sh.w[lo]:sh.w[hi]])
+		lo++
+		hi++
+	}
+	fn(sc[sh.w[lo]:])
 }
 
 func (sh *char[T]) Reset() {
