@@ -27,9 +27,15 @@ func (b *base[T]) clean(s T) []byte {
 		return b.cbuf
 	}
 	ss := byteseq.Q2S(s)
-	for _, c := range ss {
+	var space bool
+	for i, c := range ss {
 		if _, ok := b.ctable[c]; ok {
+			space = i > 0 && i < len(ss)-1 && ss[i-1] != ' ' && ss[i+1] != ' '
 			continue
+		}
+		if space {
+			b.cbuf = append(b.cbuf, ' ')
+			space = false
 		}
 		b.cbuf = utf8.AppendRune(b.cbuf, c)
 	}
