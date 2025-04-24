@@ -97,3 +97,37 @@ func TestWord(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkWord(b *testing.B) {
+	for i := 0; i < len(wstages); i++ {
+		st := &wstages[i]
+		b.Run(st.name, func(b *testing.B) {
+			b.Run("origin", func(b *testing.B) {
+				for k, _ := range st.tokens {
+					b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
+						sh := NewWord[string](k, "")
+						var buf []string
+						b.ReportAllocs()
+						for j := 0; j < b.N; j++ {
+							sh.Reset()
+							buf = sh.AppendShingle(buf[:0], st.text)
+						}
+					})
+				}
+			})
+			b.Run("clean", func(b *testing.B) {
+				for k, _ := range st.ctokens {
+					b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
+						sh := NewWord[string](k, CleanSetAll)
+						var buf []string
+						b.ReportAllocs()
+						for j := 0; j < b.N; j++ {
+							sh.Reset()
+							buf = sh.AppendShingle(buf[:0], st.text)
+						}
+					})
+				}
+			})
+		})
+	}
+}
