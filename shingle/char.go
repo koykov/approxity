@@ -8,32 +8,28 @@ import (
 
 type char[T byteseq.Q] struct {
 	base[T]
-	k uint
 	w []uint64
 }
 
-func NewChar[T byteseq.Q](k uint, cleanSet string) Shingler[T] {
-	sh := &char[T]{
-		base: base[T]{cset: cleanSet},
-		k:    k,
-	}
+func NewChar[T byteseq.Q](cleanSet string) Shingler[T] {
+	sh := &char[T]{base: base[T]{cset: cleanSet}}
 	sh.init()
 	return sh
 }
 
-func (sh *char[T]) Shingle(s T) []T {
+func (sh *char[T]) Shingle(s T, k uint) []T {
 	bcap := 1
-	if sh.k > 0 {
-		bcap = len(s) / int(sh.k)
+	if k > 0 {
+		bcap = len(s) / int(k)
 	}
 	buf := make([]T, 0, bcap)
-	return sh.AppendShingle(buf, s)
+	return sh.AppendShingle(buf, s, k)
 }
 
-func (sh *char[T]) AppendShingle(dst []T, s T) []T {
+func (sh *char[T]) AppendShingle(dst []T, s T, k uint) []T {
 	b := sh.clean(s, false)
 	sc := byteseq.B2Q[T](b)
-	if uint(len(b)) <= sh.k {
+	if uint(len(b)) <= k {
 		dst = append(dst, sc)
 		return dst
 	}
@@ -45,9 +41,9 @@ func (sh *char[T]) AppendShingle(dst []T, s T) []T {
 		sh.w = append(sh.w, i)
 		i += ul
 	}
-	lo, hi := uint64(0), uint64(sh.k)
+	lo, hi := uint64(0), uint64(k)
 	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
-	for i := uint64(0); i < uint64(len(sh.w))-uint64(sh.k); i++ {
+	for i := uint64(0); i < uint64(len(sh.w))-uint64(k); i++ {
 		dst = append(dst, sc[sh.w[lo]:sh.w[hi]])
 		lo++
 		hi++
@@ -56,10 +52,10 @@ func (sh *char[T]) AppendShingle(dst []T, s T) []T {
 	return dst
 }
 
-func (sh *char[T]) Each(s T, fn func(T)) {
+func (sh *char[T]) Each(s T, k uint, fn func(T)) {
 	b := sh.clean(s, false)
 	sc := byteseq.B2Q[T](b)
-	if uint(len(b)) <= sh.k || sh.k == 0 {
+	if uint(len(b)) <= k || k == 0 {
 		fn(sc)
 		return
 	}
@@ -71,9 +67,9 @@ func (sh *char[T]) Each(s T, fn func(T)) {
 		sh.w = append(sh.w, i)
 		i += ul
 	}
-	lo, hi := uint64(0), uint64(sh.k)
+	lo, hi := uint64(0), uint64(k)
 	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
-	for i := uint64(0); i < uint64(len(sh.w))-uint64(sh.k); i++ {
+	for i := uint64(0); i < uint64(len(sh.w))-uint64(k); i++ {
 		fn(sc[sh.w[lo]:sh.w[hi]])
 		lo++
 		hi++
