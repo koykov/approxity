@@ -10,6 +10,7 @@ type base[T byteseq.Q] struct {
 	cset   string
 	ctable map[rune]struct{}
 	cbuf   []byte
+	spc    []int
 }
 
 func (b *base[T]) init() {
@@ -21,31 +22,40 @@ func (b *base[T]) init() {
 	}
 }
 
-func (b *base[T]) clean(s T) []byte {
-	if len(b.cset) == 0 {
-		b.cbuf = append(b.cbuf, s...)
-		return b.cbuf
-	}
+func (b *base[T]) clean(s T, collapseSpaces bool) []byte {
 	ss := byteseq.Q2S(s)
-	var space bool
+	b.spc = append(b.spc, 0)
+	var space, pspace bool
 	for i, c := range ss {
 		if _, ok := b.ctable[c]; ok {
-			space = i > 0 && i < len(ss)-1 && ss[i-1] != ' ' && ss[i+1] != ' '
+			space = i > 0 && i < len(ss)-1 && ss[i-1] != ' ' && ss[i+1] != ' ' && ss[i] != '\''
 			continue
 		}
 		if space {
 			b.cbuf = append(b.cbuf, ' ')
+			b.spc = append(b.spc, spcp(len(b.cbuf)))
 			space = false
 		}
+		if c == ' ' && pspace && collapseSpaces {
+			continue
+		}
 		b.cbuf = utf8.AppendRune(b.cbuf, c)
+		if pspace = c == ' '; pspace {
+			b.spc = append(b.spc, spcp(len(b.cbuf)))
+		}
 	}
+	b.spc = append(b.spc, len(b.cbuf))
 	return b.cbuf
 }
 
 func (b *base[T]) reset() {
-	b.cset = b.cset[:0]
 	b.cbuf = b.cbuf[:0]
-	for k := range b.ctable {
-		delete(b.ctable, k)
+	b.spc = b.spc[:0]
+}
+
+func spcp(p int) int {
+	if p == 0 {
+		return 0
 	}
+	return p - 1
 }

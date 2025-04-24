@@ -1,15 +1,10 @@
 package shingle
 
-import (
-	"bytes"
-
-	"github.com/koykov/byteseq"
-)
+import "github.com/koykov/byteseq"
 
 type word[T byteseq.Q] struct {
 	base[T]
 	k uint
-	w []int
 }
 
 func NewWord[T byteseq.Q](k uint, cleanSet string) Shingler[T] {
@@ -31,29 +26,16 @@ func (sh *word[T]) Shingle(s T) []T {
 }
 
 func (sh *word[T]) AppendShingle(dst []T, s T) []T {
-	b := sh.clean(s)
+	b := sh.clean(s, true)
 	sc := byteseq.B2Q[T](b)
 	if len(b) < 2 {
 		dst = append(dst, sc)
 		return dst
 	}
-	var off int
-	sh.w = append(sh.w, 0)
-	_ = b[len(b)-1]
-	for {
-		pos := bytes.IndexByte(b[off:], ' ')
-		if pos == -1 {
-			pos = len(b)
-			sh.w = append(sh.w, pos)
-			break
-		}
-		sh.w = append(sh.w, pos+off)
-		off += pos + 1
-	}
 	lo, hi := 0, sh.k
-	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
-	for i := uint64(0); i < uint64(len(sh.w))-uint64(sh.k); i++ {
-		dst = trimq(dst, sc[sh.w[lo]:sh.w[hi]])
+	_, _ = sh.spc[len(sh.spc)-1], sc[len(sc)-1]
+	for i := uint64(0); i < uint64(len(sh.spc))-uint64(sh.k); i++ {
+		dst = trimq(dst, sc[sh.spc[lo]:sh.spc[hi]])
 		lo++
 		hi++
 	}
@@ -65,7 +47,7 @@ func (sh *word[T]) Each(s T, fn func(T)) {
 }
 
 func (sh *word[T]) Reset() {
-	sh.w = sh.w[:0]
+	sh.base.reset()
 }
 
 func trimq[T byteseq.Q](dst []T, s T) []T {

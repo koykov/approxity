@@ -31,7 +31,7 @@ func (sh *char[T]) Shingle(s T) []T {
 }
 
 func (sh *char[T]) AppendShingle(dst []T, s T) []T {
-	b := sh.clean(s)
+	b := sh.clean(s, false)
 	sc := byteseq.B2Q[T](b)
 	if uint(len(b)) <= sh.k {
 		dst = append(dst, sc)
@@ -57,7 +57,7 @@ func (sh *char[T]) AppendShingle(dst []T, s T) []T {
 }
 
 func (sh *char[T]) Each(s T, fn func(T)) {
-	b := sh.clean(s)
+	b := sh.clean(s, false)
 	sc := byteseq.B2Q[T](b)
 	if uint(len(b)) <= sh.k || sh.k == 0 {
 		fn(sc)
