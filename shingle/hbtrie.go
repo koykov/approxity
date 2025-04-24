@@ -29,5 +29,7 @@ func (t *hbtrie) contains(r rune) bool {
 }
 
 func (t *hbtrie) reset() {
-	(*t)[0], (*t)[1], (*t)[2], (*t)[3] = 0, 0, 0, 0
+	for i := 0; i < 16; i++ {
+		(*t)[i] = 0
+	}
 }

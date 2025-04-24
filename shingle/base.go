@@ -8,6 +8,7 @@ import (
 
 type base[T byteseq.Q] struct {
 	cset   string
+	ctrie  hbtrie
 	ctable map[rune]struct{}
 	cbuf   []byte
 	spc    []int
@@ -19,6 +20,7 @@ func (b *base[T]) init() {
 	}
 	for _, c := range b.cset {
 		b.ctable[c] = struct{}{}
+		b.ctrie.set(c)
 	}
 }
 
@@ -27,9 +29,12 @@ func (b *base[T]) clean(s T, collapseSpaces bool) []byte {
 	b.spc = append(b.spc, 0)
 	var space, pspace bool
 	for i, c := range ss {
-		if _, ok := b.ctable[c]; ok {
-			space = i > 0 && i < len(ss)-1 && ss[i-1] != ' ' && ss[i+1] != ' ' && ss[i] != '\''
-			continue
+		if b.ctrie.contains(c) {
+			// may be wrong, clarification required
+			if _, ok := b.ctable[c]; ok {
+				space = i > 0 && i < len(ss)-1 && ss[i-1] != ' ' && ss[i+1] != ' ' && ss[i] != '\''
+				continue
+			}
 		}
 		if space {
 			b.cbuf = append(b.cbuf, ' ')
