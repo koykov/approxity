@@ -10,11 +10,11 @@ import (
 	"github.com/koykov/pbtk/lsh"
 )
 
-const bucketsz = 64
+const vectorsz = 64
 
 type hash[T byteseq.Q] struct {
 	conf   *Config[T]
-	bucket [bucketsz]int64
+	vector [vectorsz]int64
 	token  []T
 	once   sync.Once
 
@@ -39,15 +39,15 @@ func (h *hash[T]) Add(value T) error {
 	h.token = h.conf.Shingler.AppendShingle(h.token, value, h.conf.K)
 	for i := 0; i < len(h.token); i++ {
 		hsum := h.conf.Algo.Sum64([]byte(h.token[i]))
-		for j := uint64(0); j < bucketsz; j += 8 {
-			h.bucket[j+0] += btable[(hsum>>j+0)&1]
-			h.bucket[j+1] += btable[(hsum>>j+1)&1]
-			h.bucket[j+2] += btable[(hsum>>j+2)&1]
-			h.bucket[j+3] += btable[(hsum>>j+3)&1]
-			h.bucket[j+4] += btable[(hsum>>j+4)&1]
-			h.bucket[j+5] += btable[(hsum>>j+5)&1]
-			h.bucket[j+6] += btable[(hsum>>j+6)&1]
-			h.bucket[j+7] += btable[(hsum>>j+7)&1]
+		for j := uint64(0); j < vectorsz; j += 8 {
+			h.vector[j+0] += btable[(hsum>>j+0)&1]
+			h.vector[j+1] += btable[(hsum>>j+1)&1]
+			h.vector[j+2] += btable[(hsum>>j+2)&1]
+			h.vector[j+3] += btable[(hsum>>j+3)&1]
+			h.vector[j+4] += btable[(hsum>>j+4)&1]
+			h.vector[j+5] += btable[(hsum>>j+5)&1]
+			h.vector[j+6] += btable[(hsum>>j+6)&1]
+			h.vector[j+7] += btable[(hsum>>j+7)&1]
 		}
 	}
 	return nil
@@ -60,8 +60,8 @@ func (h *hash[T]) Hash() []uint64 {
 
 func (h *hash[T]) AppendHash(dst []uint64) []uint64 {
 	var r uint64
-	for i := 0; i < bucketsz; i++ {
-		if h.bucket[i] >= 0 {
+	for i := 0; i < vectorsz; i++ {
+		if h.vector[i] >= 0 {
 			r = r | rtable[i]
 		}
 	}
@@ -69,7 +69,7 @@ func (h *hash[T]) AppendHash(dst []uint64) []uint64 {
 }
 
 func (h *hash[T]) Reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&h.bucket), bucketsz*8)
+	openrt.MemclrUnsafe(unsafe.Pointer(&h.vector), vectorsz*8)
 	h.token = h.token[:0]
 	h.conf.Shingler.Reset()
 }

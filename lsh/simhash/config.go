@@ -7,9 +7,15 @@ import (
 )
 
 type Config[T byteseq.Q] struct {
-	Algo     pbtk.Hasher
+	// Hash algorithm to use.
+	// Mandatory param.
+	Algo pbtk.Hasher
+	// Shingler to vector input data.
+	// Mandatory param.
 	Shingler shingle.Shingler[T]
-	K        uint
+	// Chunk size of vector item.
+	// Mandatory param.
+	K uint
 }
 
 func NewConfig[T byteseq.Q](algo pbtk.Hasher, shingler shingle.Shingler[T], k uint) *Config[T] {
