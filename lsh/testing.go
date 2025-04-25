@@ -159,13 +159,15 @@ func BenchmarkMe[T []byte](b *testing.B, hash Hasher[T]) {
 	}
 	for _, st := range stages {
 		b.Run(fmt.Sprintf("hash/%d", len(st)), func(b *testing.B) {
+			var buf []uint64
 			b.SetBytes(int64(len(st)))
 			b.ReportAllocs()
 			b.ResetTimer()
 			for j := 0; j < b.N; j++ {
 				hash.Reset()
 				_ = hash.Add(st)
-				_ = hash.Hash()
+				buf = hash.AppendHash(buf[:0])
+				_ = buf
 			}
 		})
 	}

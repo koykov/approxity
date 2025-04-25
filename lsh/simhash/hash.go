@@ -4,6 +4,7 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/koykov/byteseq"
 	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/lsh"
@@ -11,17 +12,20 @@ import (
 
 const bucketsz = 64
 
-type hash[T pbtk.Hashable] struct {
-	b      pbtk.Base[T]
-	algo   pbtk.Hasher
+type hash[T byteseq.Q] struct {
+	conf   *Config[T]
 	bucket [bucketsz]int64
+	token  []T
 	once   sync.Once
 
 	err error
 }
 
-func NewHasher[T pbtk.Hashable](algo pbtk.Hasher) (lsh.Hasher[T], error) {
-	h := &hash[T]{algo: algo}
+func NewHasher[T byteseq.Q](conf *Config[T]) (lsh.Hasher[T], error) {
+	if conf == nil {
+		return nil, pbtk.ErrInvalidConfig
+	}
+	h := &hash[T]{conf: conf.copy()}
 	if h.once.Do(h.init); h.err != nil {
 		return nil, h.err
 	}
@@ -32,45 +36,55 @@ func (h *hash[T]) Add(value T) error {
 	if h.once.Do(h.init); h.err != nil {
 		return h.err
 	}
-	hkey, err := h.b.Hash(h.algo, value)
-	if err != nil {
-		return err
-	}
-	return h.hadd(hkey)
-}
-
-func (h *hash[T]) HAdd(hvalue uint64) error {
-	if h.once.Do(h.init); h.err != nil {
-		return h.err
-	}
-	return h.hadd(hvalue)
-}
-
-func (h *hash[T]) hadd(hval uint64) error {
-	for i := uint64(0); i < bucketsz; i++ {
-		v := (hval >> i) & 1
-		h.bucket[i] += btable[v]
+	h.token = h.conf.Shingler.AppendShingle(h.token, value, h.conf.K)
+	for i := 0; i < len(h.token); i++ {
+		hsum := h.conf.Algo.Sum64([]byte(h.token[i]))
+		for j := uint64(0); j < bucketsz; j += 8 {
+			h.bucket[j+0] += btable[(hsum>>j+0)&1]
+			h.bucket[j+1] += btable[(hsum>>j+1)&1]
+			h.bucket[j+2] += btable[(hsum>>j+2)&1]
+			h.bucket[j+3] += btable[(hsum>>j+3)&1]
+			h.bucket[j+4] += btable[(hsum>>j+4)&1]
+			h.bucket[j+5] += btable[(hsum>>j+5)&1]
+			h.bucket[j+6] += btable[(hsum>>j+6)&1]
+			h.bucket[j+7] += btable[(hsum>>j+7)&1]
+		}
 	}
 	return nil
 }
 
 func (h *hash[T]) Hash() []uint64 {
 	var r [1]uint64
+	return h.AppendHash(r[:0])
+}
+
+func (h *hash[T]) AppendHash(dst []uint64) []uint64 {
+	var r uint64
 	for i := 0; i < bucketsz; i++ {
 		if h.bucket[i] >= 0 {
-			r[0] = r[0] | rtable[i]
+			r = r | rtable[i]
 		}
 	}
-	return r[:]
+	return append(dst, r)
 }
 
 func (h *hash[T]) Reset() {
 	openrt.MemclrUnsafe(unsafe.Pointer(&h.bucket), bucketsz*8)
+	h.token = h.token[:0]
+	h.conf.Shingler.Reset()
 }
 
 func (h *hash[T]) init() {
-	if h.algo == nil {
+	if h.conf.Algo == nil {
 		h.err = pbtk.ErrNoHasher
+		return
+	}
+	if h.conf.Shingler == nil {
+		h.err = lsh.ErrNoShingler
+		return
+	}
+	if h.conf.K == 0 {
+		h.err = lsh.ErrZeroK
 		return
 	}
 }
