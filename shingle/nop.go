@@ -24,3 +24,5 @@ func (sh *nop[T]) Each(s T, _ uint, fn func(T)) {
 }
 
 func (sh *nop[T]) Reset() {}
+
+var _ = NewNOP[string]

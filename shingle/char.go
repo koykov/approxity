@@ -43,7 +43,7 @@ func (sh *char[T]) AppendShingle(dst []T, s T, k uint) []T {
 	}
 	lo, hi := uint64(0), uint64(k)
 	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
-	for i := uint64(0); i < uint64(len(sh.w))-uint64(k); i++ {
+	for hi < uint64(len(sh.w)) {
 		dst = append(dst, sc[sh.w[lo]:sh.w[hi]])
 		lo++
 		hi++
@@ -69,7 +69,7 @@ func (sh *char[T]) Each(s T, k uint, fn func(T)) {
 	}
 	lo, hi := uint64(0), uint64(k)
 	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
-	for i := uint64(0); i < uint64(len(sh.w))-uint64(k); i++ {
+	for hi < uint64(len(sh.w)) {
 		fn(sc[sh.w[lo]:sh.w[hi]])
 		lo++
 		hi++
