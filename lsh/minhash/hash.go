@@ -22,7 +22,7 @@ type hash[T byteseq.Q] struct {
 	err error
 }
 
-func NewHasher[T byteseq.Q](conf Config[T]) (lsh.Hasher[T], error) {
+func NewHasher[T byteseq.Q](conf *Config[T]) (lsh.Hasher[T], error) {
 	h := &hash[T]{conf: conf.copy()}
 	if h.once.Do(h.init); h.err != nil {
 		return nil, h.err
@@ -64,7 +64,12 @@ func (h *hash[T]) AppendHash(dst []uint64) []uint64 {
 }
 
 func (h *hash[T]) Reset() {
+	if len(h.vector) == 0 {
+		return
+	}
+	h.token = h.token[:0]
 	openrt.MemclrUnsafe(unsafe.Pointer(&h.vector[0]), len(h.vector)*8)
+	h.conf.Shingler.Reset()
 }
 
 func (h *hash[T]) init() {

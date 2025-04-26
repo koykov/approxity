@@ -110,7 +110,7 @@ func init() {
 	}
 }
 
-func TestMe[T []byte](t *testing.T, hash Hasher[T], distFn func([]uint64, []uint64) uint64, expectAvgDist float64) {
+func TestMe[T []byte](t *testing.T, hash Hasher[T], distFn func([]uint64, []uint64, uint64) float64, numHashes uint64, expectAvgDist float64) {
 	for i := 0; i < len(datasets); i++ {
 		ds := &datasets[i]
 		t.Run(ds.name, func(t *testing.T) {
@@ -126,7 +126,7 @@ func TestMe[T []byte](t *testing.T, hash Hasher[T], distFn func([]uint64, []uint
 				_ = hash.Add(tp.B)
 				h1 := hash.Hash()
 
-				dist := (64 - float64(distFn(h0, h1))) / 64
+				dist := (64 - float64(distFn(h0, h1, numHashes))) / 64
 				s += dist
 				c++
 			}
@@ -173,7 +173,7 @@ func BenchmarkMe[T []byte](b *testing.B, hash Hasher[T]) {
 	}
 }
 
-func TestDistHamming(h0, h1 []uint64) (r uint64) {
+func TestDistHamming(h0, h1 []uint64, _ uint64) (r float64) {
 	bits := h0[0] ^ h1[0]
 	for i := 0; i < 32; i++ {
 		bs := bits & (1 << i)
@@ -182,4 +182,19 @@ func TestDistHamming(h0, h1 []uint64) (r uint64) {
 		}
 	}
 	return r
+}
+
+func TestDistJaccard(h0, h1 []uint64, n uint64) (r float64) {
+	if len(h1) < len(h0) {
+		h0, h1 = h1, h0
+	}
+	for i := 0; i < len(h0); i++ {
+		if h0[i] == h1[i] {
+			r += 1
+		}
+	}
+	if n == 0 {
+		n = 1
+	}
+	return r / float64(n)
 }
