@@ -2,6 +2,7 @@ package minhash
 
 import (
 	"math"
+	"strconv"
 	"sync"
 	"unsafe"
 
@@ -17,6 +18,7 @@ type hash[T byteseq.Q] struct {
 	conf   *Config[T]
 	vector []uint64
 	token  []T
+	buf    []byte
 	once   sync.Once
 
 	err error
@@ -44,10 +46,9 @@ func (h *hash[T]) Add(value T) error {
 	memset64.Memset(h.vector, math.MaxUint64)
 	for i := 0; i < n; i++ {
 		for j := uint(0); j < h.conf.N; j++ {
-			hsum, err := h.b.HashSalt(h.conf.Algo, h.token[i], uint64(j))
-			if err != nil {
-				return err
-			}
+			h.buf = append(h.buf[:0], h.token[i]...)
+			h.buf = strconv.AppendUint(h.buf, uint64(j), 10)
+			hsum := h.conf.Algo.Sum64(h.buf)
 			h.vector[i] = min(h.vector[i], hsum)
 		}
 	}
@@ -68,8 +69,9 @@ func (h *hash[T]) Reset() {
 		return
 	}
 	h.token = h.token[:0]
-	openrt.MemclrUnsafe(unsafe.Pointer(&h.vector[0]), len(h.vector)*8)
+	h.buf = h.buf[:0]
 	h.conf.Shingler.Reset()
+	openrt.MemclrUnsafe(unsafe.Pointer(&h.vector[0]), len(h.vector)*8)
 }
 
 func (h *hash[T]) init() {
