@@ -1,4 +1,4 @@
-package simhash
+package minhash
 
 import (
 	"github.com/koykov/byteseq"
@@ -10,6 +10,9 @@ type Config[T byteseq.Q] struct {
 	// Hash algorithm to use.
 	// Mandatory param.
 	Algo pbtk.Hasher
+	// Number of hash functions.
+	// Mandatory param.
+	N uint
 	// Shingler to vector input data.
 	// Mandatory param.
 	Shingler shingle.Shingler[T]
@@ -18,9 +21,10 @@ type Config[T byteseq.Q] struct {
 	K uint
 }
 
-func NewConfig[T byteseq.Q](algo pbtk.Hasher, shingler shingle.Shingler[T], k uint) *Config[T] {
+func NewConfig[T byteseq.Q](algo pbtk.Hasher, n uint, shingler shingle.Shingler[T], k uint) *Config[T] {
 	return &Config[T]{
 		Algo:     algo,
+		N:        n,
 		Shingler: shingler,
 		K:        k,
 	}

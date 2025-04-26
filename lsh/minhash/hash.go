@@ -1,0 +1,87 @@
+package minhash
+
+import (
+	"math"
+	"sync"
+	"unsafe"
+
+	"github.com/koykov/byteseq"
+	"github.com/koykov/openrt"
+	"github.com/koykov/pbtk"
+	"github.com/koykov/pbtk/lsh"
+	"github.com/koykov/simd/memset64"
+)
+
+type hash[T byteseq.Q] struct {
+	b      pbtk.Base[T]
+	conf   *Config[T]
+	vector []uint64
+	token  []T
+	once   sync.Once
+
+	err error
+}
+
+func NewHasher[T byteseq.Q](conf Config[T]) (lsh.Hasher[T], error) {
+	h := &hash[T]{conf: conf.copy()}
+	if h.once.Do(h.init); h.err != nil {
+		return nil, h.err
+	}
+	return h, nil
+}
+
+func (h *hash[T]) Add(value T) error {
+	if h.once.Do(h.init); h.err != nil {
+		return h.err
+	}
+	h.token = h.conf.Shingler.AppendShingle(h.token, value, h.conf.K)
+	n := len(h.token)
+
+	if cap(h.vector) < n {
+		h.vector = make([]uint64, n)
+	}
+	h.vector = h.vector[:n]
+	memset64.Memset(h.vector, math.MaxUint64)
+	for i := 0; i < n; i++ {
+		for j := uint(0); j < h.conf.N; j++ {
+			hsum, err := h.b.HashSalt(h.conf.Algo, h.token[i], uint64(j))
+			if err != nil {
+				return err
+			}
+			h.vector[i] = min(h.vector[i], hsum)
+		}
+	}
+	return nil
+}
+
+func (h *hash[T]) Hash() []uint64 {
+	r := make([]uint64, len(h.vector))
+	return h.AppendHash(r)
+}
+
+func (h *hash[T]) AppendHash(dst []uint64) []uint64 {
+	return append(dst, h.vector...)
+}
+
+func (h *hash[T]) Reset() {
+	openrt.MemclrUnsafe(unsafe.Pointer(&h.vector[0]), len(h.vector)*8)
+}
+
+func (h *hash[T]) init() {
+	if h.conf.Algo == nil {
+		h.err = pbtk.ErrNoHasher
+		return
+	}
+	if h.conf.N == 0 {
+		h.err = lsh.ErrZeroN
+		return
+	}
+	if h.conf.Shingler == nil {
+		h.err = lsh.ErrNoShingler
+		return
+	}
+	if h.conf.K == 0 {
+		h.err = lsh.ErrZeroK
+		return
+	}
+}
