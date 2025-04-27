@@ -36,7 +36,7 @@ func (h *hash[T]) Add(value T) error {
 	if h.once.Do(h.init); h.err != nil {
 		return h.err
 	}
-	h.token = h.conf.Shingler.AppendShingle(h.token, value, h.conf.K)
+	h.token = h.conf.Shingler.AppendShingle(h.token, value)
 	n := len(h.token)
 
 	if cap(h.vector) < n {
@@ -45,7 +45,7 @@ func (h *hash[T]) Add(value T) error {
 	h.vector = h.vector[:n]
 	memset64.Memset(h.vector, math.MaxUint64)
 	for i := 0; i < n; i++ {
-		for j := uint(0); j < h.conf.N; j++ {
+		for j := uint64(0); j < h.conf.K; j++ {
 			h.buf = append(h.buf[:0], h.token[i]...)
 			h.buf = strconv.AppendUint(h.buf, uint64(j), 10)
 			hsum := h.conf.Algo.Sum64(h.buf)
@@ -79,16 +79,12 @@ func (h *hash[T]) init() {
 		h.err = pbtk.ErrNoHasher
 		return
 	}
-	if h.conf.N == 0 {
-		h.err = lsh.ErrZeroN
+	if h.conf.K == 0 {
+		h.err = lsh.ErrZeroK
 		return
 	}
 	if h.conf.Shingler == nil {
 		h.err = lsh.ErrNoShingler
-		return
-	}
-	if h.conf.K == 0 {
-		h.err = lsh.ErrZeroK
 		return
 	}
 }

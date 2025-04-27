@@ -12,21 +12,17 @@ type Config[T byteseq.Q] struct {
 	Algo pbtk.Hasher
 	// Number of hash functions.
 	// Mandatory param.
-	N uint
+	K uint64
 	// Shingler to vector input data.
 	// Mandatory param.
 	Shingler shingle.Shingler[T]
-	// One shingle size.
-	// Mandatory param.
-	K uint
 }
 
-func NewConfig[T byteseq.Q](algo pbtk.Hasher, n uint, shingler shingle.Shingler[T], k uint) *Config[T] {
+func NewConfig[T byteseq.Q](algo pbtk.Hasher, k uint64, shingler shingle.Shingler[T]) *Config[T] {
 	return &Config[T]{
 		Algo:     algo,
-		N:        n,
-		Shingler: shingler,
 		K:        k,
+		Shingler: shingler,
 	}
 }
 
