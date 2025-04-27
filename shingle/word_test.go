@@ -14,6 +14,18 @@ type wstage struct {
 
 var wstages = []wstage{
 	{
+		name: "single word",
+		text: "foobar!",
+		tokens: map[uint][]string{
+			2: {"foobar!"},
+			3: {"foobar!"},
+		},
+		ctokens: map[uint][]string{
+			2: {"foobar"},
+			3: {"foobar"},
+		},
+	},
+	{
 		name: "phrase",
 		text: "Stock markets hit record highs!",
 		tokens: map[uint][]string{

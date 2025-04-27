@@ -29,12 +29,15 @@ func (sh *word[T]) AppendShingle(dst []T, s T) []T {
 		dst = append(dst, sc)
 		return dst
 	}
-	lo, hi := 0, sh.k
+	lo, hi, i := 0, sh.k, 0
 	_, _ = sh.spc[len(sh.spc)-1], sc[len(sc)-1]
-	for hi < uint64(len(sh.spc)) {
+	for ; hi < uint64(len(sh.spc)); i++ {
 		dst = trimq(dst, sc[sh.spc[lo]:sh.spc[hi]])
 		lo++
 		hi++
+	}
+	if i == 0 {
+		dst = append(dst, sc[sh.spc[lo]:])
 	}
 	return dst
 }
@@ -46,12 +49,15 @@ func (sh *word[T]) Each(s T, fn func(T)) {
 		fn(sc)
 		return
 	}
-	lo, hi := 0, sh.k
+	lo, hi, i := 0, sh.k, 0
 	_, _ = sh.spc[len(sh.spc)-1], sc[len(sc)-1]
-	for hi < uint64(len(sh.spc)) {
+	for ; hi < uint64(len(sh.spc)); i++ {
 		fn(sc[sh.spc[lo]:sh.spc[hi]])
 		lo++
 		hi++
+	}
+	if i == 0 {
+		fn(sc[sh.spc[lo]:])
 	}
 }
 
