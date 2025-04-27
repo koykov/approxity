@@ -56,7 +56,7 @@ func (h *hash[T]) Add(value T) error {
 }
 
 func (h *hash[T]) Hash() []uint64 {
-	r := make([]uint64, len(h.vector))
+	r := make([]uint64, 0, len(h.vector))
 	return h.AppendHash(r)
 }
 
