@@ -75,8 +75,8 @@ func TestWord(t *testing.T) {
 			t.Run("origin", func(t *testing.T) {
 				for k, list := range st.tokens {
 					t.Run(strconv.Itoa(int(k)), func(t *testing.T) {
-						sh := NewWord[string]("")
-						r := sh.Shingle(st.text, k)
+						sh := NewWord[string](uint64(k), "")
+						r := sh.Shingle(st.text)
 						if !sheq(r, list) {
 							t.Errorf("expected %+v, got %+v", list, r)
 						}
@@ -86,8 +86,8 @@ func TestWord(t *testing.T) {
 			t.Run("clean", func(t *testing.T) {
 				for k, list := range st.ctokens {
 					t.Run(strconv.Itoa(int(k)), func(t *testing.T) {
-						sh := NewWord[string](CleanSetAll)
-						r := sh.Shingle(st.text, k)
+						sh := NewWord[string](uint64(k), CleanSetAll)
+						r := sh.Shingle(st.text)
 						if !sheq(r, list) {
 							t.Errorf("expected %v, got %v", list, r)
 						}
@@ -105,12 +105,12 @@ func BenchmarkWord(b *testing.B) {
 			b.Run("origin", func(b *testing.B) {
 				for k, _ := range st.tokens {
 					b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
-						sh := NewWord[string]("")
+						sh := NewWord[string](uint64(k), "")
 						var buf []string
 						b.ReportAllocs()
 						for j := 0; j < b.N; j++ {
 							sh.Reset()
-							buf = sh.AppendShingle(buf[:0], st.text, k)
+							buf = sh.AppendShingle(buf[:0], st.text)
 						}
 					})
 				}
@@ -118,12 +118,12 @@ func BenchmarkWord(b *testing.B) {
 			b.Run("clean", func(b *testing.B) {
 				for k, _ := range st.ctokens {
 					b.Run(strconv.Itoa(int(k)), func(b *testing.B) {
-						sh := NewWord[string](CleanSetAll)
+						sh := NewWord[string](uint64(k), CleanSetAll)
 						var buf []string
 						b.ReportAllocs()
 						for j := 0; j < b.N; j++ {
 							sh.Reset()
-							buf = sh.AppendShingle(buf[:0], st.text, k)
+							buf = sh.AppendShingle(buf[:0], st.text)
 						}
 					})
 				}

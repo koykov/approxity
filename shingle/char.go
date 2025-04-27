@@ -8,28 +8,29 @@ import (
 
 type char[T byteseq.Q] struct {
 	base[T]
+	k uint64
 	w []uint64
 }
 
-func NewChar[T byteseq.Q](cleanSet string) Shingler[T] {
-	sh := &char[T]{base: base[T]{cset: cleanSet}}
+func NewChar[T byteseq.Q](k uint64, cleanSet string) Shingler[T] {
+	sh := &char[T]{base: base[T]{cset: cleanSet}, k: k}
 	sh.init()
 	return sh
 }
 
-func (sh *char[T]) Shingle(s T, k uint) []T {
+func (sh *char[T]) Shingle(s T) []T {
 	bcap := 1
-	if k > 0 {
-		bcap = len(s) / int(k)
+	if sh.k > 0 {
+		bcap = len(s) / int(sh.k)
 	}
 	buf := make([]T, 0, bcap)
-	return sh.AppendShingle(buf, s, k)
+	return sh.AppendShingle(buf, s)
 }
 
-func (sh *char[T]) AppendShingle(dst []T, s T, k uint) []T {
+func (sh *char[T]) AppendShingle(dst []T, s T) []T {
 	b := sh.clean(s, false)
 	sc := byteseq.B2Q[T](b)
-	if uint(len(b)) <= k {
+	if uint64(len(b)) <= sh.k || sh.k == 0 {
 		dst = append(dst, sc)
 		return dst
 	}
@@ -41,7 +42,7 @@ func (sh *char[T]) AppendShingle(dst []T, s T, k uint) []T {
 		sh.w = append(sh.w, i)
 		i += ul
 	}
-	lo, hi := uint64(0), uint64(k)
+	lo, hi := uint64(0), sh.k
 	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
 	for hi < uint64(len(sh.w)) {
 		dst = append(dst, sc[sh.w[lo]:sh.w[hi]])
@@ -52,10 +53,10 @@ func (sh *char[T]) AppendShingle(dst []T, s T, k uint) []T {
 	return dst
 }
 
-func (sh *char[T]) Each(s T, k uint, fn func(T)) {
+func (sh *char[T]) Each(s T, fn func(T)) {
 	b := sh.clean(s, false)
 	sc := byteseq.B2Q[T](b)
-	if uint(len(b)) <= k || k == 0 {
+	if uint64(len(b)) <= sh.k || sh.k == 0 {
 		fn(sc)
 		return
 	}
@@ -67,7 +68,7 @@ func (sh *char[T]) Each(s T, k uint, fn func(T)) {
 		sh.w = append(sh.w, i)
 		i += ul
 	}
-	lo, hi := uint64(0), uint64(k)
+	lo, hi := uint64(0), sh.k
 	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
 	for hi < uint64(len(sh.w)) {
 		fn(sc[sh.w[lo]:sh.w[hi]])
