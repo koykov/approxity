@@ -55,7 +55,6 @@ $$
 |--------------------------|----------------------------------|----------------------------------------------|  
 | **Feature type**         | Word tokens or character n-grams | Words for long docs, n-grams for short texts |  
 | **Fingerprint size (L)** | Bit length of output hash        | `64` (balance of precision/speed)            |  
-| **Weighting**            | Feature importance metric        | TF-IDF or binary (1/0)                       |  
 
 ## Usage
 
