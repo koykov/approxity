@@ -14,7 +14,7 @@ func NewHasher[T byteseq.Q](conf *Config[T]) (lsh.Hasher[T], error) {
 		return nil, lsh.ErrBigB
 	}
 	if conf.Vector == nil {
-		conf.Vector = newBbitvec(conf.B)
+		conf.Vector = newVector(conf.B)
 	}
 	h, err := minhash.NewHasher[T](&conf.Config)
 	if err != nil {

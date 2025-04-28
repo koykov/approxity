@@ -1,18 +1,18 @@
 package bbitminhash
 
 // compact vector of b bits of values
-type bbitvec struct {
+type vector struct {
 	buf []uint64 // storage
 	b   uint64   // number of lower bits
 	off uint64   // offset of total used bits in buf
 	c   uint64   // number of elements in buf
 }
 
-func newBbitvec(b uint64) *bbitvec {
-	return &bbitvec{b: b}
+func newVector(b uint64) *vector {
+	return &vector{b: b}
 }
 
-func (v *bbitvec) Grow(cap_ uint64) {
+func (v *vector) Grow(cap_ uint64) {
 	total := cap_ * v.b
 	sz := (total + 63) / 64
 
@@ -25,7 +25,7 @@ func (v *bbitvec) Grow(cap_ uint64) {
 	v.c = cap_
 }
 
-func (v *bbitvec) Add(val uint64) {
+func (v *vector) Add(val uint64) {
 	lo := val & ((1 << v.b) - 1)
 
 	// position in buf
@@ -54,13 +54,13 @@ func (v *bbitvec) Add(val uint64) {
 	v.c++
 }
 
-func (v *bbitvec) SetMin(pos, val uint64) {
+func (v *vector) SetMin(pos, val uint64) {
 	if curr := v.Get(pos); val < curr {
 		v.set(pos, val)
 	}
 }
 
-func (v *bbitvec) Get(pos uint64) uint64 {
+func (v *vector) Get(pos uint64) uint64 {
 	if pos >= v.c {
 		return 0
 	}
@@ -79,7 +79,7 @@ func (v *bbitvec) Get(pos uint64) uint64 {
 	return lo | (hi << rem)
 }
 
-func (v *bbitvec) Memset(val uint64) {
+func (v *vector) Memset(val uint64) {
 	if v.c == 0 {
 		return
 	}
@@ -92,7 +92,7 @@ func (v *bbitvec) Memset(val uint64) {
 	}
 }
 
-func (v *bbitvec) set(pos uint64, val uint64) {
+func (v *vector) set(pos uint64, val uint64) {
 	bpos := pos * v.b
 	idx := bpos / 64
 	boff := bpos % 64
@@ -115,7 +115,7 @@ func (v *bbitvec) set(pos uint64, val uint64) {
 	}
 }
 
-func (v *bbitvec) AppendAll(dst []uint64) []uint64 {
+func (v *vector) AppendAll(dst []uint64) []uint64 {
 	if v.c == 0 {
 		return dst
 	}
@@ -157,11 +157,11 @@ func (v *bbitvec) AppendAll(dst []uint64) []uint64 {
 	return dst
 }
 
-func (v *bbitvec) Len() uint64 {
+func (v *vector) Len() uint64 {
 	return v.c
 }
 
-func (v *bbitvec) Reset() {
+func (v *vector) Reset() {
 	v.buf = v.buf[:0]
 	v.off = 0
 	v.c = 0

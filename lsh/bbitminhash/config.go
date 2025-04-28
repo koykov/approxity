@@ -20,7 +20,7 @@ func NewConfig[T byteseq.Q](algo pbtk.Hasher, k uint64, shingler shingle.Shingle
 			Algo:     algo,
 			K:        k,
 			Shingler: shingler,
-			Vector:   newBbitvec(b),
+			Vector:   newVector(b),
 		},
 		B: b,
 	}
