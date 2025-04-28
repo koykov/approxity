@@ -21,6 +21,7 @@ func (v *bbitvec) Grow(cap_ uint64) {
 		copy(nbuf, v.buf)
 		v.buf = nbuf
 	}
+	v.buf = v.buf[:sz]
 	v.c = cap_
 }
 
