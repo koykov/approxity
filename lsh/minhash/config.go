@@ -16,6 +16,9 @@ type Config[T byteseq.Q] struct {
 	// Shingler to vector input data.
 	// Mandatory param.
 	Shingler shingle.Shingler[T]
+	// Values storage.
+	// If this param omitted, the instance of DefaultVector will be used.
+	Vector Vector
 }
 
 func NewConfig[T byteseq.Q](algo pbtk.Hasher, k uint64, shingler shingle.Shingler[T]) *Config[T] {
