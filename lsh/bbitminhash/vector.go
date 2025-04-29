@@ -55,8 +55,10 @@ func (v *vector) Add(val uint64) {
 }
 
 func (v *vector) SetMin(pos, val uint64) {
-	if curr := v.Get(pos); val < curr {
-		v.set(pos, val)
+	curr := v.Get(pos)
+	reduced := v.reduce(val)
+	if reduced < curr {
+		v.set(pos, reduced)
 	}
 }
 
@@ -84,11 +86,9 @@ func (v *vector) Memset(val uint64) {
 		return
 	}
 
-	pattern := val & ((1 << v.b) - 1)
-	pattern = pattern | (pattern << v.b)
-	pattern = pattern | (pattern << (2 * v.b))
+	reduced := v.reduce(val)
 	for i := uint64(0); i < v.c; i++ {
-		v.set(i, pattern)
+		v.set(i, reduced)
 	}
 }
 
@@ -165,4 +165,11 @@ func (v *vector) Reset() {
 	v.buf = v.buf[:0]
 	v.off = 0
 	v.c = 0
+}
+
+func (v *vector) reduce(val uint64) (r uint64) {
+	r = val & ((1 << v.b) - 1)
+	r = r | (r << v.b)
+	r = r | (r << (2 * v.b))
+	return
 }
