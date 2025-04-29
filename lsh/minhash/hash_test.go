@@ -32,11 +32,11 @@ func BenchmarkHash(b *testing.B) {
 	b.Run("char", func(b *testing.B) {
 		h, err := NewHasher[[]byte](NewConfig(testh, testk, testshc))
 		_ = err
-		lsh.BenchmarkMe(b, h)
+		lsh.BenchMe(b, h)
 	})
 	b.Run("word", func(b *testing.B) {
 		h, err := NewHasher[[]byte](NewConfig(testh, testk, testshw))
 		_ = err
-		lsh.BenchmarkMe(b, h)
+		lsh.BenchMe(b, h)
 	})
 }

@@ -137,7 +137,7 @@ func TestMe[T []byte](t *testing.T, hash Hasher[T], distFn func([]uint64, []uint
 	}
 }
 
-func BenchmarkMe[T []byte](b *testing.B, hash Hasher[T]) {
+func BenchMe[T []byte](b *testing.B, hash Hasher[T]) {
 	stages := [][]byte{
 		[]byte("foo"),
 		[]byte("foobar"),
