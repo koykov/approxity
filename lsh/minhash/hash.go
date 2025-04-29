@@ -42,7 +42,7 @@ func (h *hash[T]) Add(value T) error {
 			h.buf = append(h.buf[:0], h.token[i]...)
 			h.buf = strconv.AppendUint(h.buf, j, 10)
 			hsum := h.conf.Algo.Sum64(h.buf)
-			h.vec().SetMin(i, min(h.vec().Get(i), hsum))
+			h.vec().SetMin(i, hsum)
 		}
 	}
 	return nil
