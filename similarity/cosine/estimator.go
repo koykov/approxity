@@ -17,7 +17,7 @@ type estimator[T byteseq.Q] struct {
 }
 
 func NewEstimator[T byteseq.Q](conf *Config[T]) (similarity.Estimator[T], error) {
-	e := &estimator[T]{conf: conf}
+	e := &estimator[T]{conf: conf.copy()}
 	if e.once.Do(e.init); e.err != nil {
 		return nil, e.err
 	}
@@ -36,6 +36,7 @@ func (e *estimator[T]) Estimate(a, b T) (r float64, err error) {
 	e.buf = e.conf.LSH.AppendHash(e.buf[:0])
 	mid = len(e.buf)
 
+	e.conf.LSH.Reset()
 	if err = e.conf.LSH.Add(b); err != nil {
 		return
 	}
