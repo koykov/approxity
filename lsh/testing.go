@@ -1,122 +1,18 @@
 package lsh
 
 import (
-	"encoding/csv"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
 	"testing"
+
+	"github.com/koykov/pbtk/simtest"
 )
-
-type tuple struct {
-	ID         int     `tsv:"pair_ID"`
-	A          []byte  `tsv:"sentence_A"`
-	B          []byte  `tsv:"sentence_B"`
-	RelScore   float64 `tsv:"relatedness_score"`
-	Entailment []byte  `tsv:"entailment_judgment"`
-}
-
-type dataset struct {
-	name   string
-	tuples []tuple
-}
-
-const (
-	datasetTrial = "https://raw.githubusercontent.com/brmson/dataset-sts/refs/heads/master/data/sts/sick2014/SICK_trial.txt"
-	datasetTrain = "https://raw.githubusercontent.com/brmson/dataset-sts/refs/heads/master/data/sts/sick2014/SICK_train.txt"
-	datasetTest  = "https://raw.githubusercontent.com/brmson/dataset-sts/refs/heads/master/data/sts/sick2014/SICK_test_annotated.txt"
-)
-
-var datasets []dataset
-
-func init() {
-	fread := func(rempath string) (dataset, error) {
-		var ds dataset
-
-		pos := strings.LastIndex(rempath, "/")
-		if pos == -1 {
-			return ds, fmt.Errorf("invalid path: %s", rempath)
-		}
-		fname := rempath[pos+1:]
-		ds.name = strings.ReplaceAll(fname, ".txt", "")
-		locpath := "/tmp/" + fname
-
-		var r io.Reader
-
-		if _, err := os.Stat(locpath); errors.Is(err, os.ErrNotExist) {
-			u, err := http.Get(rempath)
-			if err != nil {
-				return ds, err
-			}
-
-			t, err := os.OpenFile(locpath, os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				return ds, err
-			}
-			defer func() { _ = t.Close() }()
-			_, err = io.Copy(t, u.Body)
-			if err != nil {
-				return ds, err
-			}
-			_ = u.Body.Close()
-		}
-
-		f, err := os.Open(locpath)
-		if err != nil {
-			return ds, err
-		}
-		defer func() { _ = f.Close() }()
-		r = f
-
-		rdr := csv.NewReader(r)
-		rdr.Comma = '\t'
-		for i := 0; ; i++ {
-			rec, err := rdr.Read()
-			if err == io.EOF {
-				break
-			}
-			if i == 0 {
-				continue
-			}
-			id, _ := strconv.Atoi(rec[0])
-			score, _ := strconv.ParseFloat(rec[3], 64)
-			t := tuple{
-				ID:         id,
-				A:          []byte(rec[1]),
-				B:          []byte(rec[2]),
-				RelScore:   score,
-				Entailment: []byte(rec[4]),
-			}
-			ds.tuples = append(ds.tuples, t)
-			if err != nil {
-				break
-			}
-		}
-		return ds, nil
-
-	}
-	if t, err := fread(datasetTrial); err == nil {
-		datasets = append(datasets, t)
-	}
-	if t, err := fread(datasetTrain); err == nil {
-		datasets = append(datasets, t)
-	}
-	if t, err := fread(datasetTest); err == nil {
-		datasets = append(datasets, t)
-	}
-}
 
 func TestMe[T []byte](t *testing.T, hash Hasher[T], distFn func([]uint64, []uint64, uint64) float64, numHashes uint64, expectAvgDist float64) {
-	for i := 0; i < len(datasets); i++ {
-		ds := &datasets[i]
-		t.Run(ds.name, func(t *testing.T) {
+	simtest.EachTestingDataset(func(_ int, ds *simtest.Dataset) {
+		t.Run(ds.Name, func(t *testing.T) {
 			var s, c float64
-			for j := 0; j < len(ds.tuples); j++ {
-				tp := &ds.tuples[j]
+			for j := 0; j < len(ds.Tuples); j++ {
+				tp := &ds.Tuples[j]
 
 				hash.Reset()
 				_ = hash.Add(tp.A)
@@ -134,7 +30,7 @@ func TestMe[T []byte](t *testing.T, hash Hasher[T], distFn func([]uint64, []uint
 				t.Errorf("avg dist = %f, expected %f", avg, expectAvgDist)
 			}
 		})
-	}
+	})
 }
 
 func BenchMe[T []byte](b *testing.B, hash Hasher[T]) {
