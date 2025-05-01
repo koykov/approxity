@@ -2,6 +2,7 @@ package lsh
 
 import (
 	"fmt"
+	"math/bits"
 	"testing"
 
 	"github.com/koykov/pbtk/simtest"
@@ -70,12 +71,16 @@ func BenchMe[T []byte](b *testing.B, hash Hasher[T]) {
 }
 
 func TestDistHamming(h0, h1 []uint64, _ uint64) (r float64) {
-	bits := h0[0] ^ h1[0]
-	for i := 0; i < 32; i++ {
-		bs := bits & (1 << i)
-		if bs != 0 {
-			r += 1
+	n := max(len(h0), len(h1))
+	for i := 0; i < n; i++ {
+		var v0, v1 uint64
+		if i < len(h0) {
+			v0 = h0[i]
 		}
+		if i < len(h1) {
+			v1 = h1[i]
+		}
+		r += float64(bits.OnesCount64(v0 ^ v1))
 	}
 	return r
 }
