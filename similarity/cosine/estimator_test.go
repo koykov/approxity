@@ -33,3 +33,20 @@ func TestEstimator(t *testing.T) {
 		similarity.TestMe(t, e, 1)
 	})
 }
+
+func BenchmarkEstimator(b *testing.B) {
+	b.Run("char", func(b *testing.B) {
+		e, err := NewEstimator[[]byte](NewConfig[[]byte](testlshc))
+		if err != nil {
+			b.Fatal(err)
+		}
+		similarity.BenchMe(b, e)
+	})
+	b.Run("word", func(b *testing.B) {
+		e, err := NewEstimator[[]byte](NewConfig[[]byte](testlshw))
+		if err != nil {
+			b.Fatal(err)
+		}
+		similarity.BenchMe(b, e)
+	})
+}

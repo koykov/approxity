@@ -23,3 +23,18 @@ func TestMe(t *testing.T, est Estimator[[]byte], threshold float64) {
 		})
 	})
 }
+
+func BenchMe(b *testing.B, est Estimator[[]byte]) {
+	simtest.EachTestingDataset(func(_ int, ds *simtest.Dataset) {
+		b.Run(ds.Name, func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				for j := 0; j < len(ds.Tuples); j++ {
+					est.Reset()
+					tp := &ds.Tuples[j]
+					_, _ = est.Estimate(tp.A, tp.B)
+				}
+			}
+		})
+	})
+}
