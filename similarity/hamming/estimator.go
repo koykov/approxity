@@ -1,7 +1,7 @@
-package cosine
+package hamming
 
 import (
-	"math"
+	"math/bits"
 	"sync"
 
 	"github.com/koykov/byteseq"
@@ -34,27 +34,19 @@ func (e *estimator[T]) Estimate(a, b T) (r float64, err error) {
 	if len(abuf) == 0 || len(bbuf) == 0 || err != nil {
 		return
 	}
-	var amag, bmag float64
 	n := max(len(abuf), len(bbuf))
 	_, _ = abuf[len(abuf)-1], bbuf[len(bbuf)-1]
 	for i := 0; i < n; i++ {
-		var av, bv float64
+		var av, bv uint64
 		if i < len(abuf) {
-			av = float64(abuf[i])
+			av = abuf[i]
 		}
 		if i < len(bbuf) {
-			bv = float64(bbuf[i])
+			bv = bbuf[i]
 		}
-		r += av * bv
-		amag += av * av
-		bmag += bv * bv
+		r += float64(bits.OnesCount64(av ^ bv))
 	}
-	amag = math.Sqrt(amag)
-	bmag = math.Sqrt(bmag)
-	if amag == 0 || bmag == 0 {
-		return
-	}
-	r /= amag * bmag
+	r = 1 - r/float64(n*64)
 	return
 }
 
