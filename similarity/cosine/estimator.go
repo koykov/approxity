@@ -9,8 +9,8 @@ import (
 )
 
 type estimator[T byteseq.Q] struct {
+	similarity.Base[T]
 	conf *Config[T]
-	buf  []uint64
 	once sync.Once
 
 	err error
@@ -29,21 +29,9 @@ func (e *estimator[T]) Estimate(a, b T) (r float64, err error) {
 		err = e.err
 		return
 	}
-	var mid int
-	if err = e.conf.LSH.Add(a); err != nil {
-		return
-	}
-	e.buf = e.conf.LSH.AppendHash(e.buf[:0])
-	mid = len(e.buf)
 
-	e.conf.LSH.Reset()
-	if err = e.conf.LSH.Add(b); err != nil {
-		return
-	}
-	e.buf = e.conf.LSH.AppendHash(e.buf)
-
-	abuf, bbuf := e.buf[:mid], e.buf[mid:]
-	if len(abuf) == 0 || len(bbuf) == 0 {
+	abuf, bbuf, err := e.VectorizePair(e.conf.LSH, a, b)
+	if len(abuf) == 0 || len(bbuf) == 0 || err != nil {
 		return
 	}
 	var amag, bmag float64
@@ -71,7 +59,7 @@ func (e *estimator[T]) Estimate(a, b T) (r float64, err error) {
 }
 
 func (e *estimator[T]) Reset() {
-	e.buf = e.buf[:0]
+	e.Base.Reset()
 	e.conf.LSH.Reset()
 }
 
