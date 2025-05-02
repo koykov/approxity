@@ -4,11 +4,12 @@ import (
 	"sync"
 
 	"github.com/koykov/byteseq"
+	"github.com/koykov/pbtk/lsh"
 	"github.com/koykov/pbtk/similarity"
 )
 
 type estimator[T byteseq.Q] struct {
-	similarity.Base[T]
+	lsh.VectorPair[T]
 	conf   *Config[T]
 	r0, r1 map[uint64]struct{}
 	once   sync.Once
@@ -54,7 +55,7 @@ func (e *estimator[T]) Estimate(a, b T) (r float64, err error) {
 }
 
 func (e *estimator[T]) Reset() {
-	e.Base.Reset()
+	e.VectorPair.Reset()
 	e.rstr()
 	e.conf.LSH.Reset()
 }
