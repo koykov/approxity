@@ -29,68 +29,68 @@ func NewDiffer[T byteseq.Q](conf *Config[T]) (symmetric.Differ[T], error) {
 	return e, nil
 }
 
-func (e *differ[T]) Diff(a, b T) (r float64, err error) {
-	if e.once.Do(e.init); e.err != nil {
-		err = e.err
+func (d *differ[T]) Diff(a, b T) (r float64, err error) {
+	if d.once.Do(d.init); d.err != nil {
+		err = d.err
 		return
 	}
 
-	abuf, bbuf, err := e.VectorizePair(e.conf.LSH, a, b)
+	abuf, bbuf, err := d.VectorizePair(d.conf.LSH, a, b)
 	if len(abuf) == 0 || len(bbuf) == 0 || err != nil {
 		return
 	}
 	for i := 0; i < len(abuf); i++ {
-		e.v0.Xor(abuf[i] % e.m)
+		d.v0.Xor(abuf[i] % d.m)
 	}
 	for i := 0; i < len(bbuf); i++ {
-		e.v1.Xor(bbuf[i] % e.m)
+		d.v1.Xor(bbuf[i] % d.m)
 	}
 	var diff uint64
-	if diff, err = e.v0.Difference(e.v1); err != nil || diff == 0 {
+	if diff, err = d.v0.Difference(d.v1); err != nil || diff == 0 {
 		return
 	}
-	m, k := float64(e.m), float64(diff)
+	m, k := float64(d.m), float64(diff)
 	r = -m * math.Log(1-(2*k)/m)
 	return
 }
 
-func (e *differ[T]) Reset() {
-	e.VectorPair.Reset()
-	e.v0.Reset()
-	e.v1.Reset()
-	e.conf.LSH.Reset()
+func (d *differ[T]) Reset() {
+	d.VectorPair.Reset()
+	d.v0.Reset()
+	d.v1.Reset()
+	d.conf.LSH.Reset()
 }
 
-func (e *differ[T]) init() {
-	c := e.conf
-	if e.conf.LSH == nil {
-		e.err = symmetric.ErrNoLSH
+func (d *differ[T]) init() {
+	c := d.conf
+	if d.conf.LSH == nil {
+		d.err = symmetric.ErrNoLSH
 		return
 	}
 	if c.ItemsNumber == 0 {
-		e.err = amq.ErrNoItemsNumber
+		d.err = amq.ErrNoItemsNumber
 		return
 	}
 	if c.FPP == 0 {
 		c.FPP = defaultFPP
 	}
 	if c.FPP < 0 || c.FPP > 1 {
-		e.err = amq.ErrInvalidFPP
+		d.err = amq.ErrInvalidFPP
 		return
 	}
 
-	e.m = optimalM(c.ItemsNumber, c.FPP)
-	e.k = optimalK(c.ItemsNumber, e.m)
+	d.m = optimalM(c.ItemsNumber, c.FPP)
+	d.k = optimalK(c.ItemsNumber, d.m)
 
 	if c.Concurrent != nil {
-		if e.v0, e.err = bitvector.NewConcurrentVector(e.m, c.Concurrent.WriteAttemptsLimit); e.err != nil {
+		if d.v0, d.err = bitvector.NewConcurrentVector(d.m, c.Concurrent.WriteAttemptsLimit); d.err != nil {
 			return
 		}
-		e.v1, e.err = bitvector.NewConcurrentVector(e.m, c.Concurrent.WriteAttemptsLimit)
+		d.v1, d.err = bitvector.NewConcurrentVector(d.m, c.Concurrent.WriteAttemptsLimit)
 	} else {
-		if e.v0, e.err = bitvector.NewVector(e.m); e.err != nil {
+		if d.v0, d.err = bitvector.NewVector(d.m); d.err != nil {
 			return
 		}
-		e.v1, e.err = bitvector.NewVector(e.m)
+		d.v1, d.err = bitvector.NewVector(d.m)
 	}
 }
