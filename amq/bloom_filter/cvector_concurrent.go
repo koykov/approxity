@@ -6,6 +6,7 @@ import (
 	"math"
 	"sync/atomic"
 
+	"github.com/koykov/bitvector"
 	"github.com/koykov/pbtk"
 )
 
@@ -36,6 +37,10 @@ func (vec *ccnvector) Set(i uint64) bool {
 		}
 	}
 	return false
+}
+
+func (vec *ccnvector) Xor(_ uint64) bool {
+	return false // senseless for CBF
 }
 
 func (vec *ccnvector) Unset(i uint64) bool {
@@ -80,6 +85,10 @@ func (vec *ccnvector) Capacity() uint64 {
 
 func (vec *ccnvector) Popcnt() uint64 {
 	return 0 // useless for Bloom
+}
+
+func (vec *ccnvector) Difference(_ bitvector.Interface) (uint64, error) {
+	return 0, nil // useless for Bloom
 }
 
 func (vec *ccnvector) Reset() {

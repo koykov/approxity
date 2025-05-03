@@ -1,9 +1,7 @@
 github.com/koykov/bitset v1.0.0 h1:2mEbAhKelhpdWqnpa+mR3HRhdMsto5od7ACOi6MIAmk=
 github.com/koykov/bitset v1.0.0/go.mod h1:DVR3bH49c1oOcNtD38h+aQq7lp1ZY91cXmjOldlTk8A=
-github.com/koykov/bitvector v0.0.0-20250412173108-a36869b034af h1:owomRdTY2woZOn2A5SDEXMtOcQ3ZmJQlysKgiQG3WCU=
-github.com/koykov/bitvector v0.0.0-20250412173108-a36869b034af/go.mod h1:kXYBZMiSVuP9Ji4pGcX1E7LTfxIPWvs+KAF6A6vI4OU=
-github.com/koykov/byteconv v1.0.1 h1:5Yb6++P+HnipDW/V9rHXR7CyS0ZFncspT4isvt65fFA=
-github.com/koykov/byteconv v1.0.1/go.mod h1:viZknv/akQJrXOQS3bZu2U7TE+gjA03LFQpSsRExZR4=
+github.com/koykov/bitvector v0.0.0-20250502202936-76e25ca53304 h1:7W8tTn1PRMrPhpa+5i4HspKeYcbt9tlm7fLWspxMqK0=
+github.com/koykov/bitvector v0.0.0-20250502202936-76e25ca53304/go.mod h1:kXYBZMiSVuP9Ji4pGcX1E7LTfxIPWvs+KAF6A6vI4OU=
 github.com/koykov/byteseq v1.0.1 h1:PbsGtxkUnvrqlwnjNxnRq5FDIvLXJg5CcN9yRuSQY7A=
 github.com/koykov/byteseq v1.0.1/go.mod h1:JlIJ6P3/ocuGNRbTVyP0NVRS/ExofhOS8g7mtefjefw=
 github.com/koykov/hash v1.0.1-0.20250305161527-55fd63f527af h1:GvMAZundlBUMYxU15YTJ0TQ67K3NCLj8SrTjsXlIO8I=

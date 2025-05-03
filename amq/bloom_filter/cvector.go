@@ -6,6 +6,7 @@ import (
 	"math"
 	"unsafe"
 
+	"github.com/koykov/bitvector"
 	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
 )
@@ -32,6 +33,10 @@ func (vec *cvector) Set(i uint64) bool {
 	vec.buf[i/2] = uint32(v0)<<16 | uint32(v1)
 	vec.s++
 	return true
+}
+
+func (vec *cvector) Xor(_ uint64) bool {
+	return false // senseless for CBF
 }
 
 func (vec *cvector) Unset(i uint64) bool {
@@ -72,6 +77,10 @@ func (vec *cvector) Capacity() uint64 {
 
 func (vec *cvector) Popcnt() uint64 {
 	return 0 // useless for Bloom
+}
+
+func (vec *cvector) Difference(_ bitvector.Interface) (uint64, error) {
+	return 0, nil // useless for Bloom
 }
 
 func (vec *cvector) Reset() {
