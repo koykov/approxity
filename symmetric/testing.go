@@ -23,3 +23,18 @@ func TestMe(t *testing.T, diff Differ[[]byte], threshold float64) {
 		})
 	})
 }
+
+func BenchMe(b *testing.B, diff Differ[[]byte]) {
+	simtest.EachTestingDataset(func(_ int, ds *simtest.Dataset) {
+		b.Run(ds.Name, func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				for j := 0; j < len(ds.Tuples); j++ {
+					diff.Reset()
+					tp := &ds.Tuples[j]
+					_, _ = diff.Diff(tp.A, tp.B)
+				}
+			}
+		})
+	})
+}
