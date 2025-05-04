@@ -78,6 +78,8 @@ Through the `Config` structure, you can provide a [`MetricsWriter`](metrics.go) 
 
 This approach solves the "black box" problem - metrics help evaluate filter efficiency and optimize its configuration.
 
+The package contains builtin [Prometheus](metrics/prometheus) implementation. Feel free to implement your own implementation (e.g. VictoriaMetrics...).
+
 ## Conclusion
 
 AMQ filters are powerful tools for data filtering tasks, but they should only be used when simpler approaches
