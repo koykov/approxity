@@ -5,19 +5,19 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type metricsWriter struct {
+type mwAMQ struct {
 	name string
 }
 
-func NewMetricsWriter(name string) amq.MetricsWriter {
-	return &metricsWriter{name: name}
+func NewMetricsWriterAMQ(name string) amq.MetricsWriter {
+	return &mwAMQ{name: name}
 }
 
-func (mw *metricsWriter) Capacity(cap uint64) {
+func (mw *mwAMQ) Capacity(cap uint64) {
 	mcap.WithLabelValues(mw.name).Set(float64(cap))
 }
 
-func (mw *metricsWriter) Set(err error) error {
+func (mw *mwAMQ) Set(err error) error {
 	result := "success"
 	if err != nil {
 		result = "fail"
@@ -26,7 +26,7 @@ func (mw *metricsWriter) Set(err error) error {
 	return err
 }
 
-func (mw *metricsWriter) Unset(err error) error {
+func (mw *mwAMQ) Unset(err error) error {
 	result := "success"
 	if err != nil {
 		result = "fail"
@@ -35,7 +35,7 @@ func (mw *metricsWriter) Unset(err error) error {
 	return err
 }
 
-func (mw *metricsWriter) Contains(positive bool) bool {
+func (mw *mwAMQ) Contains(positive bool) bool {
 	result := "positive"
 	if !positive {
 		result = "negative"
@@ -44,7 +44,7 @@ func (mw *metricsWriter) Contains(positive bool) bool {
 	return positive
 }
 
-func (mw *metricsWriter) Reset() {}
+func (mw *mwAMQ) Reset() {}
 
 func init() {
 	mcap = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -72,5 +72,5 @@ var (
 	mcap                    *prometheus.GaugeVec
 	mset, munset, mcontains *prometheus.CounterVec
 
-	_ = NewMetricsWriter
+	_ = NewMetricsWriterAMQ
 )
