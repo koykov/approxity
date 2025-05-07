@@ -46,3 +46,5 @@ func Release[T pbtk.Hashable](f amq.Filter[T]) {
 	f.Reset()
 	p.Put(f)
 }
+
+var _ = AcquireWithHKeys
