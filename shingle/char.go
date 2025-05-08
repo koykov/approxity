@@ -1,6 +1,7 @@
 package shingle
 
 import (
+	"fmt"
 	"unicode/utf8"
 
 	"github.com/koykov/byteseq"
@@ -45,6 +46,11 @@ func (sh *char[T]) AppendShingle(dst []T, s T) []T {
 	lo, hi := uint64(0), sh.k
 	_, _ = sh.w[len(sh.w)-1], sc[len(sc)-1]
 	for hi < uint64(len(sh.w)) {
+		if sh.w[hi] == 0 {
+			fmt.Println(string(sh.base.cbuf))
+			fmt.Println(lo, hi)
+			fmt.Printf("%+v\n", sh.w)
+		}
 		dst = append(dst, sc[sh.w[lo]:sh.w[hi]])
 		lo++
 		hi++

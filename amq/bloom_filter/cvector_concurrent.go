@@ -91,6 +91,17 @@ func (vec *ccnvector) Difference(_ bitvector.Interface) (uint64, error) {
 	return 0, nil // useless for Bloom
 }
 
+func (vec *ccnvector) Clone() bitvector.Interface {
+	clone := &ccnvector{
+		buf: make([]uint32, len(vec.buf)),
+		s:   atomic.LoadUint64(&vec.s),
+	}
+	for i := 0; i < len(vec.buf); i++ {
+		clone.buf[i] = atomic.LoadUint32(&vec.buf[i])
+	}
+	return clone
+}
+
 func (vec *ccnvector) Reset() {
 	atomic.StoreUint64(&vec.s, 0)
 	for i := 0; i < len(vec.buf); i++ {

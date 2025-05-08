@@ -5,8 +5,8 @@ import (
 	"io"
 	"math"
 
-	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
+	"github.com/koykov/simd/memclr64"
 )
 
 const (
@@ -56,7 +56,7 @@ func (vec *syncvec) size() uint64 {
 }
 
 func (vec *syncvec) reset() {
-	openrt.Memclr(vec.buf)
+	memclr64.ClearBytes(vec.buf)
 }
 
 func (vec *syncvec) writeTo(w io.Writer) (n int64, err error) {

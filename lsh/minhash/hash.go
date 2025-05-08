@@ -58,12 +58,12 @@ func (h *hash[T]) AppendHash(dst []uint64) []uint64 {
 }
 
 func (h *hash[T]) Reset() {
+	h.conf.Shingler.Reset()
 	if h.vec().Len() == 0 {
 		return
 	}
 	h.token = h.token[:0]
 	h.buf = h.buf[:0]
-	h.conf.Shingler.Reset()
 	h.vec().Reset()
 }
 

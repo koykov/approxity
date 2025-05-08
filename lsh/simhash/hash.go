@@ -5,9 +5,9 @@ import (
 	"unsafe"
 
 	"github.com/koykov/byteseq"
-	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/lsh"
+	"github.com/koykov/simd/memclr64"
 )
 
 const vectorsz = 64
@@ -69,7 +69,7 @@ func (h *hash[T]) AppendHash(dst []uint64) []uint64 {
 }
 
 func (h *hash[T]) Reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&h.vector), vectorsz*8)
+	memclr64.ClearUnsafe(unsafe.Pointer(&h.vector), vectorsz*8)
 	h.token = h.token[:0]
 	h.conf.Shingler.Reset()
 }

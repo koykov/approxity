@@ -7,8 +7,8 @@ import (
 	"unsafe"
 
 	"github.com/koykov/bitvector"
-	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
+	"github.com/koykov/simd/memclr64"
 )
 
 const (
@@ -83,8 +83,15 @@ func (vec *cvector) Difference(_ bitvector.Interface) (uint64, error) {
 	return 0, nil // useless for Bloom
 }
 
+func (vec *cvector) Clone() bitvector.Interface {
+	return &cvector{
+		buf: append([]uint32{}, vec.buf...),
+		s:   vec.s,
+	}
+}
+
 func (vec *cvector) Reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*4)
+	memclr64.ClearUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*4)
 	vec.s = 0
 }
 

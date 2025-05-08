@@ -3,7 +3,7 @@ package minhash
 import (
 	"unsafe"
 
-	"github.com/koykov/openrt"
+	"github.com/koykov/simd/memclr64"
 	"github.com/koykov/simd/memset64"
 )
 
@@ -62,5 +62,5 @@ func (v *DefaultVector) Len() uint64 {
 }
 
 func (v *DefaultVector) Reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&(*v)[0]), len(*v)*8)
+	memclr64.ClearUnsafe(unsafe.Pointer(&(*v)[0]), len(*v)*8)
 }

@@ -6,8 +6,8 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
+	"github.com/koykov/simd/memclr64"
 )
 
 const (
@@ -70,7 +70,7 @@ func (vec *syncvec) size() uint64 {
 }
 
 func (vec *syncvec) reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*bucketsz)
+	memclr64.ClearUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*bucketsz)
 }
 
 func (vec *syncvec) writeTo(w io.Writer) (n int64, err error) {

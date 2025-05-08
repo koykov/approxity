@@ -6,8 +6,8 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
+	"github.com/koykov/simd/memclr64"
 )
 
 const (
@@ -32,7 +32,7 @@ func (vec *syncvec) get(pos uint64, stime, now uint32) float64 {
 }
 
 func (vec *syncvec) reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*8)
+	memclr64.ClearUnsafe(unsafe.Pointer(&vec.buf[0]), len(vec.buf)*8)
 }
 
 func (vec *syncvec) readFrom(r io.Reader) (n int64, err error) {

@@ -11,8 +11,8 @@ import (
 	"unsafe"
 
 	"github.com/koykov/bitset"
-	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
+	"github.com/koykov/simd/memclr64"
 )
 
 const (
@@ -105,7 +105,7 @@ func (vec *syncvec32) decay(ctx context.Context, factor float64) error {
 }
 
 func (vec *syncvec32) reset() {
-	openrt.MemclrUnsafe(unsafe.Pointer(&vec.buf[0]), int(vec.w*vec.d*4))
+	memclr64.ClearUnsafe(unsafe.Pointer(&vec.buf[0]), int(vec.w*vec.d*4))
 }
 
 func (vec *syncvec32) readFrom(r io.Reader) (n int64, err error) {

@@ -5,9 +5,9 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/koykov/openrt"
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/amq"
+	"github.com/koykov/simd/memclr64"
 )
 
 // Quotient filter implementation.
@@ -304,7 +304,7 @@ func (f *filter[T]) Reset() {
 	if f.once.Do(f.init); f.err != nil {
 		return
 	}
-	openrt.MemclrUnsafe(unsafe.Pointer(&f.vec[0]), len(f.vec)*8)
+	memclr64.ClearUnsafe(unsafe.Pointer(&f.vec[0]), len(f.vec)*8)
 	f.s = 0
 }
 
