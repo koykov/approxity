@@ -36,7 +36,7 @@ the decay.
 
 ```go
 type ForceDecayNotifier interface {
-Notify() <-chan struct{}
+    Notify() <-chan struct{}
 }
 ```
 
@@ -64,29 +64,34 @@ These control how aggressively counters are reduced during decay:
 The minimal working example:
 
 ```go
+package main
+
 import (
-"github.com/koykov/pbtk/frequency/tinylfu"
-"github.com/koykov/hash/xxhash"
+  "fmt"
+
+  "github.com/koykov/hash/xxhash"
+  "github.com/koykov/pbtk/frequency/tinylfu"
 )
 
 const (
-confidence = 0.99
-epsilon = 0.01
+  confidence = 0.99
+  epsilon    = 0.01
 )
 
 func main() {
-est, err := tinylfu.NewEstimator[string](tinylfu.NewConfig(confidence, epsilon, xxhash.Hasher64[[]byte]{}).
-WithDecayLimit(100000))
-_ = err
-for i := 0; i<5; i++ {
-key := fmt.Sprintf("item-%d", i)
-_ = est.Add(key)
-if i == 3 {
-for j := 0; j<1e6; j++ {
-_ = est.Add(key)
+  est, err := tinylfu.NewEstimator[string](tinylfu.NewConfig(confidence, epsilon, xxhash.Hasher64[[]byte]{}).
+    WithDecayLimit(100000))
+  _ = err
+  for i := 0; i < 5; i++ {
+    key := fmt.Sprintf("item-%d", i)
+    _ = est.Add(key)
+    if i == 3 {
+      for j := 0; j < 1e6; j++ {
+        _ = est.Add(key)
+      }
+    }
+  }
+  println(est.Estimate("item-3")) // ~1000000
 }
-}
-}
-println(est.Estimate("item-3")) // ~1000000
-}
+
 ```
