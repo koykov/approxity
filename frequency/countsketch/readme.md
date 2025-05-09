@@ -20,12 +20,7 @@ hash tables, making it robust for detecting low-frequency elements in adversaria
         * for each hash function $h_i$ calculates index $$j = {h_i(x) \mod w}$$
         * for each hash function $s_i$ calculates sign
           $$
-          sign=\left\{
-          \begin{array}{ll}
-          1 &\text{if }s_i(x) \mod 2 == 0\\
-          -1 &\text{otherwise},
-          \end{array}
-          \right.
+          sign=\left\{\begin{array}{ll}1 &\text{if }s_i(x) \mod 2 == 0\\-1 &\text{otherwise},\end{array}\right.
           $$
         * counter $C[i][j]$ increases to $sign * Δ$
 * **Estimation**:
@@ -33,12 +28,7 @@ hash tables, making it robust for detecting low-frequency elements in adversaria
         * for each hash function $h_i$ calculates index $$j = h_i(x) \mod w$$
         * for each hash function $s_i$ calculates sign
           $$
-          sign=\left\{
-          \begin{array}{ll}
-          1 &\text{if }s_i(x) \mod 2 == 0\\
-          -1 &\text{otherwise},
-          \end{array}
-          \right.
+          sign=\left\{\begin{array}{ll}1 &\text{if }s_i(x) \mod 2 == 0\\-1 &\text{otherwise},\end{array}\right.
           $$
         * estimation $E$ is a median value of all counters $C[i][j]$ $$E(x) = \mathrm{med}(C[i][0], C[i][1], \dots C[i][d-1])$$
 
