@@ -13,24 +13,33 @@ hash tables, making it robust for detecting low-frequency elements in adversaria
         * $confidence$ - possibility that potential error will be in range of acceptable error rate
         * $ϵ (epsilon)$ - estimation precision (0..1)
     * Making a 2D array of counters $C[w][d]$, where
-        * $w$ - number of counters (width) $$w = {1 \over ϵ^2} = {1 \over epsilon^2}$$
-        * $d$ - number of hash functions (height) $$d = ln({1 \over δ}) = ln({1 \over {1-confidence}})$$
+        * $w$ - number of counters (width)
+$$
+w = {1 \over ϵ^2} = {1 \over epsilon^2}
+$$
+        * $d$ - number of hash functions (height)
+$$
+d = ln({1 \over δ}) = ln({1 \over {1-confidence}})
+$$
 * **Insertion**:
     * For item $x$ and its weight $Δ$:
         * for each hash function $h_i$ calculates index $$j = {h_i(x) \mod w}$$
         * for each hash function $s_i$ calculates sign
-          $$
-          sign=\left\{\begin{array}{ll}1 &\text{if }s_i(x) \mod 2 == 0\\-1 &\text{otherwise},\end{array}\right.
-          $$
-        * counter $C[i][j]$ increases to $sign * Δ$
+$$
+sign=\left\{\begin{array}{ll}1 &\text{if }s_i(x) \mod 2 == 0\\-1 &\text{otherwise},\end{array}\right.
+$$
+  * counter $C[i][j]$ increases to $sign * Δ$
 * **Estimation**:
     * For item $x$:
         * for each hash function $h_i$ calculates index $$j = h_i(x) \mod w$$
-        * for each hash function $s_i$ calculates sign
-          $$
-          sign=\left\{\begin{array}{ll}1 &\text{if }s_i(x) \mod 2 == 0\\-1 &\text{otherwise},\end{array}\right.
-          $$
-        * estimation $E$ is a median value of all counters $C[i][j]$ $$E(x) = \mathrm{med}(C[i][0], C[i][1], \dots C[i][d-1])$$
+* for each hash function $s_i$ calculates sign
+$$
+sign=\left\{\begin{array}{ll}1 &\text{if }s_i(x) \mod 2 == 0\\-1 &\text{otherwise},\end{array}\right.
+$$
+        * estimation $E$ is a median value of all counters $C[i][j]$
+$$
+E(x) = \mathrm{med}(C[i][0], C[i][1], \dots C[i][d-1])
+$$
 
 ## Usage
 
