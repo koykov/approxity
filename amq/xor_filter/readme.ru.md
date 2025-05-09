@@ -32,25 +32,31 @@ Xor Filter требует предварительного построения 
 
 1. **Распределение ключей**:
    Для каждого ключа $x$ вычисляются позиции:
+
    $$
    h_1(x), h_2(x), h_3(x) \in \{0, \ldots, m-1\}
    $$
+   
    где $m$ - размер фильтра, обычно $m \approx 1.23 \cdot n$ для $n$ ключей.
 
 2. **Построение системы уравнений**:
    Каждый ключ $x$ соответствует уравнению:
+   
    $$
    \text{fingerprint}(x) = \text{filter}[h_1(x)] \oplus \text{filter}[h_2(x)] \oplus \text{filter}[h_3(x)]
    $$
+   
    где $\text{fingerprint}(x)$ - 8-битный хэш ключа.
 
 3. **Решение системы**:
    Система решается методом исключения Гаусса, что гарантирует:
+   
    $$
    \text{Pr}(\text{false positive}) \leq \frac{1}{2^8} = \frac{1}{256} \approx 0.39\%
    $$
 
 Проверка принадлежности ключа $y$ выполняется как:
+
 $$
 \text{Contains}(y) = \left(\text{filter}[h_1(y)] \oplus \text{filter}[h_2(y)] \oplus \text{filter}[h_3(y)]\right) == \text{fingerprint}(y)
 $$
