@@ -16,7 +16,9 @@ produce uniformly distributed outputs.
 * **Tracking Maximum Leading Zeros**: For each bucket $j$, the maximum number of leading zeros $M_j$ is tracked. The
 cardinality $E$ is estimated using the geometric mean of $M_j$:
 
-$$E=α_m⋅m⋅2^{{1 \over m} \sum_{j=1}^m {M_j} }$$
+$$
+E=α_m⋅m⋅2^{{1 \over m} \sum_{j=1}^m {M_j} }
+$$
 
 Where:
   * $α_m$ is a correction factor for small and large ranges (e.g., $α_{16}≈0.773$).
@@ -25,12 +27,10 @@ Where:
 * **Bias Correction**: For small cardinalities, a bias correction is applied to improve accuracy:
 
 $$
-E'=\left\{
-\begin{array}{ll}
-m⋅log({m \over V}) &\text{if }E \leq {5 \over 2}m \\
-E &\text{otherwise},
-\end{array}
-\right.
+E' = \begin{cases}
+m \cdot \log\left(\frac{m}{V}\right) & \text{if } E \leq \frac{5}{2}m \\
+E & \text{otherwise}
+\end{cases}
 $$
 
 where $V$ is the number of buckets with $M_j=0$.
