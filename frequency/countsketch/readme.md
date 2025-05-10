@@ -29,7 +29,10 @@ $$
         * for each hash function $s_i$ calculates sign
 
 $$
-sign=\left\{\begin{array}{ll}1 &\text{if }s_i(x) \mod 2 == 0\\-1 &\text{otherwise},\end{array}\right.
+sign = \begin{cases}
+1 & \text{if } s_i(x) \mod 2 = 0 \\
+-1 & \text{otherwise}
+\end{cases}
 $$
 
   * counter $C[i][j]$ increases to $sign * Δ$
@@ -39,7 +42,10 @@ $$
 * for each hash function $s_i$ calculates sign and estimation $E$ as a median value of all counters $C[i][j]$
 
 $$
-sign=\left\{\begin{array}{ll}1 &\text{if }s_i(x) \mod 2 == 0\\-1 &\text{otherwise},\end{array}\right.
+sign = \begin{cases}
+1 & \text{if } s_i(x) \mod 2 = 0 \\
+-1 & \text{otherwise}
+\end{cases}
 $$
 
 $$
