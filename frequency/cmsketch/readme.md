@@ -14,8 +14,16 @@ This makes it ideal for applications where confirming "at least X occurrences" m
     * $confidence$ - possibility that potential error will be in range of acceptable error rate
     * $ϵ (epsilon)$ - estimation precision (0..1)
   * Making a 2D array of counters $C[w][d]$, where
-    * $w$ - number of counters (width) $$w = {e \over ϵ} = {Euler \over epsilon}$$
-    * $d$ - number of hash functions (height) $$d = ln({1 \over δ}) = ln({1 \over {1-confidence}})$$
+    * $w$ - number of counters (width), $d$ - number of hash functions (height)
+
+$$
+w = {e \over ϵ} = {Euler \over epsilon}
+$$
+
+$$
+d = ln({1 \over δ}) = ln({1 \over {1-confidence}})
+$$
+
 * **Insertion**:
   * For item $x$ and its weight $Δ$:
     * for each hash function $h_i$ calculates index $j = h_i(x)$
@@ -23,7 +31,11 @@ This makes it ideal for applications where confirming "at least X occurrences" m
 * **Estimation**:
   * For item $x$:
     * for each hash function $h_i$ calculates index $j = h_i(x)$
-    * estimation $E$ is a minimal value of all counters $C[i][j]$ $$E(x) = \min_{i=1..d}(C[i][j])$$
+    * estimation $E$ is a minimal value of all counters $C[i][j]$
+
+$$
+E(x) = \min_{i=1..d}(C[i][j])
+$$
 
 ## Usage
 
