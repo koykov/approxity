@@ -15,27 +15,35 @@ The goal is to estimate $|A \triangle B|j$ without storing the full sets.
 - **Input**: A set of elements (e.g., hashed via MinHash).
 - **Bit Vector**: A binary vector $Sj$ of size $mj$.
 - **Hashing**: For each element $xj$, compute its position in $Sj$ using a hash function:  
-  $$
-  i = h(x) \mod m
-  $$
+
+$$
+i = h(x) \mod m
+$$
+
 - **XOR Update**: Flip the bit at position $ij$:  
-  $$
-  S[i] = S[i] \oplus 1
-  $$  
+
+$$
+S[i] = S[i] \oplus 1
+$$
+
   (Bits set to `1` indicate elements hashed an odd number of times.)
 
 ### 3. Estimating $|A \triangle B|j$
 - **XOR Sketch Comparison**: Given sketches $S_Aj$ and $S_Bj$, compute:  
-  $$
-  S_{A \triangle B} = S_A \oplus S_B
-  $$  
+
+$$
+S_{A \triangle B} = S_A \oplus S_B
+$$
+
   (Bits set to `1` in $S_{A \triangle B}j$ correspond to elements in $A \triangle Bj$.)
 
 - **Count Differing Bits**: Let $kj$ be the number of `1`s in $S_{A \triangle B}j$.
-- **Estimate Symmetric Difference**:  
-  $$
-  |A \triangle B| \approx -m \cdot \ln\left(1 - \frac{2k}{m}\right)
-  $$  
+- **Estimate Symmetric Difference**:
+
+$$
+|A \triangle B| \approx -m \cdot \ln\left(1 - \frac{2k}{m}\right)
+$$
+
   (Derived from the probability of hash collisions in a Bloom filter-like structure.)
 
 ## Usage
