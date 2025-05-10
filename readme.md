@@ -2,7 +2,7 @@
 
 A collection of probabilistic data structures and algorithms. Solves the following tasks:
 
-* AMQ (Approximate Membership Query)
+* Membership testing aka AMQ (Approximate Membership Query)
 * Cardinality estimation
 * Frequency estimation
 * Similarity estimation
@@ -11,8 +11,8 @@ A collection of probabilistic data structures and algorithms. Solves the followi
 
 All solutions are designed for high-load environments and provide the following features:
 
-* Compact structures with minimal memory footprint
-* Minimal or zero memory allocations
+* Compact structures with minimal memory usage
+* Zero or minimal memory allocations
 * Lock-free operations via atomic operations
 * Concurrency mode support for multithreaded environments
 * SIMD optimizations
@@ -82,7 +82,7 @@ they trade precision for minimal memory consumption.
 
 Similarity estimation structures measure the similarity between two sets. In this package, sets are represented as string data,
 enabling fuzzy text comparison. These algorithms require an auxiliary LSH structure and handle all stages
-(shingling, hashing, and vectorization) transparently.
+(shingling, hashing, and vectorization) implicitly for the developer.
 
 [Detailed description](similarity).
 
@@ -92,7 +92,7 @@ LSH is a nearest-neighbor search method that hashes input data so that similar i
 In this package, LSH operates only on string data and performs vectorization of pre-shingled texts.
 The resulting vectors are then passed to similarity estimation structures.  
 
-In practice, LSH is initialized with a Shingle algorithm and handles shingling transparently.
+In practice, LSH is initialized with a Shingle algorithm and handles shingling implicitly.
 
 [Detailed description](lsh).
 
