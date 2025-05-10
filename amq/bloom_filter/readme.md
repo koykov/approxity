@@ -38,19 +38,23 @@ $$
 For $N = 1,000,000$ elements and $FPP = 0.01$ (1%):
 
 1. Calculate $m$:
-   $$
-   m = -\frac{1,000,000 \cdot \ln(0.01)}{(\ln 2)^2} \approx -\frac{1,000,000 \cdot (-4.605)}{0.4805} \approx 9,583,000 \text{ bits} \approx 1.14 \text{ MB}
-   $$
+
+$$
+m = -\frac{1,000,000 \cdot \ln(0.01)}{(\ln 2)^2} \approx -\frac{1,000,000 \cdot (-4.605)}{0.4805} \approx 9,583,000 \text{ bits} \approx 1.14 \text{ MB}
+$$
 
 2. Calculate $k$:
-   $$
-   k = \frac{9,583,000}{1,000,000} \cdot 0.693 \approx 6.64 \approx 7 \text{ hash functions}
-   $$
+
+$$
+k = \frac{9,583,000}{1,000,000} \cdot 0.693 \approx 6.64 \approx 7 \text{ hash functions}
+$$
 
 For comparison, a hash table storing 8-byte keys would require:
+
 $$
 1,000,000 \times 8 \text{ bytes} = 7.63 \text{ MB}
 $$
+
 for keys alone. The actual size would be larger due to additional data structures (buckets) and load factor (+30-50%).
 
 ## Usage Example
