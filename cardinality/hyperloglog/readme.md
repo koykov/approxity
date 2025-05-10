@@ -28,12 +28,10 @@ Where:
 For small cardinalities, a bias correction is applied to improve accuracy:
 
 $$
-E'=\left\{
-\begin{array}{ll}
-m⋅log({m \over V}) &\text{if }E \leq {5 \over 2}m \\
-E &\text{otherwise},
-\end{array}
-\right.
+E' = \begin{cases}
+m \cdot \log\left(\frac{m}{V}\right) & \text{if } E \leq \frac{5}{2}m \\
+E & \text{otherwise}
+\end{cases}
 $$
 
 where $V$ is the number of buckets with $M_j = 0$.
