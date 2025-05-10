@@ -14,10 +14,11 @@ uniformly distributed outputs.
 * **Estimating Cardinality**: For each bucket $j$, the maximum number of leading zeros $M_j$ is tracked. The cardinality $E$
 is estimated using the harmonic mean of $M_j$:
 
-$$E=α_m⋅m^2⋅\left( \sum_{j=1}^m 2^{-M_j} \right)^{-1}$$
+$$
+E=α_m⋅m^2⋅\left( \sum_{j=1}^m 2^{-M_j} \right)^{-1}
+$$
 
 Where:
-*
   * $α_m$ is a correction factor for small and large ranges, e.g.: $α_{16} ≈ 0.673$
   * $m$ is the number of buckets.
 
@@ -27,12 +28,11 @@ Where:
 For small cardinalities, a bias correction is applied to improve accuracy:
 
 $$
-E'=\left\{
+E'=\{
 \begin{array}{ll}
 m⋅log({m \over V}) &\text{if }E \leq {5 \over 2}m \\
 E &\text{otherwise},
 \end{array}
-\right.
 $$
 
 where $V$ is the number of buckets with $M_j = 0$.
