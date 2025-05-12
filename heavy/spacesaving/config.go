@@ -11,3 +11,8 @@ type Config struct {
 	Buckets       uint64
 	MetricsWriter heavy.MetricsWriter
 }
+
+func (c *Config) copy() *Config {
+	cpy := *c
+	return &cpy
+}
