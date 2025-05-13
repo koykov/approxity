@@ -10,7 +10,7 @@ type Hit[T pbtk.Hashable] struct {
 }
 
 type Hitter[T pbtk.Hashable] interface {
-	Add(k T) error
+	Add(key T) error
 	Hits() []Hit[T]
 	AppendHits(dst []Hit[T]) []Hit[T]
 	Reset()
