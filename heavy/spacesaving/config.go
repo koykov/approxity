@@ -8,14 +8,24 @@ import (
 const defaultBuckets = 4
 
 type Config struct {
-	K             uint64
-	Hasher        pbtk.Hasher
-	Buckets       uint64
-	EWMA          EWMA
+	// Number of counters.
+	// Mandatory param.
+	K uint64
+	// Keys hasher.
+	// Mandatory param.
+	Hasher pbtk.Hasher
+	// Number of buckets.
+	// Many buckets reduces contention, but eats more memory.
+	// If this param omit, defaultBuckets (4) will use instead.
+	Buckets uint64
+	// EWMA (Exponentially weighted moving average) settings.
+	EWMA EWMA
+	// Metrics writer.
 	MetricsWriter heavy.MetricsWriter
 }
 
 type EWMA struct {
+	// Smoothing factor.
 	Alpha float64
 }
 
