@@ -7,14 +7,14 @@ import (
 	"github.com/koykov/pbtk"
 )
 
-func TestMe[T []byte](t *testing.T, h Hitter[T]) {
+func TestMe[T []byte](t *testing.T, h Hitter[T], repeatRange int) {
 	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
 		t.Run(ds.Name, func(t *testing.T) {
 			h.Reset()
-			if len(ds.All) <= 20 {
+			if len(ds.All) <= repeatRange {
 				return
 			}
-			repeat := len(ds.All) / 20
+			repeat := len(ds.All) / repeatRange
 			for i := 0; i < len(ds.All); i++ {
 				if err := h.Add(ds.All[i]); err != nil {
 					t.Fatal(err)

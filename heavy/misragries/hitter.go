@@ -53,6 +53,9 @@ func (h *hitter[T]) AppendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 	if h.once.Do(h.init); h.err != nil {
 		return dst
 	}
+	for i := 0; i < len(h.buckets); i++ {
+		dst = h.buckets[i].appendHits(dst)
+	}
 	if len(dst) == 0 {
 		return dst
 	}

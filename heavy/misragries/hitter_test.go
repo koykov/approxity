@@ -1,4 +1,4 @@
-package spacesaving
+package misragries
 
 import (
 	"testing"
@@ -7,14 +7,10 @@ import (
 	"github.com/koykov/pbtk/heavy"
 )
 
-var (
-	testh     = xxhash.Hasher64[[]byte]{}
-	testAlpha = 0.01
-)
+var testh = xxhash.Hasher64[[]byte]{}
 
 func TestHitter(t *testing.T) {
-	h, err := NewHitter[[]byte](NewConfig(5, testh).
-		WithEWMA(testAlpha))
+	h, err := NewHitter[[]byte](NewConfig(5, testh).WithBuckets(1))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,8 +18,7 @@ func TestHitter(t *testing.T) {
 }
 
 func BenchmarkHitter(b *testing.B) {
-	h, err := NewHitter[[]byte](NewConfig(5, testh).
-		WithEWMA(testAlpha))
+	h, err := NewHitter[[]byte](NewConfig(5, testh))
 	if err != nil {
 		b.Fatal(err)
 	}
