@@ -30,15 +30,15 @@ func NewHitter[T pbtk.Hashable](conf *Config) (heavy.Hitter[T], error) {
 
 func (h *hitter[T]) Add(key T) error {
 	if h.once.Do(h.init); h.err != nil {
-		return h.err
+		return h.mw().Add(h.err)
 	}
 	hkey, err := h.Hash(h.conf.Hasher, key)
 	if err != nil {
-		return err
+		return h.mw().Add(err)
 	}
 	bi := hkey % h.conf.Buckets
 	h.buckets[bi].add(key, hkey, 1)
-	return nil
+	return h.mw().Add(nil)
 }
 
 func (h *hitter[T]) Hits() []heavy.Hit[T] {
@@ -56,6 +56,9 @@ func (h *hitter[T]) AppendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 	for i := 0; i < len(h.buckets); i++ {
 		dst = h.buckets[i].appendHits(dst)
 	}
+	if len(dst) == 0 {
+		return dst
+	}
 	slices.SortFunc(dst, func(a, b heavy.Hit[T]) int {
 		// reverse order
 		switch {
@@ -66,12 +69,17 @@ func (h *hitter[T]) AppendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 		}
 		return 0
 	})
+	h.mw().Hits(dst[0].Rate, dst[len(dst)-1].Rate)
 	return dst[:h.conf.K]
 }
 
 func (h *hitter[T]) Reset() {
 	if h.once.Do(h.init); h.err != nil {
 		return
+	}
+	h.mw().Reset()
+	for i := 0; i < len(h.buckets); i++ {
+		h.buckets[i].reset()
 	}
 }
 
@@ -87,6 +95,9 @@ func (h *hitter[T]) init() {
 	if h.conf.Buckets == 0 {
 		h.conf.Buckets = defaultBuckets
 	}
+	if h.conf.MetricsWriter == nil {
+		h.conf.MetricsWriter = &heavy.DummyMetricsWriter{}
+	}
 	for i := uint64(0); i < h.conf.Buckets; i++ {
 		b := &bucket[T]{
 			k:    h.conf.K,
@@ -96,4 +107,8 @@ func (h *hitter[T]) init() {
 		}
 		h.buckets = append(h.buckets, b)
 	}
+}
+
+func (h *hitter[T]) mw() heavy.MetricsWriter {
+	return h.conf.MetricsWriter
 }

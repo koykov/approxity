@@ -25,7 +25,7 @@ func (b *bucket[T]) add(key T, hkey, n uint64) {
 	b.mux.Lock()
 	defer b.mux.Unlock()
 	if i, ok := b.keys[hkey]; ok {
-		b.buf[i].rate += b.tryEWMA(n, b.buf[i].rate)
+		b.buf[i].rate += b.tryEWMA(b.buf[i].rate, n)
 		return
 	}
 	if uint64(len(b.buf)) < b.k {
@@ -46,13 +46,13 @@ func (b *bucket[T]) add(key T, hkey, n uint64) {
 		}
 	}
 	delete(b.keys, mt.hkey)
-	rate := b.tryEWMA(n, mt.rate)
 	mt.key = key
-	mt.rate = rate
+	mt.rate = b.tryEWMA(mt.rate, n)
+	mt.hkey = hkey
 	b.keys[hkey] = uint64(mi)
 }
 
-func (b *bucket[T]) tryEWMA(n uint64, val float64) float64 {
+func (b *bucket[T]) tryEWMA(val float64, n uint64) float64 {
 	if b.a == 0 {
 		return val + float64(n)
 	}
@@ -74,4 +74,13 @@ func (b *bucket[T]) appendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 		})
 	}
 	return dst
+}
+
+func (b *bucket[T]) reset() {
+	b.mux.Lock()
+	defer b.mux.Unlock()
+	for k := range b.keys {
+		delete(b.keys, k)
+	}
+	b.buf = b.buf[:0]
 }
