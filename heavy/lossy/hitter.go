@@ -77,6 +77,9 @@ func (h *hitter[T]) appendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 		}
 		return 0
 	})
+	if uint64(len(dst)) > h.w {
+		dst = dst[:h.w]
+	}
 	h.mw().Hits(dst[0].Rate, dst[len(dst)-1].Rate)
 	return dst
 }
