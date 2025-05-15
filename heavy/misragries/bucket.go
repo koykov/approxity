@@ -64,6 +64,9 @@ func (b *bucket[T]) appendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 	_ = b.buf[len(b.buf)-1]
 	for i := 0; i < len(b.buf); i++ {
 		t := &b.buf[i]
+		if t.rate == 0 {
+			continue
+		}
 		dst = append(dst, heavy.Hit[T]{
 			Key:  t.key,
 			Rate: t.rate,

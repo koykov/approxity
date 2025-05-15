@@ -46,13 +46,17 @@ func (h *hitter[T]) Hits() []heavy.Hit[T] {
 		return nil
 	}
 	buf := make([]heavy.Hit[T], 0, h.conf.K*h.conf.Buckets)
-	return h.AppendHits(buf)
+	return h.appendHits(buf)
 }
 
 func (h *hitter[T]) AppendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 	if h.once.Do(h.init); h.err != nil {
 		return dst
 	}
+	return h.appendHits(dst)
+}
+
+func (h *hitter[T]) appendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 	for i := 0; i < len(h.buckets); i++ {
 		dst = h.buckets[i].appendHits(dst)
 	}
@@ -70,7 +74,7 @@ func (h *hitter[T]) AppendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 		return 0
 	})
 	h.mw().Hits(dst[0].Rate, dst[len(dst)-1].Rate)
-	return dst[:h.conf.K]
+	return dst
 }
 
 func (h *hitter[T]) Reset() {
