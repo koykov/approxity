@@ -30,7 +30,7 @@ func NewHitter[T pbtk.Hashable](conf *Config) (heavy.Hitter[T], error) {
 
 func (h *hitter[T]) Add(key T) error {
 	if h.once.Do(h.init); h.err != nil {
-		return h.err
+		return h.mw().Add(h.err)
 	}
 	hkey, err := h.Hash(h.conf.Hasher, key)
 	if err != nil {
