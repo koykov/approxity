@@ -4,6 +4,7 @@ import (
 	"math"
 	"slices"
 	"sync"
+	"unsafe"
 
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/heavy"
@@ -80,7 +81,7 @@ func (h *hitter[T]) appendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 	if uint64(len(dst)) > h.w {
 		dst = dst[:h.w]
 	}
-	h.mw().Hits(dst[0].Rate, dst[len(dst)-1].Rate)
+	h.mw().Hits(*(*[]heavy.Freq)(unsafe.Pointer(&dst)))
 	return dst
 }
 
@@ -88,6 +89,7 @@ func (h *hitter[T]) Reset() {
 	if h.once.Do(h.init); h.err != nil {
 		return
 	}
+	h.mw().Reset()
 	for i := 0; i < len(h.buckets); i++ {
 		h.buckets[i].reset()
 	}

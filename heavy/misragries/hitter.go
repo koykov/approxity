@@ -3,6 +3,7 @@ package misragries
 import (
 	"slices"
 	"sync"
+	"unsafe"
 
 	"github.com/koykov/pbtk"
 	"github.com/koykov/pbtk/heavy"
@@ -73,7 +74,7 @@ func (h *hitter[T]) appendHits(dst []heavy.Hit[T]) []heavy.Hit[T] {
 		}
 		return 0
 	})
-	h.mw().Hits(dst[0].Rate, dst[len(dst)-1].Rate)
+	h.mw().Hits(*(*[]heavy.Freq)(unsafe.Pointer(&dst)))
 	return dst
 }
 
