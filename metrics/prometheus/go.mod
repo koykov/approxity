@@ -3,7 +3,7 @@ module github.com/koykov/pbtk/metrics/prometheus
 go 1.22
 
 require (
-	github.com/koykov/pbtk v0.0.0-20250504144222-7d2bc847fa70
+	github.com/koykov/pbtk v0.0.0-20250516201341-663d60a78976
 	github.com/prometheus/client_golang v1.22.0
 )
 
