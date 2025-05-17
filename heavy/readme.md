@@ -44,7 +44,16 @@ This enables easy swapping of one structure for another without modifying applic
 The `Config` structure allows passing a [`MetricsWriter`](metrics.go) implementation to collect metrics such as:
 
 * Number of elements added
-* Frequency histograms of elements
+* Min/Max frequency
+* Average frequency
+* Sum of all frequencies
+* Standard deviation (stddev)
+* Median frequency
+* Frequency variance
+* Distribution asymmetry (skewness)
+* Variation coefficient (normalized variance)
+* Frequency percentiles (25, 50, 75, 90, 99)
+* Frequency histogram
 
 Using metrics helps solve the "black box" problem—you can always evaluate how effectively the structure performs and optimize its configuration if needed.
 
