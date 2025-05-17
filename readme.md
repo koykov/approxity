@@ -125,7 +125,7 @@ in terms of resource consumption. Like other probabilistic structures, they give
 > The implementations provided are not lock-free structures and therefore are an exception to the rules for this repository.
 > They work in concurrent access mode by default.
 
-[Подробное описание](heavy)
+[Detailed description](heavy)
 
 ## Conclusion
 
