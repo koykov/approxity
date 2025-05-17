@@ -8,6 +8,7 @@ A collection of probabilistic data structures and algorithms. Solves the followi
 * Similarity estimation
 * Symmetric difference
 * LSH (Locality-Sensitive Hashing)
+* Heavy hitters
 
 All solutions are designed for high-load environments and provide the following features:
 
