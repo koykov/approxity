@@ -52,6 +52,10 @@ Full implementations tree:
 * [Shingle](shingle)
     * [Char](shingle/char.go)
     * [Word](shingle/word.go)
+* [Heavy hitters](heavy)
+  * [Space-Saving](heavy/spacesaving)
+  * [Misra-Gries](heavy/misragries)
+  * [Lossy Counting](heavy/lossy)
 
 Below is a brief description of each task. For algorithm details, refer to the corresponding sections.
 
@@ -110,6 +114,18 @@ Symmetric difference is inversely related to similarity estimation: the more sim
 Like similarity estimation, these structures require an auxiliary LSH.
 
 [Detailed description](symmetric).
+
+## Heavy hitters
+
+Heavy hitters algorithms solve the problem of identifying the most frequently occurring elements in a data stream.
+They are suitable for cases when the data stream is so large that traditional methods (such as hash tables) are inefficient
+in terms of resource consumption. Like other probabilistic structures, they give approximate results but consume minimal resources.
+
+> [!IMPORTANT]
+> The implementations provided are not lock-free structures and therefore are an exception to the rules for this repository.
+> They work in concurrent access mode by default.
+
+[Подробное описание](heavy)
 
 ## Conclusion
 
