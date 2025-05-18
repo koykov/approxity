@@ -38,7 +38,7 @@
   * [Count-Min Sketch](frequency/cmsketch)
   * [Conservative Update Sketch](frequency/cusketch)
   * [Count Sketch](frequency/countsketch)
-  * [TinyLFU](frequency/tinylfu/)
+  * [TinyLFU](frequency/tinylfu)
   * [TinyLFU (EWMA)](frequency/tinylfu_ewma/readme.ru.md)
 * [Similarity estimation](similarity/readme.ru.md)
   * [Cosine similarity](similarity/cosine)
