@@ -37,31 +37,31 @@ $$
 h_1(x), h_2(x), h_3(x) \in \{0, \ldots, m-1\}
 $$
 
-   where $m$ is the filter size, typically $m \approx 1.23 \cdot n$ for $n$ keys.
+where $m$ is the filter size, typically $m \approx 1.23 \cdot n$ for $n$ keys.
 
-2. **Equation System Construction**:
-   Each key $x$ corresponds to an equation:
+2. **Fingerprint calculation**:
+   For key $x$, compute:
 
 $$
 \text{fingerprint}(x) = \text{filter}[h_1(x)] \oplus \text{filter}[h_2(x)] \oplus \text{filter}[h_3(x)]
 $$
-   
-   where $\text{fingerprint}(x)$ is an 8-bit key hash.
 
-3. **System Solution**:
-   The system is solved using Gaussian elimination, guaranteeing:
- 
-$$
-\text{Pr}(\text{false positive}) \leq \frac{1}{2^8} = \frac{1}{256} \approx 0.39\%
-$$
+where $\text{fingerprint}(x)$ is an 8-bit hash of the key.
 
-Membership testing for key $y$ is performed as:
+3. **Membership test**:
+   For key $y$, verify:
 
 $$
 \text{Contains}(y) = \left(\text{filter}[h_1(y)] \oplus \text{filter}[h_2(y)] \oplus \text{filter}[h_3(y)]\right) == \text{fingerprint}(y)
 $$
 
-## Usage
+The false-positive probability is:
+
+$$
+\text{Pr}(\text{false positive}) \leq \frac{1}{2^8} = \frac{1}{256} \approx 0.39\%
+$$
+
+## Usage Example
 
 ```go
 package main
