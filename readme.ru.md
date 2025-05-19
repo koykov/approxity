@@ -53,10 +53,10 @@
 * [Shingle](shingle/readme.ru.md)
   * [Char](shingle/char.go)
   * [Word](shingle/word.go)
-* [Heavy hitters](heavy)
-  * [Space-Saving](heavy/spacesaving)
-  * [Misra-Gries](heavy/misragries)
-  * [Lossy Counting](heavy/lossy)
+* [Heavy hitters](heavy/readme.ru.md)
+  * [Space-Saving](heavy/spacesaving/readme.ru.md)
+  * [Misra-Gries](heavy/misragries/readme.ru.md)
+  * [Lossy Counting](heavy/lossy/readme.ru.md)
 
 Ниже есть краткое описание каждой задачи. Описание конкретных алгоритмов можно найти в соответствующих разделах.
 
