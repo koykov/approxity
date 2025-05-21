@@ -42,6 +42,9 @@ func TestMe[T []byte](t *testing.T, f Filter[T]) {
 
 func TestMeConcurrently[T []byte](t *testing.T, f Filter[T]) {
 	pbtk.EachTestingDataset(func(_ int, ds *pbtk.TestingDataset[[]byte]) {
+		if len(ds.All) == 0 {
+			return
+		}
 		t.Run(ds.Name, func(t *testing.T) {
 			f.Reset()
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
